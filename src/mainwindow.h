@@ -37,8 +37,10 @@ private slots:
     void on_comboBox_3_currentIndexChanged(int index);
     // Переключение рисовки векторов
     void on_checkBox_4_clicked();
-
+    // Число рисуемых векторов
     void on_spinBox_2_valueChanged(int arg1);
+    // Событие при изменении числа внутренних сегментов каждого КЭ
+    void on_spinBox_3_valueChanged(int arg1);
 
 private:
     Ui::MainWindow *ui;

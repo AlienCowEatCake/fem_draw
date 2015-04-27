@@ -122,39 +122,104 @@ void glwidget::tec_read(const string & filename)
         step_u_small[k] = step_u_big[k] / 256.0;
     }
 
-    // Замутим треугольники
+    is_loaded = true;
+    set_isolines_num(isolines_num);
+    set_div_num(div_num);
+}
+
+// Изменение количества сегментов, на которые разбивается каждый КЭ
+void glwidget::set_div_num(size_t num)
+{
+    this->div_num = num;
+    if(!is_loaded) return;
+
+    vector<triangle> tmp1;
+    vector<triangle> tmp2;
+    // Посчитаем в локальных координатах
+    tmp1.push_back(triangle(point(0.0, 0.0), point(1.0, 0.0), point(0.0, 1.0)));
+    tmp1.push_back(triangle(point(1.0, 0.0), point(1.0, 1.0), point(0.0, 1.0)));
+    for(size_t i = 0; i < num; i++)
+    {
+        for(size_t j = 0; j < tmp1.size(); j++)
+        {
+            point middles[3] =
+            {
+                point((tmp1[j].nodes[0].x + tmp1[j].nodes[1].x) / 2.0, (tmp1[j].nodes[0].y + tmp1[j].nodes[1].y) / 2.0),
+                point((tmp1[j].nodes[0].x + tmp1[j].nodes[2].x) / 2.0, (tmp1[j].nodes[0].y + tmp1[j].nodes[2].y) / 2.0),
+                point((tmp1[j].nodes[1].x + tmp1[j].nodes[2].x) / 2.0, (tmp1[j].nodes[1].y + tmp1[j].nodes[2].y) / 2.0)
+            };
+            tmp2.push_back(triangle(tmp1[j].nodes[0], middles[0], middles[1]));
+            tmp2.push_back(triangle(middles[0], tmp1[j].nodes[1], middles[2]));
+            tmp2.push_back(triangle(middles[1], middles[2], tmp1[j].nodes[2]));
+            tmp2.push_back(triangle(middles[0], middles[2], middles[1]));
+        }
+        tmp2.swap(tmp1);
+        tmp2.clear();
+    }
+
+    // Заполняем вектор из треугольников переводя координаты в глобальные и считая цвет
+    triangles.clear();
+    // Обходим все прямоугольники
     for(size_t i = 0; i < nx - 1; i++)
     {
         for(size_t j = 0; j < ny - 1; j++)
         {
-            triangle tr[2];
+            double x0 = tec_data[i * nx + j].coord.x;
+            double y0 = tec_data[i * nx + j].coord.y;
+            double x1 = tec_data[(i + 1) * nx + j + 1].coord.x;
+            double y1 = tec_data[(i + 1) * nx + j + 1].coord.y;
+            double hx = x1 - x0;
+            double hy = y1 - y0;
 
-            tr[0].nodes[0] = & tec_data[i * nx + j].coord;
-            tr[0].nodes[1] = & tec_data[i * nx + j + 1].coord;
-            tr[0].nodes[2] = & tec_data[(i + 1) * nx + j].coord;
-
-            tr[1].nodes[0] = & tec_data[(i + 1) * nx + j + 1].coord;
-            tr[1].nodes[1] = & tec_data[i * nx + j + 1].coord;
-            tr[1].nodes[2] = & tec_data[(i + 1) * nx + j].coord;
-
-            tr[0].solution[0] = & tec_data[i * nx + j].value;
-            tr[0].solution[1] = & tec_data[i * nx + j + 1].value;
-            tr[0].solution[2] = & tec_data[(i + 1) * nx + j].value;
-
-            tr[1].solution[0] = & tec_data[(i + 1) * nx + j + 1].value;
-            tr[1].solution[1] = & tec_data[i * nx + j + 1].value;
-            tr[1].solution[2] = & tec_data[(i + 1) * nx + j].value;
-
-            for(size_t k = 0; k < 2; k++)
+            for(size_t tn = 0; tn < tmp1.size(); tn++)
             {
-                for(size_t v = 0; v < 7; v++)
+                triangle tmp_tr;
+                // Переводим координаты в глобальные
+                for(size_t k = 0; k < 3; k++)
                 {
-                    tecplot_value center;
-                    center[v] = 0;
-                    for(size_t m = 0; m < 3; m++)
-                        center[v] += (* tr[k].solution[m])[v];
-                    center[v] /= 3.0;
+                    tmp_tr.nodes[k].x = tmp1[tn].nodes[k].x * hx + x0;
+                    tmp_tr.nodes[k].y = tmp1[tn].nodes[k].y * hy + y0;
+                }
 
+                // Занесем значение решения в узлах
+                for(size_t k = 0; k < 3; k++)
+                {
+                    // Строим билинейную интерполяцию
+                    for(size_t m = 0; m < TEC_SIZE; m++)
+                    {
+                        double r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j].value[m] +
+                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[i * nx + j + 1].value[m];
+                        double r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[(i + 1) * nx + j].value[m] +
+                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
+                        tmp_tr.solution[k][m] = (y1 - tmp_tr.nodes[k].y) / hy * r1 +
+                                             (tmp_tr.nodes[k].y - y0) / hy * r2;
+                    }
+                }
+
+                // Барицентр треугольника
+                double cx = 0.0, cy = 0.0;
+                for(size_t k = 0; k < 3; k++)
+                {
+                    cx += tmp_tr.nodes[k].x;
+                    cy += tmp_tr.nodes[k].y;
+                }
+                point barycenter(cx / 3.0, cy / 3.0);
+
+                // Решение в барицентре
+                tecplot_value center;
+                // Строим билинейную интерполяцию
+                for(size_t m = 0; m < TEC_SIZE; m++)
+                {
+                    double r1 = (x1 - barycenter.x) / hx * tec_data[i * nx + j].value[m] +
+                                (barycenter.x - x0) / hx * tec_data[i * nx + j + 1].value[m];
+                    double r2 = (x1 - barycenter.x) / hx * tec_data[(i + 1) * nx + j].value[m] +
+                                (barycenter.x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
+                    center[m] = (y1 - barycenter.y) / hy * r1 +
+                                         (barycenter.y - y0) / hy * r2;
+                }
+
+                for(size_t v = 0; v < TEC_SIZE; v++)
+                {
                     // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
                     unsigned short r_color = 0, g_color = 0, b_color = 0;
                     if(center[v] > min_u[v] + step_u_big[v] * 3.0)
@@ -190,17 +255,14 @@ void glwidget::tec_read(const string & filename)
                     b_color = b_color * 3 / 4 + 64;
 
                     // Задаем посчитанный цвет
-                    tr[k].color[v] = QColor(r_color, g_color, b_color);
+                    tmp_tr.color[v] = QColor(r_color, g_color, b_color);
                 }
-            }
 
-            triangles.push_back(tr[0]);
-            triangles.push_back(tr[1]);
+                // И заносим в вектор
+                triangles.push_back(tmp_tr);
+            }
         }
     }
-
-    is_loaded = true;
-    set_isolines_num(isolines_num);
 }
 
 #define USE_LEGEND
@@ -217,6 +279,7 @@ glwidget::glwidget(QWidget * parent) : QWidget(parent)
     ind_vec_2 = 1;
     draw_vectors = false;
     skip_vec = 1;
+    div_num = 2;
 }
 
 // Пересчет значений изолиний
@@ -360,7 +423,7 @@ void glwidget::paintEvent(QPaintEvent * event)
         // Рисуем
         QPoint tr[3];
         for(size_t k = 0; k < 3; k++)
-            tr[k] = to_window((triangles[i].nodes[k]->x - min_x) / size_x, (triangles[i].nodes[k]->y - min_y) / size_y);
+            tr[k] = to_window((triangles[i].nodes[k].x - min_x) / size_x, (triangles[i].nodes[k].y - min_y) / size_y);
         painter.drawPolygon(tr, 3);
     }
 
@@ -375,24 +438,24 @@ void glwidget::paintEvent(QPaintEvent * event)
             // Если значения на разных концах ребра будут разными, значит изолиния проходит через это ребро
             set<double>::const_iterator segment_isol[3];
             for(size_t k = 0; k < 3; k++)
-                segment_isol[k] = isolines[draw_index].lower_bound((* triangles[i].solution[k])[draw_index]);
+                segment_isol[k] = isolines[draw_index].lower_bound(triangles[i].solution[k][draw_index]);
 
             // А теперь нарисуем, согласно вышеприведенному условию
             QPoint isol_points[3];
             size_t counter = 0;
             if(segment_isol[0] != segment_isol[1])
             {
-                isol_points[counter] = to_window(((triangles[i].nodes[1]->x + triangles[i].nodes[0]->x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[1]->y + triangles[i].nodes[0]->y) * 0.5 - min_y) / size_y);
+                isol_points[counter] = to_window(((triangles[i].nodes[1].x + triangles[i].nodes[0].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[1].y + triangles[i].nodes[0].y) * 0.5 - min_y) / size_y);
                 counter++;
             }
             if(segment_isol[0] != segment_isol[2])
             {
-                isol_points[counter] = to_window(((triangles[i].nodes[2]->x + triangles[i].nodes[0]->x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2]->y + triangles[i].nodes[0]->y) * 0.5 - min_y) / size_y);
+                isol_points[counter] = to_window(((triangles[i].nodes[2].x + triangles[i].nodes[0].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[0].y) * 0.5 - min_y) / size_y);
                 counter++;
             }
             if(segment_isol[1] != segment_isol[2])
             {
-                isol_points[counter] = to_window(((triangles[i].nodes[2]->x + triangles[i].nodes[1]->x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2]->y + triangles[i].nodes[1]->y) * 0.5 - min_y) / size_y);
+                isol_points[counter] = to_window(((triangles[i].nodes[2].x + triangles[i].nodes[1].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[1].y) * 0.5 - min_y) / size_y);
                 counter++;
             }
 

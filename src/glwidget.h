@@ -54,11 +54,11 @@ public:
 class triangle
 {
 public:
-    const point * nodes[3];
+    point nodes[3];
     QColor color[TEC_SIZE];
-    tecplot_value * solution[3];
+    tecplot_value solution[3];
     triangle() {}
-    triangle(const point * node1, const point * node2, const point * node3)
+    triangle(const point & node1, const point & node2, const point & node3)
     {
         nodes[0] = node1;
         nodes[1] = node2;
@@ -101,6 +101,9 @@ public:
     // Число пропускаемых векторов
     size_t skip_vec;
 
+    // Изменение количества сегментов, на которые разбивается каждый КЭ
+    void set_div_num(size_t num);
+
 protected:
     // Отрисовка сцены
     void paintEvent(QPaintEvent *event);
@@ -141,6 +144,9 @@ private:
 
     // Число отрезков по x и по y
     size_t nx, ny;
+
+    // Количество сегментов, на которые разбивается каждый КЭ
+    size_t div_num;
 };
 
 #endif // GLWIDGET_H

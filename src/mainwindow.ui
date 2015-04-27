@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>400</height>
+    <width>640</width>
+    <height>530</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,8 +19,8 @@
      <rect>
       <x>0</x>
       <y>25</y>
-      <width>600</width>
-      <height>375</height>
+      <width>640</width>
+      <height>505</height>
      </rect>
     </property>
    </widget>
@@ -29,22 +29,41 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>75</width>
+      <width>60</width>
       <height>25</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>Open Tecplot file</string>
+    </property>
     <property name="text">
-     <string>Open ...</string>
+     <string>Open</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="spinBox_3">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>0</y>
+      <width>50</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Set number of interpolation (bilinear)</string>
     </property>
    </widget>
    <widget class="QCheckBox" name="checkBox_3">
     <property name="geometry">
      <rect>
-      <x>80</x>
+      <x>120</x>
       <y>0</y>
       <width>65</width>
       <height>25</height>
      </rect>
+    </property>
+    <property name="toolTip">
+     <string>Draw color image</string>
     </property>
     <property name="text">
      <string>Color</string>
@@ -53,21 +72,27 @@
    <widget class="QComboBox" name="comboBox">
     <property name="geometry">
      <rect>
-      <x>140</x>
+      <x>180</x>
       <y>0</y>
       <width>65</width>
       <height>25</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>Data component for colors and isolines</string>
+    </property>
    </widget>
    <widget class="QCheckBox" name="checkBox_2">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>250</x>
       <y>0</y>
       <width>75</width>
       <height>25</height>
      </rect>
+    </property>
+    <property name="toolTip">
+     <string>Draw isolines</string>
     </property>
     <property name="text">
      <string>Isolines</string>
@@ -76,21 +101,27 @@
    <widget class="QSpinBox" name="spinBox">
     <property name="geometry">
      <rect>
-      <x>285</x>
+      <x>325</x>
       <y>0</y>
       <width>50</width>
       <height>25</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>Number of isolines (linear)</string>
+    </property>
    </widget>
    <widget class="QCheckBox" name="checkBox_4">
     <property name="geometry">
      <rect>
-      <x>340</x>
+      <x>380</x>
       <y>0</y>
       <width>75</width>
       <height>25</height>
      </rect>
+    </property>
+    <property name="toolTip">
+     <string>Draw vectors</string>
     </property>
     <property name="text">
      <string>Vectors</string>
@@ -99,31 +130,40 @@
    <widget class="QSpinBox" name="spinBox_2">
     <property name="geometry">
      <rect>
-      <x>420</x>
+      <x>460</x>
       <y>0</y>
       <width>50</width>
       <height>25</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>Number of skipped values</string>
+    </property>
    </widget>
    <widget class="QComboBox" name="comboBox_2">
     <property name="geometry">
      <rect>
-      <x>470</x>
+      <x>510</x>
       <y>0</y>
       <width>65</width>
       <height>25</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>Data component for first vector axis</string>
+    </property>
    </widget>
    <widget class="QComboBox" name="comboBox_3">
     <property name="geometry">
      <rect>
-      <x>535</x>
+      <x>575</x>
       <y>0</y>
       <width>65</width>
       <height>25</height>
      </rect>
+    </property>
+    <property name="toolTip">
+     <string>Data component for second vector axis</string>
     </property>
    </widget>
   </widget>

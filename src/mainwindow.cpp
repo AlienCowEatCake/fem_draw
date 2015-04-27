@@ -9,8 +9,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     // Установка минимальных размеров окна
-    this->setMinimumHeight(500);
-    this->setMinimumWidth(600);
+    this->setMinimumHeight(530);
+    this->setMinimumWidth(640);
 
     // Перемещение в центр экрана
     QPoint center = QApplication::desktop()->availableGeometry().center();
@@ -56,6 +56,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinBox_2->setMinimum(1);
     ui->spinBox_2->setMaximum(10000);
     ui->spinBox_2->setValue(1);
+    ui->spinBox_3->setMinimum(0);
+    ui->spinBox_3->setMaximum(7);
+    ui->spinBox_3->setValue(0);
 
     // Немного эстетства
     this->setWindowTitle(trUtf8("VFEM Draw"));
@@ -66,6 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->widget->draw_vectors = ui->checkBox_4->isChecked();
     ui->widget->set_isolines_num(ui->spinBox->value());
     ui->widget->skip_vec = ui->spinBox_2->value();
+    ui->widget->set_div_num(ui->spinBox_3->value());
 }
 
 // Деструктор
@@ -148,5 +152,13 @@ void MainWindow::on_spinBox_2_valueChanged(int arg1)
 {
     if(arg1 >= ui->spinBox_2->minimum() && arg1 <= ui->spinBox_2->maximum())
         ui->widget->skip_vec = (size_t)arg1;
+    ui->widget->repaint();
+}
+
+// Событие при изменении числа внутренних сегментов каждого КЭ
+void MainWindow::on_spinBox_3_valueChanged(int arg1)
+{
+    if(arg1 >= ui->spinBox_3->minimum() && arg1 <= ui->spinBox_3->maximum())
+        ui->widget->set_div_num(arg1);
     ui->widget->repaint();
 }
