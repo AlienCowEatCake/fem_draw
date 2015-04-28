@@ -33,8 +33,8 @@ FORMS += \
 #    QMAKE_CXXFLAGS_WARN_ON *= -Wextra
     QMAKE_CXXFLAGS_RELEASE -= -O2
     QMAKE_CXXFLAGS_RELEASE *= -O3
-    QMAKE_CXXFLAGS_RELEASE *= -march=native
-    QMAKE_CXXFLAGS_RELEASE *= -mtune=native
+#    QMAKE_CXXFLAGS_RELEASE *= -march=native
+#    QMAKE_CXXFLAGS_RELEASE *= -mtune=native
     QMAKE_CXXFLAGS_RELEASE *= -DNDEBUG
 }
 
