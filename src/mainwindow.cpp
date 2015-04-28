@@ -115,6 +115,7 @@ void MainWindow::on_pushButton_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Tecplot File"), "", tr("Tecplot Data Files (*.dat)"));
     if(fileName.length() == 0) return;
+    ui->spinBox_3->setValue(0); // Сбросим значение интерполяции, чтобы не повисло на больших файлах
     ui->widget->tec_read(fileName.toStdString());
     ui->widget->repaint();
 }
@@ -155,7 +156,7 @@ void MainWindow::on_spinBox_2_valueChanged(int arg1)
     ui->widget->repaint();
 }
 
-// Событие при изменении числа внутренних сегментов каждого КЭ
+// Событие при изменении уровня интерполяции
 void MainWindow::on_spinBox_3_valueChanged(int arg1)
 {
     if(arg1 >= ui->spinBox_3->minimum() && arg1 <= ui->spinBox_3->maximum())

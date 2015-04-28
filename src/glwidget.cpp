@@ -127,7 +127,7 @@ void glwidget::tec_read(const string & filename)
     set_div_num(div_num);
 }
 
-// Изменение количества сегментов, на которые разбивается каждый КЭ
+// Изменение уровня интерполяции
 void glwidget::set_div_num(size_t num)
 {
     this->div_num = num;

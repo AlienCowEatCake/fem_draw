@@ -39,7 +39,7 @@ private slots:
     void on_checkBox_4_clicked();
     // Число рисуемых векторов
     void on_spinBox_2_valueChanged(int arg1);
-    // Событие при изменении числа внутренних сегментов каждого КЭ
+    // Событие при изменении уровня интерполяции
     void on_spinBox_3_valueChanged(int arg1);
 
 private:
