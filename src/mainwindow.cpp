@@ -23,28 +23,12 @@ MainWindow::MainWindow(QWidget *parent) :
         this->move(center);
 
     // Список компонент
-    ui->comboBox->addItem("ReEx");
-    ui->comboBox->addItem("ReEy");
-    ui->comboBox->addItem("ReEz");
-    ui->comboBox->addItem("ImEx");
-    ui->comboBox->addItem("ImEy");
-    ui->comboBox->addItem("ImEz");
-    ui->comboBox->addItem("abs(E)");
-    ui->comboBox_2->addItem("ReEx");
-    ui->comboBox_2->addItem("ReEy");
-    ui->comboBox_2->addItem("ReEz");
-    ui->comboBox_2->addItem("ImEx");
-    ui->comboBox_2->addItem("ImEy");
-    ui->comboBox_2->addItem("ImEz");
-    ui->comboBox_2->addItem("abs(E)");
-    ui->comboBox_3->addItem("ReEx");
-    ui->comboBox_3->addItem("ReEy");
-    ui->comboBox_3->addItem("ReEz");
-    ui->comboBox_3->addItem("ImEx");
-    ui->comboBox_3->addItem("ImEy");
-    ui->comboBox_3->addItem("ImEz");
-    ui->comboBox_3->addItem("abs(E)");
-    ui->comboBox_3->setCurrentIndex(1);
+    while(ui->comboBox->count() > 0)
+        ui->comboBox->removeItem(0);
+    while(ui->comboBox_2->count() > 0)
+        ui->comboBox_2->removeItem(0);
+    while(ui->comboBox_3->count() > 0)
+        ui->comboBox_3->removeItem(0);
 
     // Начальные значения элементов управления
     ui->checkBox_2->setChecked(true);
@@ -113,10 +97,64 @@ void MainWindow::on_spinBox_valueChanged(int arg1)
 // Событие при открытии файла
 void MainWindow::on_pushButton_clicked()
 {
+    // Запомним старые значения индексов, чтоб потом восстановить
+    size_t old_draw_index = ui->widget->draw_index;
+    ui->widget->draw_index = 0;
+    size_t old_ind_vec_1 = ui->widget->ind_vec_1;
+    ui->widget->ind_vec_1 = 0;
+    size_t old_ind_vec_2 = ui->widget->ind_vec_2;
+    ui->widget->ind_vec_2 = 0;
+
+    // Откроем файл
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Tecplot File"), "", tr("Tecplot Data Files (*.dat)"));
     if(fileName.length() == 0) return;
     ui->spinBox_3->setValue(0); // Сбросим значение интерполяции, чтобы не повисло на больших файлах
     ui->widget->tec_read(fileName.toStdString());
+    // Ненене, еще не все готово!
+    ui->widget->is_loaded = false;
+
+    // Очистим поля в комбобоксах
+    while(ui->comboBox->count() > 0)
+        ui->comboBox->removeItem(0);
+    while(ui->comboBox_2->count() > 0)
+        ui->comboBox_2->removeItem(0);
+    while(ui->comboBox_3->count() > 0)
+        ui->comboBox_3->removeItem(0);
+
+    // Заполним поля в комбобоксах
+    for(size_t i = 0; i < ui->widget->variables.size(); i++)
+    {
+        ui->comboBox->addItem(ui->widget->variables[i]);
+        ui->comboBox_2->addItem(ui->widget->variables[i]);
+        ui->comboBox_3->addItem(ui->widget->variables[i]);
+    }
+
+    // Попытаемся восстановить старые индексы
+    if(old_draw_index < ui->widget->variables.size())
+        ui->comboBox->setCurrentIndex((int)old_draw_index);
+    else
+        ui->comboBox->setCurrentIndex(0);
+
+    if(old_ind_vec_1 < ui->widget->variables.size())
+        ui->comboBox_2->setCurrentIndex((int)old_ind_vec_1);
+    else
+        ui->comboBox_2->setCurrentIndex(0);
+
+    if(old_ind_vec_2 < ui->widget->variables.size())
+        ui->comboBox_3->setCurrentIndex((int)old_ind_vec_2);
+    else
+        ui->comboBox_3->setCurrentIndex(0);
+
+    // Устанавливаем оптимальное значение для векторов
+    if(ui->widget->vect_value < ui->spinBox_2->minimum())
+        ui->spinBox_2->setValue(ui->spinBox_2->minimum());
+    else if(ui->widget->vect_value > ui->spinBox_2->maximum())
+        ui->spinBox_2->setValue(ui->spinBox_2->maximum());
+    else
+        ui->spinBox_2->setValue(ui->widget->vect_value);
+
+    // А вот теперь готово
+    ui->widget->is_loaded = true;
     ui->widget->repaint();
 }
 

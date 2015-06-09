@@ -9,70 +9,168 @@
 #include <QMessageBox>
 #include <fstream>
 #include <limits>
+#include <cstring>
+
+void glwidget::print_io_error()
+{
+    QMessageBox msgBox;
+    msgBox.setAttribute(Qt::WA_QuitOnClose);
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+    msgBox.setWindowTitle(trUtf8("Error"));
+    msgBox.setText(trUtf8("Error: Corrupted file"));
+    msgBox.setIcon(QMessageBox::Critical);
+    msgBox.exec();
+}
 
 void glwidget::tec_read(const string & filename)
 {
+    // Чистим старое
     is_loaded = false;
     tec_data.clear();
     triangles.clear();
-    for(size_t k = 0; k < TEC_SIZE; k++)
+    for(size_t k = 0; k < isolines.size(); k++)
         isolines[k].clear();
+    variables.clear();
 
+    // Пошли читать файл
     ifstream ifs(filename.c_str());
     string tmp;
-    size_t I, J, K;
+    // TITLE = "Slice Z = -10"
     getline(ifs, tmp);
+    // VARIABLES = "x", "y", "z", "ExR", "EyR", "EzR", "ExI", "EyI", "EzI", "abs(E)"
     getline(ifs, tmp);
-    ifs >> tmp >> tmp;
-    ifs >> I >> tmp >> tmp >> J >> tmp >> tmp >> K;
+    // Разберем переменные
+    bool parse_flag = true;
+    const char * curr_c = tmp.c_str(), * end_c = curr_c;
+    const size_t VAR_MAX_LEN = 10;
+    char var_c[3][VAR_MAX_LEN];
+    // Первые три могут быть координаты. Также могут быть и первые две, но это мы потом поправим
+    for(size_t i = 0; i < 3 && parse_flag; i++)
+    {
+        if((curr_c = strchr(end_c + 1, '\"')) != NULL)
+        {
+            if((end_c = strchr(++curr_c, '\"')) != NULL)
+            {
+                size_t len = end_c - curr_c;
+                strncpy(var_c[i], curr_c, len);
+                var_c[i][len] = '\0';
+            }
+            else
+                parse_flag = false;
+        }
+        else
+            parse_flag = false;
+    }
+    if(!parse_flag)
+    {
+        print_io_error();
+        return;
+    }
+    // Читаем остальные переменные со значениями
+    while(parse_flag)
+    {
+        if((curr_c = strchr(end_c + 1, '\"')) != NULL)
+        {
+            if((end_c = strchr(++curr_c, '\"')) != NULL)
+            {
+                char var[VAR_MAX_LEN];
+                size_t len = end_c - curr_c;
+                strncpy(var, curr_c, len);
+                var[len] = '\0';
+                variables.push_back(var);
+            }
+            else
+                parse_flag = false;
+        }
+        else
+            parse_flag = false;
+    }
+    // ZONE I= 101, J= 101, K= 1, F=POINT
     getline(ifs, tmp);
+    size_t points_coord = 3; // Число координат у точки
+    size_t IJK[3];
+    parse_flag = true;
+    curr_c = tmp.c_str();
+    for(size_t i = 0; i < 3 && parse_flag; i++)
+    {
+        if((curr_c = strchr(curr_c, '=')) != NULL)
+        {
+            int bla;
+            if(sscanf(++curr_c, "%d", &bla) != 1)
+            {
+                // Если точка из двух координат, учтем это
+                if(i == 2)
+                {
+                    IJK[2] = 1;
+                    points_coord = 2;
+                    variables.insert(variables.begin(), var_c[2]);
+                    break;
+                }
+                else
+                    parse_flag = false;
+            }
+            else
+                IJK[i] = (size_t)bla;
+        }
+        else
+            parse_flag = false;
+    }
+    if(!parse_flag)
+    {
+        print_io_error();
+        return;
+    }
 
+    // Понимаем в какой плоскости лежит сечение
     size_t ind[2];
-    if(I == 1) // y-z
+    if(IJK[0] == 1) // y-z
     {
         ind[0] = 1;
         ind[1] = 2;
-        nx = J;
-        ny = K;
-        label_x = "y";
-        label_y = "z";
     }
-    if(J == 1) // x-z
+    if(IJK[1] == 1) // x-z
     {
         ind[0] = 0;
         ind[1] = 2;
-        nx = I;
-        ny = K;
-        label_x = "x";
-        label_y = "z";
     }
-    if(K == 1) // x-y
+    if(IJK[2] == 1) // x-y
     {
         ind[0] = 0;
         ind[1] = 1;
-        nx = I;
-        ny = J;
-        label_x = "x";
-        label_y = "y";
     }
+    nx = IJK[ind[0]];
+    ny = IJK[ind[1]];
+    label_x = var_c[ind[0]];
+    label_y = var_c[ind[1]];
+
+    // Правим размерность векторов под переменные
+    min_u.resize(variables.size());
+    max_u.resize(variables.size());
+    step_u_big.resize(variables.size());
+    step_u_small.resize(variables.size());
+    isolines.resize(variables.size());
 
     // Ищем минимальные и максимальные значения координат
     max_x = max_y = - numeric_limits<double>::max();
     min_x = min_y = numeric_limits<double>::max();
-    for(size_t k = 0; k < TEC_SIZE; k++)
+    for(size_t k = 0; k < variables.size(); k++)
     {
         min_u[k] = numeric_limits<double>::max();
         max_u[k] = - numeric_limits<double>::max();
     }
 
-    tec_data.resize(I * J * K);
+    // Читаем сами данные
+    tec_data.resize(IJK[0] * IJK[1] * IJK[2]);
     for(size_t i = 0; i < tec_data.size(); i++)
     {
         double coords[3];
-        ifs >> coords[0] >> coords[1] >> coords[2];
+        for(size_t j = 0; j < points_coord; j++)
+            ifs >> coords[j];
         tec_data[i].coord.x = coords[ind[0]];
         tec_data[i].coord.y = coords[ind[1]];
-        for(size_t k = 0; k < TEC_SIZE; k++)
+        tec_data[i].value.resize(variables.size());
+        for(size_t k = 0; k < variables.size(); k++)
             ifs >> tec_data[i].value[k];
 
         if(tec_data[i].coord.x > max_x) max_x = tec_data[i].coord.x;
@@ -80,7 +178,7 @@ void glwidget::tec_read(const string & filename)
         if(tec_data[i].coord.x < min_x) min_x = tec_data[i].coord.x;
         if(tec_data[i].coord.y < min_y) min_y = tec_data[i].coord.y;
 
-        for(size_t k = 0; k < TEC_SIZE; k++)
+        for(size_t k = 0; k < variables.size(); k++)
         {
             if(tec_data[i].value[k] > max_u[k]) max_u[k] = tec_data[i].value[k];
             if(tec_data[i].value[k] < min_u[k]) min_u[k] = tec_data[i].value[k];
@@ -89,19 +187,12 @@ void glwidget::tec_read(const string & filename)
 
     if(!ifs.good())
     {
-        QMessageBox msgBox;
-        msgBox.setAttribute(Qt::WA_QuitOnClose);
-        msgBox.setStandardButtons(QMessageBox::Ok);
-        msgBox.setDefaultButton(QMessageBox::Ok);
-        msgBox.setWindowTitle(trUtf8("Error"));
-        msgBox.setText(trUtf8("Error: Corrupted file"));
-        msgBox.setIcon(QMessageBox::Critical);
-        msgBox.exec();
+        print_io_error();
         return;
     }
-
     ifs.close();
 
+    // Небольшие корректировки на всякий случай
     size_x = max_x - min_x;
     size_y = max_y - min_y;
     min_x -= size_x * 0.01;
@@ -116,12 +207,16 @@ void glwidget::tec_read(const string & filename)
     size_y = max_y - min_y;
 
     // Шаги для разбиения по цветовым областям
-    for(size_t k = 0; k < TEC_SIZE; k++)
+    for(size_t k = 0; k < variables.size(); k++)
     {
         step_u_big[k] = (max_u[k] - min_u[k]) / 4.0;
         step_u_small[k] = step_u_big[k] / 256.0;
     }
 
+    // Устанавливаем рекомендуемое значение для spinBox_2
+    vect_value = (int)(sqrt((double)(IJK[0] * IJK[1] * IJK[2])) / 20);
+
+    // Как-то так
     is_loaded = true;
     set_isolines_num(isolines_num);
     set_div_num(div_num);
@@ -174,18 +269,20 @@ void glwidget::set_div_num(size_t num)
             for(size_t tn = 0; tn < tmp1.size(); tn++)
             {
                 triangle tmp_tr;
+                tmp_tr.color.resize(variables.size());
                 // Переводим координаты в глобальные
                 for(size_t k = 0; k < 3; k++)
                 {
                     tmp_tr.nodes[k].x = tmp1[tn].nodes[k].x * hx + x0;
                     tmp_tr.nodes[k].y = tmp1[tn].nodes[k].y * hy + y0;
+                    tmp_tr.solution[k].resize(variables.size());
                 }
 
                 // Занесем значение решения в узлах
                 for(size_t k = 0; k < 3; k++)
                 {
                     // Строим билинейную интерполяцию
-                    for(size_t m = 0; m < TEC_SIZE; m++)
+                    for(size_t m = 0; m < variables.size(); m++)
                     {
                         double r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j].value[m] +
                                     (tmp_tr.nodes[k].x - x0) / hx * tec_data[i * nx + j + 1].value[m];
@@ -206,9 +303,9 @@ void glwidget::set_div_num(size_t num)
                 point barycenter(cx / 3.0, cy / 3.0);
 
                 // Решение в барицентре
-                tecplot_value center;
+                tecplot_value center(variables.size());
                 // Строим билинейную интерполяцию
-                for(size_t m = 0; m < TEC_SIZE; m++)
+                for(size_t m = 0; m < variables.size(); m++)
                 {
                     double r1 = (x1 - barycenter.x) / hx * tec_data[i * nx + j].value[m] +
                                 (barycenter.x - x0) / hx * tec_data[i * nx + j + 1].value[m];
@@ -218,7 +315,7 @@ void glwidget::set_div_num(size_t num)
                                          (barycenter.y - y0) / hy * r2;
                 }
 
-                for(size_t v = 0; v < TEC_SIZE; v++)
+                for(size_t v = 0; v < variables.size(); v++)
                 {
                     // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
                     unsigned short r_color = 0, g_color = 0, b_color = 0;
@@ -280,6 +377,7 @@ glwidget::glwidget(QWidget * parent) : QWidget(parent)
     draw_vectors = false;
     skip_vec = 1;
     div_num = 2;
+    vect_value = 1;
 }
 
 // Пересчет значений изолиний
@@ -287,7 +385,7 @@ void glwidget::set_isolines_num(size_t isolines_num)
 {
     this->isolines_num = isolines_num;
     if(!is_loaded) return;
-    for(size_t j = 0; j < TEC_SIZE; j++)
+    for(size_t j = 0; j < variables.size(); j++)
     {
         isolines[j].clear();
         double isolines_step = (max_u[j] - min_u[j]) / (double)(isolines_num + 1);

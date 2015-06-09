@@ -5,6 +5,7 @@
 #include <QString>
 #include <QPoint>
 #include <set>
+#include <vector>
 
 using namespace std;
 
@@ -20,27 +21,8 @@ public:
     }
 };
 
-static const size_t TEC_SIZE = 7;
-
 // Класс элемент сечения текплота
-class tecplot_value
-{
-public:
-    double ExR, EyR, EzR;
-    double ExI, EyI, EzI;
-    double absE;
-    double & operator [] (size_t i)
-    {
-        if(i == 0) return ExR;
-        if(i == 1) return EyR;
-        if(i == 2) return EzR;
-        if(i == 3) return ExI;
-        if(i == 4) return EyI;
-        if(i == 5) return EzI;
-        if(i == 6) return absE;
-        return absE;
-    }
-};
+typedef vector<double> tecplot_value;
 
 // Класс элемент сечения текплота
 class tecplot_node
@@ -55,7 +37,7 @@ class triangle
 {
 public:
     point nodes[3];
-    QColor color[TEC_SIZE];
+    vector<QColor> color;
     tecplot_value solution[3];
     triangle() {}
     triangle(const point & node1, const point & node2, const point & node3)
@@ -104,6 +86,15 @@ public:
     // Изменение уровня интерполяции
     void set_div_num(size_t num);
 
+    // Подписи к переменным
+    vector<QString> variables;
+
+    // Есть данные
+    bool is_loaded;
+
+    // Рекомендуемое значение для spinBox_2
+    int vect_value;
+
 protected:
     // Отрисовка сцены
     void paintEvent(QPaintEvent *event);
@@ -128,7 +119,7 @@ private:
     tecplot_value step_u_big, step_u_small;
 
     // Значения изолиний
-    set<double> isolines[TEC_SIZE];
+    vector<set<double> > isolines;
 
     // Треугольники, которые будем рисовать
     vector<triangle> triangles;
@@ -139,14 +130,14 @@ private:
     // Подписи осей
     string label_x, label_y;
 
-    // Есть данные
-    bool is_loaded;
-
     // Число отрезков по x и по y
     size_t nx, ny;
 
     // Уровень интерполяции
     size_t div_num;
+
+    // Вывести msgbox с ошибкой
+    void print_io_error();
 };
 
 #endif // GLWIDGET_H
