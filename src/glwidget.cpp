@@ -11,6 +11,18 @@
 #include <limits>
 #include <cstring>
 
+// Использовать ли фиолетовые оттенки цвета
+// Дает большую комбинацию оттенков, но приводит к
+// некоторому дисбалансу между красным и синим
+//#define USE_PURPLE
+
+// Приглушать ли чрезмерно яркие цвета
+// На мониторе они выглядят ничего, но если печатать...
+#define USE_LIGHTNESS
+
+// Рисовать ли легенду справа
+#define USE_LEGEND
+
 void glwidget::print_io_error()
 {
     QMessageBox msgBox;
@@ -209,7 +221,11 @@ void glwidget::tec_read(const string & filename)
     // Шаги для разбиения по цветовым областям
     for(size_t k = 0; k < variables.size(); k++)
     {
+#if defined USE_PURPLE
         step_u_big[k] = (max_u[k] - min_u[k]) / 4.0;
+#else
+        step_u_big[k] = (max_u[k] - min_u[k]) / 3.0;
+#endif
         step_u_small[k] = step_u_big[k] / 256.0;
     }
 
@@ -235,13 +251,14 @@ void glwidget::set_div_num(size_t num)
     tmp1.push_back(triangle(point(1.0, 0.0), point(1.0, 1.0), point(0.0, 1.0)));
     for(size_t i = 0; i < num; i++)
     {
+        tmp2.reserve(tmp1.size() * 4);
         for(size_t j = 0; j < tmp1.size(); j++)
         {
             point middles[3] =
             {
-                point((tmp1[j].nodes[0].x + tmp1[j].nodes[1].x) / 2.0, (tmp1[j].nodes[0].y + tmp1[j].nodes[1].y) / 2.0),
-                point((tmp1[j].nodes[0].x + tmp1[j].nodes[2].x) / 2.0, (tmp1[j].nodes[0].y + tmp1[j].nodes[2].y) / 2.0),
-                point((tmp1[j].nodes[1].x + tmp1[j].nodes[2].x) / 2.0, (tmp1[j].nodes[1].y + tmp1[j].nodes[2].y) / 2.0)
+                point((tmp1[j].nodes[0].x + tmp1[j].nodes[1].x) * 0.5, (tmp1[j].nodes[0].y + tmp1[j].nodes[1].y) * 0.5),
+                point((tmp1[j].nodes[0].x + tmp1[j].nodes[2].x) * 0.5, (tmp1[j].nodes[0].y + tmp1[j].nodes[2].y) * 0.5),
+                point((tmp1[j].nodes[1].x + tmp1[j].nodes[2].x) * 0.5, (tmp1[j].nodes[1].y + tmp1[j].nodes[2].y) * 0.5)
             };
             tmp2.push_back(triangle(tmp1[j].nodes[0], middles[0], middles[1]));
             tmp2.push_back(triangle(middles[0], tmp1[j].nodes[1], middles[2]));
@@ -317,6 +334,7 @@ void glwidget::set_div_num(size_t num)
 
                 for(size_t v = 0; v < variables.size(); v++)
                 {
+#if defined USE_PURPLE
                     // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
                     unsigned short r_color = 0, g_color = 0, b_color = 0;
                     if(center[v] > min_u[v] + step_u_big[v] * 3.0)
@@ -345,11 +363,36 @@ void glwidget::set_div_num(size_t num)
                         g_color = 0;
                         b_color = 255 - tmp;
                     }
+#else
+                    // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
+                    unsigned short r_color = 0, g_color = 0, b_color = 0;
+                    if(center[v] > min_u[v] + step_u_big[v] * 2.0)
+                    {
+                        r_color = 255;
+                        g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0)) / step_u_small[v]);
+                        b_color = 0;
+                    }
+                    else if(center[v] > min_u[v] + step_u_big[v])
+                    {
+                        r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
+                        g_color = 255;
+                        b_color = 0;
+                    }
+                    else
+                    {
+                        unsigned short tmp = (unsigned short)((center[v] - min_u[v]) / step_u_small[v]);
+                        r_color = 0;
+                        g_color = tmp;
+                        b_color = 255 - tmp;
+                    }
+#endif
 
+#if defined USE_LIGHTNESS
                     // Приглушаем кислотные цвета
                     r_color = r_color * 3 / 4 + 64;
                     g_color = g_color * 3 / 4 + 64;
                     b_color = b_color * 3 / 4 + 64;
+#endif
 
                     // Задаем посчитанный цвет
                     tmp_tr.color[v] = QColor(r_color, g_color, b_color);
@@ -361,8 +404,6 @@ void glwidget::set_div_num(size_t num)
         }
     }
 }
-
-#define USE_LEGEND
 
 // Конструктор
 glwidget::glwidget(QWidget * parent) : QWidget(parent)
@@ -564,6 +605,7 @@ void glwidget::paintEvent(QPaintEvent * event)
 
 #if defined USE_LEGEND
     // Легенда
+#if defined USE_PURPLE
 /*
  * Матрица цветов:
  * 255,   0,   0        glColor3d(1.0, 0.0, 0.0);
@@ -591,6 +633,7 @@ void glwidget::paintEvent(QPaintEvent * event)
  * 3). U = G * step_u_small + min_u + step_u_big
  * 4). U = (76 - R) * (step_u_small * (255.0 / 76.0)) + min_u
  */
+#if defined USE_LIGHTNESS
     static const QColor legend_colors[14] =
     {
         QColor(  76 * 3 / 4 + 64,   0 * 3 / 4 + 64, 179 * 3 / 4 + 64 ),
@@ -608,6 +651,25 @@ void glwidget::paintEvent(QPaintEvent * event)
         QColor( 255 * 3 / 4 + 64,  65 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
         QColor( 255 * 3 / 4 + 64,   0 * 3 / 4 + 64,   0 * 3 / 4 + 64 )
     };
+#else
+    static const QColor legend_colors[14] =
+    {
+        QColor(  76,   0, 179 ),
+        QColor(  15,   0, 240 ),
+        QColor(   0,  50, 205 ),
+        QColor(   0, 115, 140 ),
+        QColor(   0, 180,  75 ),
+        QColor(   0, 245,  10 ),
+        QColor(  55, 255,   0 ),
+        QColor( 120, 255,   0 ),
+        QColor( 185, 255,   0 ),
+        QColor( 250, 255,   0 ),
+        QColor( 255, 195,   0 ),
+        QColor( 255, 130,   0 ),
+        QColor( 255,  65,   0 ),
+        QColor( 255,   0,   0 )
+    };
+#endif
     double legend_values[14] =
     {
         min_u[draw_index],
@@ -625,6 +687,83 @@ void glwidget::paintEvent(QPaintEvent * event)
         190.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0,
         max_u[draw_index]
     };
+#else
+    /*
+     * Матрица цветов:
+     * 255,   0,   0
+     * 255,  59,   0
+     * 255, 118,   0
+     * 255, 177,   0
+     * 255, 236,   0
+     * 215, 255,   0
+     * 157, 255,   0
+     *  99, 255,   0
+     *  50, 255,   0
+     *   0, 236,  19
+     *   0, 177,  78
+     *   0, 118, 137
+     *   0,  59, 196
+     *   0,   0, 255
+     *
+     * 1). U = (255 - G) * step_u_small + min_u + step_u_big * 2.0
+     * 2). U = R * step_u_small + min_u + step_u_big
+     * 3). U = G * step_u_small + min_u
+     */
+#if defined USE_LIGHTNESS
+    static const QColor legend_colors[14] =
+    {
+        QColor(   0 * 3 / 4 + 64,   0 * 3 / 4 + 64, 255 * 3 / 4 + 64 ),
+        QColor(   0 * 3 / 4 + 64,  59 * 3 / 4 + 64, 196 * 3 / 4 + 64 ),
+        QColor(   0 * 3 / 4 + 64, 118 * 3 / 4 + 64, 137 * 3 / 4 + 64 ),
+        QColor(   0 * 3 / 4 + 64, 177 * 3 / 4 + 64,  78 * 3 / 4 + 64 ),
+        QColor(   0 * 3 / 4 + 64, 236 * 3 / 4 + 64,  19 * 3 / 4 + 64 ),
+        QColor(  50 * 3 / 4 + 64, 245 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        QColor(  99 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        QColor( 157 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        QColor( 215 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        QColor( 255 * 3 / 4 + 64, 236 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        QColor( 255 * 3 / 4 + 64, 177 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        QColor( 255 * 3 / 4 + 64, 118 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        QColor( 255 * 3 / 4 + 64,  59 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        QColor( 255 * 3 / 4 + 64,   0 * 3 / 4 + 64,   0 * 3 / 4 + 64 )
+    };
+#else
+    static const QColor legend_colors[14] =
+    {
+        QColor(   0,   0, 255 ),
+        QColor(   0,  59, 196 ),
+        QColor(   0, 118, 137 ),
+        QColor(   0, 177,  78 ),
+        QColor(   0, 236,  19 ),
+        QColor(  50, 245,   0 ),
+        QColor(  99, 255,   0 ),
+        QColor( 157, 255,   0 ),
+        QColor( 215, 255,   0 ),
+        QColor( 255, 236,   0 ),
+        QColor( 255, 177,   0 ),
+        QColor( 255, 118,   0 ),
+        QColor( 255,  59,   0 ),
+        QColor( 255,   0,   0 )
+    };
+#endif
+    double legend_values[14] =
+    {
+        min_u[draw_index],
+        59.0 * step_u_small[draw_index] + min_u[draw_index],
+        118.0 * step_u_small[draw_index] + min_u[draw_index],
+        177.0 * step_u_small[draw_index] + min_u[draw_index],
+        236.0 * step_u_small[draw_index] + min_u[draw_index],
+        50.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        99.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        157.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        215.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        19.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
+        78.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
+        137.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
+        196.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
+        max_u[draw_index]
+    };
+#endif
     for(size_t i = 0; i < 14; i++)
     {
         static const double x0 = 1.0175;
