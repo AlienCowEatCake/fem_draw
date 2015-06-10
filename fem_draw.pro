@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-TARGET = vfem_draw
+TARGET = fem_draw
 TEMPLATE = app
 
 QT += core gui

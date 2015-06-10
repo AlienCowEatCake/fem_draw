@@ -45,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinBox_3->setValue(0);
 
     // Немного эстетства
-    this->setWindowTitle(trUtf8("VFEM Draw"));
+    this->setWindowTitle(trUtf8("FEM Draw"));
 
     // Передача начальных значений виджету
     ui->widget->draw_isolines = ui->checkBox_2->isChecked();
