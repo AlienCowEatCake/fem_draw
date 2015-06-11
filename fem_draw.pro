@@ -6,6 +6,7 @@
 
 TARGET = fem_draw
 TEMPLATE = app
+CONFIG += warn_on
 
 QT += core gui
 INCLUDEPATH += src
@@ -27,14 +28,18 @@ HEADERS += \
 FORMS += \
     src/mainwindow.ui
 
+RESOURCES += resources/icon.qrc
+
+win32 {
+  RC_FILE += resources/icon.rc
+}
+
 *g++*|*clang* {
-#    QMAKE_CXXFLAGS *= -ansi
-#    QMAKE_CXXFLAGS *= -pedantic
-#    QMAKE_CXXFLAGS_WARN_ON *= -Wextra
+    QMAKE_CXXFLAGS *= -ansi
+    QMAKE_CXXFLAGS *= -pedantic
+    QMAKE_CXXFLAGS_WARN_ON *= -Wextra
     QMAKE_CXXFLAGS_RELEASE -= -O2
     QMAKE_CXXFLAGS_RELEASE *= -O3
-#    QMAKE_CXXFLAGS_RELEASE *= -march=native
-#    QMAKE_CXXFLAGS_RELEASE *= -mtune=native
     QMAKE_CXXFLAGS_RELEASE *= -DNDEBUG
 }
 

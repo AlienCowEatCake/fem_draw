@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="../resources/icon.qrc">
+    <normaloff>:/resources/icon.ico</normaloff>:/resources/icon.ico</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="glwidget" name="widget" native="true">
     <property name="geometry">
@@ -272,6 +276,8 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../resources/icon.qrc"/>
+ </resources>
  <connections/>
 </ui>
