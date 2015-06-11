@@ -35,8 +35,6 @@ win32 {
 }
 
 *g++*|*clang* {
-    QMAKE_CXXFLAGS *= -ansi
-    QMAKE_CXXFLAGS *= -pedantic
     QMAKE_CXXFLAGS_WARN_ON *= -Wextra
     QMAKE_CXXFLAGS_RELEASE -= -O2
     QMAKE_CXXFLAGS_RELEASE *= -O3

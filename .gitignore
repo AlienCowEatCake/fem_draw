@@ -63,3 +63,8 @@ Makefile*
 # Temp files
 *~
 
+# ================ FEM Draw specific .gitignore ================================
+
+/build_*
+/fem_draw
+
