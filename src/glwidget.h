@@ -100,11 +100,11 @@ public:
     size_t div_num;
 
     // Отрисовка сцены на QPaintDevice
-    void draw(QPaintDevice * device, QPaintEvent *event);
+    void draw(QPaintDevice * device, bool transparency);
 
 protected:
     // Отрисовка сцены
-    void paintEvent(QPaintEvent *event);
+    void paintEvent(QPaintEvent *);
 
 private:
     // Текплотовские значения

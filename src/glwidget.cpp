@@ -32,6 +32,7 @@ void glwidget::print_io_error()
     msgBox.setWindowTitle(trUtf8("Error"));
     msgBox.setText(trUtf8("Error: Corrupted file"));
     msgBox.setIcon(QMessageBox::Critical);
+    msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
     msgBox.exec();
 }
 
@@ -480,20 +481,23 @@ QPoint glwidget::to_window(double x, double y) const
 }
 
 // Отрисовка сцены
-void glwidget::paintEvent(QPaintEvent * event)
+void glwidget::paintEvent(QPaintEvent *)
 {
-    draw(this, event);
+    draw(this, false);
 }
 
 // Отрисовка сцены на QPaintDevice
-void glwidget::draw(QPaintDevice * device, QPaintEvent *event)
+void glwidget::draw(QPaintDevice * device, bool transparency)
 {
     QPainter painter;
     painter.begin(device);
     painter.setViewport(0, 0, device->width(), device->height());
 
     // Заливка области белым цветом
-    if(event) painter.fillRect(event->rect(), QBrush(Qt::white));
+    if(!transparency)
+        painter.fillRect(0, 0, device->width(), device->height(), QBrush(Qt::white));
+    else
+        painter.fillRect(0, 0, device->width(), device->height(), QBrush(Qt::transparent));
 
     if(!is_loaded) return;
 

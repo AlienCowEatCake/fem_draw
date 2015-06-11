@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QImage>
 #include <QMessageBox>
+#include <QImageWriter>
 #include "glwidget.h"
 
 namespace Ui {

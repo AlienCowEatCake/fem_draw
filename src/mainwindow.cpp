@@ -210,36 +210,70 @@ void MainWindow::on_actionDecrease_Interpolation_triggered()
 // Событие при сохранении
 void MainWindow::on_actionSave_Image_File_triggered()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image File"), "draw.png", tr("All Images (*.bmp *.png *.jpg *.jpeg);;PNG Images (*.png);;JPG Images (*.jpg *.jpeg);;BMP Images (*.bmp)"));
+    QList<QByteArray> supported = QImageWriter::supportedImageFormats();
+    QString formats, formats_all;
+    for(QList<QByteArray>::const_iterator it = supported.begin(); it != supported.end(); ++it)
+    {
+        QString record(* it);
+        if(formats_all.length() > 0)
+            formats_all.append(" *.");
+        else
+            formats_all.append("*.");
+        formats_all.append(record);
+
+        if(formats.length() > 0)
+            formats.append(";;");
+        formats.append(record.toUpper());
+        formats.append(" Images (*.");
+        formats.append(record);
+        formats.append(")");
+    }
+    formats_all.prepend("All Images (");
+    formats_all.append(");;");
+    formats.prepend(formats_all);
+
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image File"), "draw.png", formats);
     if(fileName.length() == 0) return;
     string fn = fileName.toStdString();
     size_t found = fn.find_last_of(".");
-    bool use_transparent;
     if(found == string::npos)
     {
-        use_transparent = true;
         fileName.append(".png");
     }
     else
     {
         QString ext = fn.substr(found + 1).c_str();
-        if(ext.compare("jpg", Qt::CaseInsensitive) == 0 || ext.compare("jpeg", Qt::CaseInsensitive) == 0 || ext.compare("bmp", Qt::CaseInsensitive) == 0)
-            use_transparent = false;
-        else if(ext.compare("png", Qt::CaseInsensitive) == 0)
-            use_transparent = true;
-        else
+        bool finded = false;
+        for(QList<QByteArray>::const_iterator it = supported.begin(); it != supported.end() && !finded; ++it)
         {
-            use_transparent = true;
-            fileName.append(".png");
+            if(ext.compare(QString(* it), Qt::CaseInsensitive) == 0)
+                finded = true;
         }
+        if(!finded)
+            fileName.append(".png");
     }
+
     QImage image(ui->widget->width(), ui->widget->height(), QImage::Format_ARGB32_Premultiplied);
-    if(use_transparent)
+    bool transparent = ui->actionTransparent_Image->isChecked();
+    if(transparent)
         image.fill(Qt::transparent);
     else
         image.fill(Qt::white);
-    ui->widget->draw(& image, NULL);
-    image.save(fileName);
+    ui->widget->draw(& image, transparent);
+    bool saved = image.save(fileName);
+
+    if(!saved)
+    {
+        QMessageBox msgBox;
+        msgBox.setAttribute(Qt::WA_QuitOnClose);
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.setDefaultButton(QMessageBox::Ok);
+        msgBox.setWindowTitle(trUtf8("Error"));
+        msgBox.setText(trUtf8("Error: Can't save file"));
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+        msgBox.exec();
+    }
 }
 
 // Событие при нажатии кнопки Exit
@@ -256,7 +290,7 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setDefaultButton(QMessageBox::Ok);
     msgBox.setWindowTitle("About");
-    msgBox.setText(trUtf8("<b>FEM Draw v1.0 beta</b><br><br>"
+    msgBox.setText(trUtf8("<b>FEM Draw v1.0 beta1</b><br><br>"
                           "<a href=\"http://fami-net.dlinkddns.com/gitlab/peter/fem_draw\">http://fami-net.dlinkddns.com/gitlab/peter/fem_draw</a><br>"
                           "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
                           "Copyright &copy; 2014 - 2015<br>"
