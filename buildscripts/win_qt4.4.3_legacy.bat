@@ -21,7 +21,7 @@ cd ..
 rmdir /S /Q %V_BUILDDIR% 2>nul >nul
 mkdir %V_BUILDDIR%
 cd %V_BUILDDIR%
-qmake CONFIG+="release" ..\%V_PROJECT%.pro
+qmake CONFIG+="release" CONFIG+="use_static_qgif use_static_qjpeg use_static_qtiff" ..\%V_PROJECT%.pro
 mingw32-make
 strip --strip-all release\%V_PROJECT%.exe
 copy release\%V_PROJECT%.exe ..\%V_PROJECT%.exe

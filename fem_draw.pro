@@ -47,3 +47,21 @@ win32 {
     DEFINES += _CRT_SECURE_NO_WARNINGS
     DEFINES += _USE_MATH_DEFINES
 }
+
+# qmake CONFIG+=use_static_qgif
+use_static_qgif {
+    QTPLUGIN += qgif
+    DEFINES += USE_STATIC_QGIF
+}
+
+# qmake CONFIG+=use_static_qjpeg
+use_static_qjpeg {
+    QTPLUGIN += qjpeg
+    DEFINES += USE_STATIC_QJPEG
+}
+
+# qmake CONFIG+=use_static_qtiff
+use_static_qtiff {
+    QTPLUGIN += qtiff
+    DEFINES += USE_STATIC_QTIFF
+}
