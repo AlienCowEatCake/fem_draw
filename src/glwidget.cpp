@@ -552,28 +552,22 @@ void glwidget::draw(QPaintDevice * device, bool transparency)
         painter.drawText(to_window(-0.05, y - 0.01), st);
     }
 
-    // Отрисовка всех треугольников
-    for(size_t i = 0; i < triangles.size(); i++)
+    // Раскрашивать будем если запрошено сие
+    if(draw_color)
     {
-        // Раскрашивать будем если запрошено сие, иначе зальем белым цветом
-        if(draw_color)
+        // Отрисовка всех треугольников
+        for(size_t i = 0; i < triangles.size(); i++)
         {
             // Задаем посчитанный цвет
             painter.setBrush(QBrush(triangles[i].color[draw_index]));
             painter.setPen(QPen(triangles[i].color[draw_index], 1));
-        }
-        else
-        {
-            // Задаем белый цвет
-            painter.setBrush(QBrush(Qt::white));
-            painter.setPen(QPen(Qt::white, 1));
-        }
 
-        // Рисуем
-        QPoint tr[3];
-        for(size_t k = 0; k < 3; k++)
-            tr[k] = to_window((triangles[i].nodes[k].x - min_x) / size_x, (triangles[i].nodes[k].y - min_y) / size_y);
-        painter.drawPolygon(tr, 3);
+            // Рисуем
+            QPoint tr[3];
+            for(size_t k = 0; k < 3; k++)
+                tr[k] = to_window((triangles[i].nodes[k].x - min_x) / size_x, (triangles[i].nodes[k].y - min_y) / size_y);
+            painter.drawPolygon(tr, 3);
+        }
     }
 
     painter.setPen(QPen(Qt::black, 1));
