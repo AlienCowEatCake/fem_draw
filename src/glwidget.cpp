@@ -482,12 +482,18 @@ QPoint glwidget::to_window(double x, double y) const
 // Отрисовка сцены
 void glwidget::paintEvent(QPaintEvent * event)
 {
+    draw(this, event);
+}
+
+// Отрисовка сцены на QPaintDevice
+void glwidget::draw(QPaintDevice * device, QPaintEvent *event)
+{
     QPainter painter;
-    painter.begin(this);
-    painter.setViewport(0, 0, this->width(), this->height());
+    painter.begin(device);
+    painter.setViewport(0, 0, device->width(), device->height());
 
     // Заливка области белым цветом
-    painter.fillRect(event->rect(), QBrush(Qt::white));
+    if(event) painter.fillRect(event->rect(), QBrush(Qt::white));
 
     if(!is_loaded) return;
 

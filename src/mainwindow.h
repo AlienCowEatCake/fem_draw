@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QDesktopWidget>
 #include <QFileDialog>
+#include <QImage>
+#include <QMessageBox>
 #include "glwidget.h"
 
 namespace Ui {
@@ -28,7 +30,7 @@ private slots:
     // Событие при изменении числа изолиний
     void on_spinBox_valueChanged(int arg1);
     // Событие при открытии файла
-    void on_pushButton_clicked();
+    void on_actionOpen_Tecplot_File_triggered();
     // Изменение переменной, которую выводим
     void on_comboBox_currentIndexChanged(int index);
     // Первая переменная вектора
@@ -40,7 +42,14 @@ private slots:
     // Число рисуемых векторов
     void on_spinBox_2_valueChanged(int arg1);
     // Событие при изменении уровня интерполяции
-    void on_spinBox_3_valueChanged(int arg1);
+    void on_actionIncrease_Interpolation_triggered();
+    void on_actionDecrease_Interpolation_triggered();
+    // Событие при сохранении
+    void on_actionSave_Image_File_triggered();
+    // Событие при нажатии кнопки About
+    void on_actionAbout_FEM_Draw_triggered();
+    // Событие при нажатии кнопки Exit
+    void on_actionExit_triggered();
 
 private:
     Ui::MainWindow *ui;

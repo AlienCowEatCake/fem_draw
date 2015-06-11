@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     // Установка минимальных размеров окна
-    this->setMinimumHeight(530);
+    this->setMinimumHeight(570);
     this->setMinimumWidth(640);
 
     // Перемещение в центр экрана
@@ -40,12 +40,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinBox_2->setMinimum(1);
     ui->spinBox_2->setMaximum(10000);
     ui->spinBox_2->setValue(1);
-    ui->spinBox_3->setMinimum(0);
-    ui->spinBox_3->setMaximum(7);
-    ui->spinBox_3->setValue(0);
 
     // Немного эстетства
     this->setWindowTitle(trUtf8("FEM Draw"));
+    connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
     // Передача начальных значений виджету
     ui->widget->draw_isolines = ui->checkBox_2->isChecked();
@@ -53,7 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->widget->draw_vectors = ui->checkBox_4->isChecked();
     ui->widget->set_isolines_num(ui->spinBox->value());
     ui->widget->skip_vec = ui->spinBox_2->value();
-    ui->widget->set_div_num(ui->spinBox_3->value());
+    ui->widget->set_div_num(0);
 }
 
 // Деструктор
@@ -95,7 +93,7 @@ void MainWindow::on_spinBox_valueChanged(int arg1)
 }
 
 // Событие при открытии файла
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_actionOpen_Tecplot_File_triggered()
 {
     // Запомним старые значения индексов, чтоб потом восстановить
     size_t old_draw_index = ui->widget->draw_index;
@@ -108,7 +106,7 @@ void MainWindow::on_pushButton_clicked()
     // Откроем файл
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Tecplot File"), "", tr("Tecplot Data Files (*.dat)"));
     if(fileName.length() == 0) return;
-    ui->spinBox_3->setValue(0); // Сбросим значение интерполяции, чтобы не повисло на больших файлах
+    ui->widget->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
     ui->widget->tec_read(fileName.toStdString());
     // Ненене, еще не все готово!
     ui->widget->is_loaded = false;
@@ -195,9 +193,75 @@ void MainWindow::on_spinBox_2_valueChanged(int arg1)
 }
 
 // Событие при изменении уровня интерполяции
-void MainWindow::on_spinBox_3_valueChanged(int arg1)
+void MainWindow::on_actionIncrease_Interpolation_triggered()
 {
-    if(arg1 >= ui->spinBox_3->minimum() && arg1 <= ui->spinBox_3->maximum())
-        ui->widget->set_div_num(arg1);
+    if(ui->widget->div_num < 7)
+        ui->widget->set_div_num(ui->widget->div_num + 1);
     ui->widget->repaint();
+}
+
+void MainWindow::on_actionDecrease_Interpolation_triggered()
+{
+    if(ui->widget->div_num > 0)
+        ui->widget->set_div_num(ui->widget->div_num - 1);
+    ui->widget->repaint();
+}
+
+// Событие при сохранении
+void MainWindow::on_actionSave_Image_File_triggered()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image File"), "draw.png", tr("All Images (*.bmp *.png *.jpg *.jpeg);;PNG Images (*.png);;JPG Images (*.jpg *.jpeg);;BMP Images (*.bmp)"));
+    if(fileName.length() == 0) return;
+    string fn = fileName.toStdString();
+    size_t found = fn.find_last_of(".");
+    bool use_transparent;
+    if(found == string::npos)
+    {
+        use_transparent = true;
+        fileName.append(".png");
+    }
+    else
+    {
+        QString ext = fn.substr(found + 1).c_str();
+        if(ext.compare("jpg", Qt::CaseInsensitive) == 0 || ext.compare("jpeg", Qt::CaseInsensitive) == 0 || ext.compare("bmp", Qt::CaseInsensitive) == 0)
+            use_transparent = false;
+        else if(ext.compare("png", Qt::CaseInsensitive) == 0)
+            use_transparent = true;
+        else
+        {
+            use_transparent = true;
+            fileName.append(".png");
+        }
+    }
+    QImage image(ui->widget->width(), ui->widget->height(), QImage::Format_ARGB32_Premultiplied);
+    if(use_transparent)
+        image.fill(Qt::transparent);
+    else
+        image.fill(Qt::white);
+    ui->widget->draw(& image, NULL);
+    image.save(fileName);
+}
+
+// Событие при нажатии кнопки Exit
+void MainWindow::on_actionExit_triggered()
+{
+    close();
+}
+
+// Событие при нажатии кнопки About
+void MainWindow::on_actionAbout_FEM_Draw_triggered()
+{
+    QMessageBox msgBox;
+    msgBox.setAttribute(Qt::WA_QuitOnClose);
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+    msgBox.setWindowTitle("About");
+    msgBox.setText(trUtf8("<b>FEM Draw v1.0 beta</b><br>"
+                          "<a href=\"http://fami-net.dlinkddns.com/gitlab/peter/fem_draw\">http://fami-net.dlinkddns.com/gitlab/peter/fem_draw</a><br>"
+                          "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
+                          "Copyright &copy; 2014 - 2015<br>"
+                          "Zhigalov Peter &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;"));
+    msgBox.setIcon(QMessageBox::Information);
+    //msgBox.setWindowIcon(QIcon(":/icons/msgbox04.ico"));
+    msgBox.exec();
 }

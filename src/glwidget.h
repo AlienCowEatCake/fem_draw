@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QString>
 #include <QPoint>
+#include <QPaintDevice>
 #include <set>
 #include <vector>
 
@@ -95,6 +96,12 @@ public:
     // Рекомендуемое значение для spinBox_2
     int vect_value;
 
+    // Уровень интерполяции
+    size_t div_num;
+
+    // Отрисовка сцены на QPaintDevice
+    void draw(QPaintDevice * device, QPaintEvent *event);
+
 protected:
     // Отрисовка сцены
     void paintEvent(QPaintEvent *event);
@@ -132,9 +139,6 @@ private:
 
     // Число отрезков по x и по y
     size_t nx, ny;
-
-    // Уровень интерполяции
-    size_t div_num;
 
     // Вывести msgbox с ошибкой
     void print_io_error();
