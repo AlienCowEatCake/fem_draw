@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     // Установка минимальных размеров окна
-    this->setMinimumHeight(570);
+    this->setMinimumHeight(500);
     this->setMinimumWidth(640);
 
     // Перемещение в центр экрана
