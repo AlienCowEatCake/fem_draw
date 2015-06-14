@@ -7,7 +7,7 @@
 #include <QImage>
 #include <QMessageBox>
 #include <QImageWriter>
-#include "glwidget.h"
+#include "paintwidget.h"
 
 namespace Ui {
 class MainWindow;

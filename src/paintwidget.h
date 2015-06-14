@@ -1,5 +1,5 @@
-#ifndef GLWIDGET_H
-#define GLWIDGET_H
+#ifndef PAINTWIDGET_H
+#define PAINTWIDGET_H
 
 #include <QWidget>
 #include <QString>
@@ -23,14 +23,11 @@ public:
 };
 
 // Класс элемент сечения текплота
-typedef vector<double> tecplot_value;
-
-// Класс элемент сечения текплота
 class tecplot_node
 {
 public:
     point coord;
-    tecplot_value value;
+    vector<double> value;
 };
 
 // Класс треугольник
@@ -39,7 +36,7 @@ class triangle
 public:
     point nodes[3];
     vector<QColor> color;
-    tecplot_value solution[3];
+    vector<double> solution[3];
     triangle() {}
     triangle(const point & node1, const point & node2, const point & node3)
     {
@@ -49,13 +46,13 @@ public:
     }
 };
 
-// Класс OpenGL виджет
-class glwidget : public QWidget
+// Класс виджет для рисования на QPaintDevice
+class paintwidget : public QWidget
 {
     Q_OBJECT
 public:
     // Конструктор
-    glwidget(QWidget * parent = 0);
+    paintwidget(QWidget * parent = 0);
 
     // Флаг отрисовки изолиний
     bool draw_isolines;
@@ -120,10 +117,10 @@ private:
     void adjustAxis(double & min, double & max, size_t & numTicks);
 
     // Минимальное и максимальное значения решения
-    tecplot_value min_u, max_u;
+    vector<double> min_u, max_u;
 
     // Вспомогательные шаги по цвету для закраски
-    tecplot_value step_u_big, step_u_small;
+    vector<double> step_u_big, step_u_small;
 
     // Значения изолиний
     vector<set<double> > isolines;
@@ -144,4 +141,4 @@ private:
     void print_io_error();
 };
 
-#endif // GLWIDGET_H
+#endif // PAINTWIDGET_H

@@ -3,7 +3,7 @@
 #else
 #include <QtGui>
 #endif
-#include "glwidget.h"
+#include "paintwidget.h"
 #include <QFont>
 #include <QString>
 #include <QMessageBox>
@@ -23,7 +23,7 @@
 // Рисовать ли легенду справа
 #define USE_LEGEND
 
-void glwidget::print_io_error()
+void paintwidget::print_io_error()
 {
     QMessageBox msgBox;
     msgBox.setAttribute(Qt::WA_QuitOnClose);
@@ -36,7 +36,7 @@ void glwidget::print_io_error()
     msgBox.exec();
 }
 
-void glwidget::tec_read(const string & filename)
+void paintwidget::tec_read(const string & filename)
 {
     // Чистим старое
     is_loaded = false;
@@ -240,7 +240,7 @@ void glwidget::tec_read(const string & filename)
 }
 
 // Изменение уровня интерполяции
-void glwidget::set_div_num(size_t num)
+void paintwidget::set_div_num(size_t num)
 {
     this->div_num = num;
     if(!is_loaded) return;
@@ -321,7 +321,7 @@ void glwidget::set_div_num(size_t num)
                 point barycenter(cx / 3.0, cy / 3.0);
 
                 // Решение в барицентре
-                tecplot_value center(variables.size());
+                vector<double> center(variables.size());
                 // Строим билинейную интерполяцию
                 for(size_t m = 0; m < variables.size(); m++)
                 {
@@ -407,7 +407,7 @@ void glwidget::set_div_num(size_t num)
 }
 
 // Конструктор
-glwidget::glwidget(QWidget * parent) : QWidget(parent)
+paintwidget::paintwidget(QWidget * parent) : QWidget(parent)
 {
     isolines_num = 10;
     draw_index = 0;
@@ -423,7 +423,7 @@ glwidget::glwidget(QWidget * parent) : QWidget(parent)
 }
 
 // Пересчет значений изолиний
-void glwidget::set_isolines_num(size_t isolines_num)
+void paintwidget::set_isolines_num(size_t isolines_num)
 {
     this->isolines_num = isolines_num;
     if(!is_loaded) return;
@@ -437,7 +437,7 @@ void glwidget::set_isolines_num(size_t isolines_num)
 }
 
 // Подгонка осей под реальность и вычисление шагов координатной сетки
-void glwidget::adjustAxis(double & min, double & max, size_t & numTicks)
+void paintwidget::adjustAxis(double & min, double & max, size_t & numTicks)
 {
     static const double axis_epsilon = 1.0 / 10000.0;
     if(max - min < axis_epsilon)
@@ -461,7 +461,7 @@ void glwidget::adjustAxis(double & min, double & max, size_t & numTicks)
 }
 
 // Геометрия окна
-QPoint glwidget::to_window(double x, double y) const
+QPoint paintwidget::to_window(double x, double y) const
 {
     // В OpenGL это был бы glOrtho
     const double gl_x0 = -0.06;
@@ -481,13 +481,13 @@ QPoint glwidget::to_window(double x, double y) const
 }
 
 // Отрисовка сцены
-void glwidget::paintEvent(QPaintEvent *)
+void paintwidget::paintEvent(QPaintEvent *)
 {
     draw(this, false);
 }
 
 // Отрисовка сцены на QPaintDevice
-void glwidget::draw(QPaintDevice * device, bool transparency)
+void paintwidget::draw(QPaintDevice * device, bool transparency)
 {
     QPainter painter;
     painter.begin(device);
@@ -571,10 +571,10 @@ void glwidget::draw(QPaintDevice * device, bool transparency)
     }
 
     painter.setPen(QPen(Qt::black, 1));
-    for(size_t i = 0; i < triangles.size(); i++)
+    // Изолинии рисуем только если оно нам надо
+    if(draw_isolines)
     {
-        // Изолинии рисуем только если оно нам надо
-        if(draw_isolines)
+        for(size_t i = 0; i < triangles.size(); i++)
         {
             // Теперь рисуем изолинии
             // Будем искать наименьшее значение, большее или равное решению

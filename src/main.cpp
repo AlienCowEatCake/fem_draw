@@ -1,9 +1,6 @@
 #include "mainwindow.h"
 #include <QApplication>
 
-#if defined USE_STATIC_QGIF
-Q_IMPORT_PLUGIN(qgif)
-#endif
 #if defined USE_STATIC_QJPEG
 Q_IMPORT_PLUGIN(qjpeg)
 #endif

@@ -18,7 +18,7 @@
     <normaloff>:/resources/icon.ico</normaloff>:/resources/icon.ico</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="glwidget" name="widget" native="true">
+   <widget class="paintwidget" name="widget" native="true">
     <property name="geometry">
      <rect>
       <x>0</x>
@@ -280,9 +280,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>glwidget</class>
+   <class>paintwidget</class>
    <extends>QWidget</extends>
-   <header>glwidget.h</header>
+   <header>paintwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

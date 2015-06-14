@@ -17,12 +17,12 @@ greaterThan(QT_MAJOR_VERSION, 4) {
 }
 
 SOURCES += \
-    src/glwidget.cpp \
+    src/paintwidget.cpp \
     src/main.cpp \
     src/mainwindow.cpp
 
 HEADERS += \
-    src/glwidget.h \
+    src/paintwidget.h \
     src/mainwindow.h
 
 FORMS += \
@@ -46,12 +46,6 @@ win32 {
     QMAKE_CXXFLAGS_RELEASE *= -Ox
     DEFINES += _CRT_SECURE_NO_WARNINGS
     DEFINES += _USE_MATH_DEFINES
-}
-
-# qmake CONFIG+=use_static_qgif
-use_static_qgif {
-    QTPLUGIN += qgif
-    DEFINES += USE_STATIC_QGIF
 }
 
 # qmake CONFIG+=use_static_qjpeg
