@@ -4,6 +4,7 @@
 #include <QtGui>
 #endif
 #include "paintwidget.h"
+#include <cmath>
 #include <QFont>
 #include <QString>
 #include <QMessageBox>

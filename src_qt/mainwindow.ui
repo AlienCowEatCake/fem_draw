@@ -83,7 +83,7 @@
      </rect>
     </property>
     <property name="toolTip">
-     <string>Number of isolines (linear)</string>
+     <string>Number of isolines</string>
     </property>
    </widget>
    <widget class="QCheckBox" name="checkBox_4">

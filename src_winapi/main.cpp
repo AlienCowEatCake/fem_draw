@@ -14,28 +14,36 @@
 #if !defined WC_EDIT
 #define WC_EDIT     TEXT("Edit")
 #endif
+#if !defined WC_COMBOBOX
+#define WC_COMBOBOX TEXT("Combobox")
+#endif
 
-#define CNTRL_DRAW_MESH         10001
-#define CNTRL_DRAW_ISOL         10002
-#define CNTRL_DRAW_COLOR        10003
-#define CNTRL_ISOL_NUM_TEXT     10004
-#define CNTRL_ISOL_NUM_UPDWN    10005
-#define CNTRL_ISOL_NUM_LBL      10006
-#define CNTRL_SMOOTH_TEXT       10007
-#define CNTRL_SMOOTH_UPDWN      10008
-#define CNTRL_SMOOTH_LBL        10009
-#define CNTRL_GDI_WIDGET        10010
+#define CTRL_PAINT_WIDGET                   10000
+#define CTRL_CHECKBOX_COLOR                 10001
+#define CTRL_COMBOBOX_COLOR                 10002
+#define CTRL_CHECKBOX_ISOLINES              10003
+#define CTRL_SPINBOX_ISOLINES_TEXT          10004
+#define CTRL_SPINBOX_ISOLINES_UPDOWN        10005
+#define CTRL_CHECKBOX_VECTORS               10006
+#define CTRL_SPINBOX_VECTORS_TEXT           10007
+#define CTRL_SPINBOX_VECTORS_UPDOWN         10008
+#define CTRL_LABEL_VECTORS_U                10009
+#define CTRL_COMBOBOX_VECTORS_U             10010
+#define CTRL_LABEL_VECTORS_V                10011
+#define CTRL_COMBOBOX_VECTORS_V             10012
+#define CTRL_MENU_OPEN                      10013
+#define CTRL_MENU_SAVE                      10014
+#define CTRL_MENU_EXIT                      10015
+#define CTRL_MENU_INCREASE_INTERPOLATION    10016
+#define CTRL_MENU_DECREASE_INTERPOLATION    10017
+#define CTRL_MENU_ABOUT                     10018
 
 HWND hwnd;
 paintwidget * pdraw;
-int min_height;
-int min_width;
-int isol_min;
-int isol_max;
-int isol_curr;
-int smooth_min;
-int smooth_max;
-int smooth_curr;
+int min_height, min_width;
+int isol_min = 0,   isol_max = 100,   isol_curr = 10;
+int smooth_min = 0, smooth_max = 7,   smooth_curr = 0;
+int vect_min = 1,   vect_max = 10000, vect_curr = 1;
 
 void widget_redraw()
 {
@@ -57,6 +65,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
     {
     case WM_COMMAND:    // Нажата кнопка
     {
+        /*
         switch(LOWORD(wParam))
         {
         case CNTRL_DRAW_MESH:   // Переключалка рисования сетки
@@ -145,7 +154,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-        }
+        }*/
         break;
     }
     case WM_SETTEXT:
@@ -156,7 +165,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         RECT r;
         GetClientRect(hwnd, &r);
         SetWindowPos(
-                    GetDlgItem(hwnd, CNTRL_GDI_WIDGET), NULL,
+                    GetDlgItem(hwnd, CTRL_PAINT_WIDGET), NULL,
                     0, 0, r.right - r.left, r.bottom - r.top - 25,
                     SWP_NOMOVE | SWP_NOOWNERZORDER
                     );
@@ -182,19 +191,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+// Функция, устанавливающая подсказки
+void set_tooltip(HINSTANCE hInstance, HWND hwnd, int item, LPTSTR text)
+{
+    // Кому тут надо подсказку?
+    HWND hButton = GetDlgItem(hwnd, item);
+    // Создать подсказку
+    HWND hTooltip = CreateWindow(
+                TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+                CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                hButton, (HMENU)NULL, hInstance, NULL
+                );
+    // Прикрепить подсказку
+    TOOLINFO ti;
+    memset(& ti, 0, sizeof(TOOLINFO));
+    ti.cbSize = sizeof(TOOLINFO);
+    ti.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+    ti.uId = (UINT)hButton;
+    ti.lpszText = text;
+    ti.hinst = hInstance;
+    SendMessage(hTooltip, TTM_ADDTOOL, 0, (LPARAM)(LPTOOLINFO) & ti);
+}
+
 int main()
 {
     // Рисовалка
     paintwidget draw;
-    pdraw = &draw;
-
-    // Переменные
-    isol_min = 0;
-    isol_max = 100;
-    isol_curr = 10;
-    smooth_min = 0;
-    smooth_max = 7;
-    smooth_curr = 0;
+    pdraw = & draw;
 
     // Разное
     HINSTANCE hInstance = GetModuleHandle(0);
@@ -205,18 +228,19 @@ int main()
     wnd.hInstance = hInstance;
     wnd.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     wnd.lpszClassName = TEXT("mainwindow");
+    wnd.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
     RegisterClass(&wnd);
 
     // Установка минимальных размеров окна
-    min_height = 400 + 2 * GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION);
-    min_width = 600 + 2 * GetSystemMetrics(SM_CXFRAME);
+    min_height = 500 + 2 * GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION);
+    min_width = 640 + 2 * GetSystemMetrics(SM_CXFRAME);
 
     // Начинаем создавать главное окно
-    int window_width = min_width;
-    int window_height = min_height;
+    int window_width = 640 + 2 * GetSystemMetrics(SM_CXFRAME);
+    int window_height = 570 + 2 * GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION);
     HDC hDCScreen = GetDC(NULL);
     hwnd = CreateWindow(
-                TEXT("mainwindow"), TEXT("FEMA lab04"),
+                TEXT("mainwindow"), TEXT("FEM Draw"),
                 WS_OVERLAPPEDWINDOW,
                 (GetDeviceCaps(hDCScreen, HORZRES) - window_width) / 2,
                 (GetDeviceCaps(hDCScreen, VERTRES) - window_height) / 2,
@@ -224,29 +248,49 @@ int main()
                 NULL, NULL, hInstance, NULL
                 );
 
-    // Замутим чекбокс "Draw mesh"
-    CreateWindow(
-                WC_BUTTON, TEXT("Draw mesh"),
-                WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
-                10, 0, 100, 25,
-                hwnd, (HMENU)CNTRL_DRAW_MESH, hInstance, NULL
-                );
+    // Замутим меню
+    HMENU hMenu = CreateMenu();
+    HMENU hFileMenu = CreatePopupMenu();
+    AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hFileMenu, TEXT("File"));
+    AppendMenu(hFileMenu, MF_STRING, CTRL_MENU_OPEN, TEXT("Open Tecplot File\tCtrl+O"));
+    AppendMenu(hFileMenu, MF_STRING, CTRL_MENU_SAVE, TEXT("Save Image\tCtrl+S"));
+    AppendMenu(hFileMenu, MF_SEPARATOR, NULL, TEXT(""));
+    AppendMenu(hFileMenu, MF_STRING, CTRL_MENU_EXIT, TEXT("Exit\tCtrl+Q"));
+    HMENU hInterpMenu = CreatePopupMenu();
+    AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hInterpMenu, TEXT("Interpolation"));
+    AppendMenu(hInterpMenu, MF_STRING, CTRL_MENU_INCREASE_INTERPOLATION, TEXT("Increase Interpolation\t="));
+    AppendMenu(hInterpMenu, MF_STRING, CTRL_MENU_DECREASE_INTERPOLATION, TEXT("Decrease Interpolation\t-"));
+    HMENU hAboutMenu = CreatePopupMenu();
+    AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hAboutMenu, TEXT("About"));
+    AppendMenu(hAboutMenu, MF_STRING, CTRL_MENU_ABOUT, TEXT("About FEM Draw"));
+    SetMenu(hwnd, hMenu);
 
-    // Замутим чекбокс "Draw isolines"
+    // Замутим чекбокс "Color"
     CreateWindow(
-                WC_BUTTON, TEXT("Draw isolines"),
+                WC_BUTTON, TEXT("Color"),
                 WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
-                115, 0, 115, 25,
-                hwnd, (HMENU)CNTRL_DRAW_ISOL, hInstance, NULL
+                10, 0, 65, 25,
+                hwnd, (HMENU)CTRL_CHECKBOX_COLOR, hInstance, NULL
                 );
+    set_tooltip(hInstance, hwnd, CTRL_CHECKBOX_COLOR, TEXT("Draw color image"));
 
-    // Замутим чекбокс "Draw color"
+    // Комбобокс о выборе переменной по которой цвет
     CreateWindow(
-                WC_BUTTON, TEXT("Draw color"),
-                WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
-                235, 0, 100, 25,
-                hwnd, (HMENU)CNTRL_DRAW_COLOR, hInstance, NULL
+                WC_COMBOBOX, NULL,
+                WS_CHILD | WS_VISIBLE | CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP,
+                75, 0, 70, 150,
+                hwnd, (HMENU)CTRL_COMBOBOX_COLOR, hInstance, NULL
                 );
+    set_tooltip(hInstance, hwnd, CTRL_COMBOBOX_COLOR, TEXT("Data component for colors and isolines"));
+
+    // Замутим чекбокс "Isolines"
+    CreateWindow(
+                WC_BUTTON, TEXT("Isolines"),
+                WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
+                160, 0, 80, 25,
+                hwnd, (HMENU)CTRL_CHECKBOX_ISOLINES, hInstance, NULL
+                );
+    set_tooltip(hInstance, hwnd, CTRL_CHECKBOX_ISOLINES, TEXT("Draw isolines"));
 
     // Замутим спинбокс о числе изолиний
     CreateWindowEx(
@@ -254,71 +298,110 @@ int main()
                 WC_EDIT, NULL,
                 WS_CHILD | WS_VISIBLE | ES_LEFT | WS_BORDER | ES_AUTOHSCROLL |
                 ES_NUMBER | WS_TABSTOP,
-                340, 0, 50, 25,
-                hwnd, (HMENU)CNTRL_ISOL_NUM_TEXT, hInstance, NULL
+                240, 0, 55, 25,
+                hwnd, (HMENU)CTRL_SPINBOX_ISOLINES_TEXT, hInstance, NULL
                 );
     CreateUpDownControl(
                 WS_CHILD | WS_BORDER | WS_VISIBLE | UDS_ARROWKEYS |
                 UDS_ALIGNRIGHT | UDS_SETBUDDYINT,
                 0, 0, 0, 0,
-                hwnd, CNTRL_ISOL_NUM_UPDWN, hInstance, GetDlgItem(hwnd, CNTRL_ISOL_NUM_TEXT),
+                hwnd, CTRL_SPINBOX_ISOLINES_UPDOWN, hInstance, GetDlgItem(hwnd, CTRL_SPINBOX_ISOLINES_TEXT),
                 isol_max, isol_min, isol_curr
                 );
-    CreateWindow(
-                WC_STATIC, TEXT("Isolines"),
-                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
-                400, 0, 70, 25,
-                hwnd, (HMENU)CNTRL_ISOL_NUM_LBL, hInstance, NULL
-                );
+    set_tooltip(hInstance, hwnd, CTRL_SPINBOX_ISOLINES_TEXT, TEXT("Number of isolines"));
+    set_tooltip(hInstance, hwnd, CTRL_SPINBOX_ISOLINES_UPDOWN, TEXT("Number of isolines"));
 
-    // Замутим спинбокс о сглаживании
+    // Замутим чекбокс "Vectors"
+    CreateWindow(
+                WC_BUTTON, TEXT("Vectors"),
+                WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
+                310, 0, 80, 25,
+                hwnd, (HMENU)CTRL_CHECKBOX_VECTORS, hInstance, NULL
+                );
+    set_tooltip(hInstance, hwnd, CTRL_CHECKBOX_VECTORS, TEXT("Draw vectors"));
+
+    // Замутим спинбокс о числе пропускаемых векторов
     CreateWindowEx(
                 WS_EX_CLIENTEDGE,
                 WC_EDIT, NULL,
                 WS_CHILD | WS_VISIBLE | ES_LEFT | WS_BORDER | ES_AUTOHSCROLL |
                 ES_NUMBER | WS_TABSTOP,
-                470, 0, 50, 25,
-                hwnd, (HMENU)CNTRL_SMOOTH_TEXT, hInstance, NULL
+                390, 0, 55, 25,
+                hwnd, (HMENU)CTRL_SPINBOX_VECTORS_TEXT, hInstance, NULL
                 );
     CreateUpDownControl(
                 WS_CHILD | WS_BORDER | WS_VISIBLE | UDS_ARROWKEYS |
                 UDS_ALIGNRIGHT | UDS_SETBUDDYINT,
                 0, 0, 0, 0,
-                hwnd, CNTRL_SMOOTH_UPDWN, hInstance, GetDlgItem(hwnd, CNTRL_SMOOTH_TEXT),
-                smooth_max, smooth_min, smooth_curr
+                hwnd, CTRL_SPINBOX_VECTORS_UPDOWN, hInstance, GetDlgItem(hwnd, CTRL_SPINBOX_VECTORS_TEXT),
+                vect_max, vect_min, vect_curr
                 );
+    set_tooltip(hInstance, hwnd, CTRL_SPINBOX_VECTORS_TEXT, TEXT("Number of skipped values"));
+    set_tooltip(hInstance, hwnd, CTRL_SPINBOX_VECTORS_UPDOWN, TEXT("Number of skipped values"));
+
+    // Надпись "U:"
     CreateWindow(
-                WC_STATIC, TEXT("Smooth"),
+                WC_STATIC, TEXT("U:"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
-                530, 0, 70, 25,
-                hwnd, (HMENU)CNTRL_SMOOTH_LBL, hInstance, NULL
+                455, 0, 25, 25,
+                hwnd, (HMENU)CTRL_LABEL_VECTORS_U, hInstance, NULL
                 );
+
+    // Комбобокс о выборе первой переменной по которой строятся вектора
+    CreateWindow(
+                WC_COMBOBOX, NULL,
+                WS_CHILD | WS_VISIBLE | CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP,
+                470, 0, 70, 150,
+                hwnd, (HMENU)CTRL_COMBOBOX_VECTORS_U, hInstance, NULL
+                );
+    set_tooltip(hInstance, hwnd, CTRL_COMBOBOX_VECTORS_U, TEXT("Data component for first vector axis"));
+
+    // Надпись "V:"
+    CreateWindow(
+                WC_STATIC, TEXT("V:"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                550, 0, 25, 25,
+                hwnd, (HMENU)CTRL_LABEL_VECTORS_V, hInstance, NULL
+                );
+
+    // Комбобокс о выборе второй переменной по которой строятся вектора
+    CreateWindow(
+                WC_COMBOBOX, NULL,
+                WS_CHILD | WS_VISIBLE | CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP,
+                565, 0, 70, 150,
+                hwnd, (HMENU)CTRL_COMBOBOX_VECTORS_V, hInstance, NULL
+                );
+    set_tooltip(hInstance, hwnd, CTRL_COMBOBOX_VECTORS_V, TEXT("Data component for second vector axis"));
 
     // Замутим label, в котором будем рисовать
     CreateWindow(
                 WC_STATIC, NULL,
                 WS_CHILD | WS_VISIBLE,
                 0, 25, 600, 375,
-                hwnd, (HMENU)CNTRL_GDI_WIDGET, hInstance, NULL
+                hwnd, (HMENU)CTRL_PAINT_WIDGET, hInstance, NULL
                 );
 
     // Шрифт
     HFONT font_std = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-    SendDlgItemMessage(hwnd, CNTRL_DRAW_MESH, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CNTRL_DRAW_ISOL, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CNTRL_DRAW_COLOR, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CNTRL_ISOL_NUM_TEXT, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CNTRL_ISOL_NUM_UPDWN, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CNTRL_ISOL_NUM_LBL, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CNTRL_SMOOTH_TEXT, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CNTRL_SMOOTH_UPDWN, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CNTRL_SMOOTH_LBL, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_PAINT_WIDGET, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_CHECKBOX_COLOR, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_COMBOBOX_COLOR, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_CHECKBOX_ISOLINES, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_SPINBOX_ISOLINES_TEXT, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_SPINBOX_ISOLINES_UPDOWN, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_CHECKBOX_VECTORS, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_SPINBOX_VECTORS_TEXT, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_SPINBOX_VECTORS_UPDOWN, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_LABEL_VECTORS_U, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_COMBOBOX_VECTORS_U, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_LABEL_VECTORS_V, WM_SETFONT, (WPARAM)font_std, TRUE);
+    SendDlgItemMessage(hwnd, CTRL_COMBOBOX_VECTORS_V, WM_SETFONT, (WPARAM)font_std, TRUE);
 
     // Зададим умолчательные параметры
-    SendMessage(GetDlgItem(hwnd, CNTRL_DRAW_MESH), BM_SETCHECK, BST_CHECKED, 0);
-    SendMessage(GetDlgItem(hwnd, CNTRL_DRAW_ISOL), BM_SETCHECK, BST_CHECKED, 0);
-    SendMessage(GetDlgItem(hwnd, CNTRL_DRAW_COLOR), BM_SETCHECK, BST_CHECKED, 0);
-//    draw.draw_mesh = true;
+    SendMessage(GetDlgItem(hwnd, CTRL_CHECKBOX_COLOR), BM_SETCHECK, BST_CHECKED, 0);
+    SendMessage(GetDlgItem(hwnd, CTRL_CHECKBOX_ISOLINES), BM_SETCHECK, BST_CHECKED, 0);
+    SendMessage(GetDlgItem(hwnd, CTRL_CHECKBOX_VECTORS), BM_SETCHECK, BST_UNCHECKED, 0);
+/*
     draw.draw_isolines = true;
     draw.draw_color = true;
     draw.set_isolines_num((size_t)isol_curr);
@@ -332,7 +415,7 @@ int main()
     draw.ind_vec_1 = 2;
     draw.ind_vec_2 = 3;
     draw.tec_read("../fem_draw/examples/plot.dat");
-
+*/
     // Покажем окно и запустим обработчик сообщений
     ShowWindow(hwnd, SW_SHOWNORMAL);
     UpdateWindow(hwnd);
