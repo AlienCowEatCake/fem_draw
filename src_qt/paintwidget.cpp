@@ -167,19 +167,19 @@ void paintwidget::tec_read(const string & filename)
     isolines.resize(variables.size());
 
     // Ищем минимальные и максимальные значения координат
-    max_x = max_y = - numeric_limits<double>::max();
-    min_x = min_y = numeric_limits<double>::max();
+    max_x = max_y = - numeric_limits<float>::max();
+    min_x = min_y = numeric_limits<float>::max();
     for(size_t k = 0; k < variables.size(); k++)
     {
-        min_u[k] = numeric_limits<double>::max();
-        max_u[k] = - numeric_limits<double>::max();
+        min_u[k] = numeric_limits<float>::max();
+        max_u[k] = - numeric_limits<float>::max();
     }
 
     // Читаем сами данные
     tec_data.resize(IJK[0] * IJK[1] * IJK[2]);
     for(size_t i = 0; i < tec_data.size(); i++)
     {
-        double coords[3];
+        float coords[3];
         for(size_t j = 0; j < points_coord; j++)
             ifs >> coords[j];
         tec_data[i].coord.x = coords[ind[0]];
@@ -210,10 +210,10 @@ void paintwidget::tec_read(const string & filename)
     // Небольшие корректировки на всякий случай
     size_x = max_x - min_x;
     size_y = max_y - min_y;
-    min_x -= size_x * 0.01;
-    max_x += size_x * 0.01;
-    min_y -= size_y * 0.01;
-    max_y += size_y * 0.01;
+    min_x -= size_x * 0.01f;
+    max_x += size_x * 0.01f;
+    min_y -= size_y * 0.01f;
+    max_y += size_y * 0.01f;
 
     // Поправляем значения мин / макс чтобы влазило в сетку
     adjustAxis(min_x, max_x, num_ticks_x);
@@ -225,15 +225,15 @@ void paintwidget::tec_read(const string & filename)
     for(size_t k = 0; k < variables.size(); k++)
     {
 #if defined USE_PURPLE
-        step_u_big[k] = (max_u[k] - min_u[k]) / 4.0;
+        step_u_big[k] = (max_u[k] - min_u[k]) / 4.0f;
 #else
-        step_u_big[k] = (max_u[k] - min_u[k]) / 3.0;
+        step_u_big[k] = (max_u[k] - min_u[k]) / 3.0f;
 #endif
-        step_u_small[k] = step_u_big[k] / 256.0;
+        step_u_small[k] = step_u_big[k] / 256.0f;
     }
 
     // Устанавливаем рекомендуемое значение для spinBox_2
-    vect_value = (int)(sqrt((double)(IJK[0] * IJK[1] * IJK[2])) / 20);
+    vect_value = (int)(std::sqrt((float)(IJK[0] * IJK[1] * IJK[2])) / 20.0f);
 
     // Как-то так
     is_loaded = true;
@@ -250,8 +250,8 @@ void paintwidget::set_div_num(size_t num)
     vector<triangle> tmp1;
     vector<triangle> tmp2;
     // Посчитаем в локальных координатах
-    tmp1.push_back(triangle(point(0.0, 0.0), point(1.0, 0.0), point(0.0, 1.0)));
-    tmp1.push_back(triangle(point(1.0, 0.0), point(1.0, 1.0), point(0.0, 1.0)));
+    tmp1.push_back(triangle(point(0.0f, 0.0f), point(1.0f, 0.0f), point(0.0f, 1.0f)));
+    tmp1.push_back(triangle(point(1.0f, 0.0f), point(1.0f, 1.0f), point(0.0f, 1.0f)));
     for(size_t i = 0; i < num; i++)
     {
         tmp2.reserve(tmp1.size() * 4);
@@ -259,9 +259,9 @@ void paintwidget::set_div_num(size_t num)
         {
             point middles[3] =
             {
-                point((tmp1[j].nodes[0].x + tmp1[j].nodes[1].x) * 0.5, (tmp1[j].nodes[0].y + tmp1[j].nodes[1].y) * 0.5),
-                point((tmp1[j].nodes[0].x + tmp1[j].nodes[2].x) * 0.5, (tmp1[j].nodes[0].y + tmp1[j].nodes[2].y) * 0.5),
-                point((tmp1[j].nodes[1].x + tmp1[j].nodes[2].x) * 0.5, (tmp1[j].nodes[1].y + tmp1[j].nodes[2].y) * 0.5)
+                point((tmp1[j].nodes[0].x + tmp1[j].nodes[1].x) * 0.5f, (tmp1[j].nodes[0].y + tmp1[j].nodes[1].y) * 0.5f),
+                point((tmp1[j].nodes[0].x + tmp1[j].nodes[2].x) * 0.5f, (tmp1[j].nodes[0].y + tmp1[j].nodes[2].y) * 0.5f),
+                point((tmp1[j].nodes[1].x + tmp1[j].nodes[2].x) * 0.5f, (tmp1[j].nodes[1].y + tmp1[j].nodes[2].y) * 0.5f)
             };
             tmp2.push_back(triangle(tmp1[j].nodes[0], middles[0], middles[1]));
             tmp2.push_back(triangle(middles[0], tmp1[j].nodes[1], middles[2]));
@@ -279,12 +279,12 @@ void paintwidget::set_div_num(size_t num)
     {
         for(size_t j = 0; j < ny - 1; j++)
         {
-            double x0 = tec_data[i * nx + j].coord.x;
-            double y0 = tec_data[i * nx + j].coord.y;
-            double x1 = tec_data[(i + 1) * nx + j + 1].coord.x;
-            double y1 = tec_data[(i + 1) * nx + j + 1].coord.y;
-            double hx = x1 - x0;
-            double hy = y1 - y0;
+            float x0 = tec_data[i * nx + j].coord.x;
+            float y0 = tec_data[i * nx + j].coord.y;
+            float x1 = tec_data[(i + 1) * nx + j + 1].coord.x;
+            float y1 = tec_data[(i + 1) * nx + j + 1].coord.y;
+            float hx = x1 - x0;
+            float hy = y1 - y0;
 
             for(size_t tn = 0; tn < tmp1.size(); tn++)
             {
@@ -304,9 +304,9 @@ void paintwidget::set_div_num(size_t num)
                     // Строим билинейную интерполяцию
                     for(size_t m = 0; m < variables.size(); m++)
                     {
-                        double r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j].value[m] +
+                        float r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j].value[m] +
                                     (tmp_tr.nodes[k].x - x0) / hx * tec_data[i * nx + j + 1].value[m];
-                        double r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[(i + 1) * nx + j].value[m] +
+                        float r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[(i + 1) * nx + j].value[m] +
                                     (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
                         tmp_tr.solution[k][m] = (y1 - tmp_tr.nodes[k].y) / hy * r1 +
                                              (tmp_tr.nodes[k].y - y0) / hy * r2;
@@ -314,22 +314,22 @@ void paintwidget::set_div_num(size_t num)
                 }
 
                 // Барицентр треугольника
-                double cx = 0.0, cy = 0.0;
+                float cx = 0.0f, cy = 0.0f;
                 for(size_t k = 0; k < 3; k++)
                 {
                     cx += tmp_tr.nodes[k].x;
                     cy += tmp_tr.nodes[k].y;
                 }
-                point barycenter(cx / 3.0, cy / 3.0);
+                point barycenter(cx / 3.0f, cy / 3.0f);
 
                 // Решение в барицентре
-                vector<double> center(variables.size());
+                vector<float> center(variables.size());
                 // Строим билинейную интерполяцию
                 for(size_t m = 0; m < variables.size(); m++)
                 {
-                    double r1 = (x1 - barycenter.x) / hx * tec_data[i * nx + j].value[m] +
+                    float r1 = (x1 - barycenter.x) / hx * tec_data[i * nx + j].value[m] +
                                 (barycenter.x - x0) / hx * tec_data[i * nx + j + 1].value[m];
-                    double r2 = (x1 - barycenter.x) / hx * tec_data[(i + 1) * nx + j].value[m] +
+                    float r2 = (x1 - barycenter.x) / hx * tec_data[(i + 1) * nx + j].value[m] +
                                 (barycenter.x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
                     center[m] = (y1 - barycenter.y) / hy * r1 +
                                          (barycenter.y - y0) / hy * r2;
@@ -340,15 +340,15 @@ void paintwidget::set_div_num(size_t num)
 #if defined USE_PURPLE
                     // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
                     unsigned short r_color = 0, g_color = 0, b_color = 0;
-                    if(center[v] > min_u[v] + step_u_big[v] * 3.0)
+                    if(center[v] > min_u[v] + step_u_big[v] * 3.0f)
                     {
                         r_color = 255;
-                        g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 3.0)) / step_u_small[v]);
+                        g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 3.0f)) / step_u_small[v]);
                         b_color = 0;
                     }
-                    else if(center[v] > min_u[v] + step_u_big[v] * 2.0)
+                    else if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
                     {
-                        r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0)) / step_u_small[v]);
+                        r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
                         g_color = 255;
                         b_color = 0;
                     }
@@ -361,7 +361,7 @@ void paintwidget::set_div_num(size_t num)
                     }
                     else
                     {
-                        unsigned short tmp = 76 - (unsigned short)((center[v] - min_u[v]) / (step_u_small[v] * (255.0 / 76.0)));
+                        unsigned short tmp = 76 - (unsigned short)((center[v] - min_u[v]) / (step_u_small[v] * (255.0f / 76.0f)));
                         r_color = tmp;
                         g_color = 0;
                         b_color = 255 - tmp;
@@ -369,10 +369,10 @@ void paintwidget::set_div_num(size_t num)
 #else
                     // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
                     unsigned short r_color = 0, g_color = 0, b_color = 0;
-                    if(center[v] > min_u[v] + step_u_big[v] * 2.0)
+                    if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
                     {
                         r_color = 255;
-                        g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0)) / step_u_small[v]);
+                        g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
                         b_color = 0;
                     }
                     else if(center[v] > min_u[v] + step_u_big[v])
@@ -432,53 +432,53 @@ void paintwidget::set_isolines_num(size_t isolines_num)
     for(size_t j = 0; j < variables.size(); j++)
     {
         isolines[j].clear();
-        double isolines_step = (max_u[j] - min_u[j]) / (double)(isolines_num + 1);
+        float isolines_step = (max_u[j] - min_u[j]) / (float)(isolines_num + 1);
         for(size_t i = 0; i < isolines_num; i++)
-            isolines[j].insert(min_u[j] + isolines_step * (double)(i + 1));
+            isolines[j].insert(min_u[j] + isolines_step * (float)(i + 1));
     }
 }
 
 // Подгонка осей под реальность и вычисление шагов координатной сетки
-void paintwidget::adjustAxis(double & min, double & max, size_t & numTicks) const
+void paintwidget::adjustAxis(float & min, float & max, size_t & numTicks) const
 {
-    static const double axis_epsilon = 1.0 / 10000.0;
+    static const float axis_epsilon = 1.0f / 10000.0f;
     if(max - min < axis_epsilon)
     {
-        min -= 2.0 * axis_epsilon;
-        max += 2.0 * axis_epsilon;
+        min -= 2.0f * axis_epsilon;
+        max += 2.0f * axis_epsilon;
     }
 
     static const size_t MinTicks = 10;
-    double grossStep = (max - min) / MinTicks;
-    double step = pow(10, floor(log10(grossStep)));
+    float grossStep = (max - min) / MinTicks;
+    float step = std::pow(10.0f, std::floor(std::log10(grossStep)));
 
-    if (5 * step < grossStep)
-        step *= 5;
-    else if (2 * step < grossStep)
-        step *= 2;
+    if (5.0f * step < grossStep)
+        step *= 5.0f;
+    else if (2.0f * step < grossStep)
+        step *= 2.0f;
 
-    numTicks = (size_t)(ceil(max / step) - floor(min / step));
-    min = floor(min / step) * step;
-    max = ceil(max / step) * step;
+    numTicks = (size_t)(std::ceil(max / step) - std::floor(min / step));
+    min = std::floor(min / step) * step;
+    max = std::ceil(max / step) * step;
 }
 
 // Геометрия окна
-QPoint paintwidget::to_window(double x, double y) const
+QPoint paintwidget::to_window(float x, float y) const
 {
     // В OpenGL это был бы glOrtho
-    const double gl_x0 = -0.06;
-    const double gl_y0 = -0.06;
+    const float gl_x0 = -0.06f;
+    const float gl_y0 = -0.06f;
 #if defined USE_LEGEND
-    const double gl_x1 = 1.125;
+    const float gl_x1 = 1.125f;
 #else
-    const double gl_x1 = 1.015;
+    const float gl_x1 = 1.015f;
 #endif
-    const double gl_y1 = 1.02;
-    const double gl_hx = gl_x1 - gl_x0;
-    const double gl_hy = gl_y1 - gl_y0;
+    const float gl_y1 = 1.02f;
+    const float gl_hx = gl_x1 - gl_x0;
+    const float gl_hy = gl_y1 - gl_y0;
     // Перевод
-    int xl = (int)((x - gl_x0) / gl_hx * (double)width());
-    int yl = height() - (int)((y - gl_y0) / gl_hy * (double)height());
+    int xl = (int)((x - gl_x0) / gl_hx * (float)width());
+    int yl = height() - (int)((y - gl_y0) / gl_hy * (float)height());
     return QPoint(xl, yl);
 }
 
@@ -507,19 +507,19 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
     painter.setPen(QPen(Qt::lightGray));
     for(size_t i = 0; i <= num_ticks_x; i++)
     {
-        double x = (double)i / (double)num_ticks_x;
-        painter.drawLine(to_window(x, -0.01), to_window(x, 1.0));
+        float x = (float)i / (float)num_ticks_x;
+        painter.drawLine(to_window(x, -0.01f), to_window(x, 1.0f));
     }
     for(size_t i = 0; i <= num_ticks_y; i++)
     {
-        double y = (double)i / (double)num_ticks_y;
-        painter.drawLine(to_window(-0.01, y), to_window(1.0, y));
+        float y = (float)i / (float)num_ticks_y;
+        painter.drawLine(to_window(-0.01f, y), to_window(1.0f, y));
     }
 
     // Координатные оси
-    painter.setPen(QPen(Qt::black, 2));
-    painter.drawLine(to_window(0.0, -0.005), to_window(0.0, 1.005));
-    painter.drawLine(to_window(-0.005, 0.0), to_window(1.005, 0.0));
+    painter.setPen(QPen(Qt::black, 2.0f));
+    painter.drawLine(to_window(0.0f, -0.005f), to_window(0.0f, 1.005f));
+    painter.drawLine(to_window(-0.005f, 0.0f), to_window(1.005f, 0.0f));
 
     // Шрифты
 #if defined _WIN32
@@ -533,25 +533,25 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
 
     // Подписи осей
     painter.setFont(fnt_serif);
-    painter.setPen(QPen(Qt::black, 1));
-    painter.drawText(to_window(0.99, -0.04), trUtf8(label_x.c_str()));
-    painter.drawText(to_window(-0.05, 0.99), trUtf8(label_y.c_str()));
+    painter.setPen(QPen(Qt::black, 1.0f));
+    painter.drawText(to_window(0.99f, -0.04f), trUtf8(label_x.c_str()));
+    painter.drawText(to_window(-0.05f, 0.99f), trUtf8(label_y.c_str()));
 
     // Отрисовка шкалы
     painter.setFont(fnt_mono);
     for(size_t i = 0; i < num_ticks_x; i++)
     {
-        double x = (double)i / (double)num_ticks_x;
-        double x_real = (double)(floor((x * size_x + min_x) * 10000.0 + 0.5)) / 10000.0;
+        float x = (float)i / (float)num_ticks_x;
+        float x_real = (float)(std::floor((x * size_x + min_x) * 10000.0f + 0.5f)) / 10000.0f;
         QString st = QString::number(x_real);
-        painter.drawText(to_window(x - 0.01, -0.04), st);
+        painter.drawText(to_window(x - 0.01f, -0.04f), st);
     }
     for(size_t i = 0; i < num_ticks_y; i++)
     {
-        double y = (double)i / (double)num_ticks_y;
-        double y_real = (double)(floor((y * size_y + min_y) * 10000.0 + 0.5)) / 10000.0;
+        float y = (float)i / (float)num_ticks_y;
+        float y_real = (float)(std::floor((y * size_y + min_y) * 10000.0f + 0.5f)) / 10000.0f;
         QString st = QString::number(y_real);
-        painter.drawText(to_window(-0.05, y - 0.01), st);
+        painter.drawText(to_window(-0.05f, y - 0.01f), st);
     }
 
     // Раскрашивать будем если запрошено сие
@@ -572,7 +572,7 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
         }
     }
 
-    painter.setPen(QPen(Qt::black, 1));
+    painter.setPen(QPen(Qt::black, 1.0f));
     // Изолинии рисуем только если оно нам надо
     if(draw_isolines)
     {
@@ -581,7 +581,7 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
             // Теперь рисуем изолинии
             // Будем искать наименьшее значение, большее или равное решению
             // Если значения на разных концах ребра будут разными, значит изолиния проходит через это ребро
-            set<double>::const_iterator segment_isol[3];
+            set<float>::const_iterator segment_isol[3];
             for(size_t k = 0; k < 3; k++)
                 segment_isol[k] = isolines[draw_index].lower_bound(triangles[i].solution[k][draw_index]);
 
@@ -590,17 +590,17 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
             size_t counter = 0;
             if(segment_isol[0] != segment_isol[1])
             {
-                isol_points[counter] = to_window(((triangles[i].nodes[1].x + triangles[i].nodes[0].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[1].y + triangles[i].nodes[0].y) * 0.5 - min_y) / size_y);
+                isol_points[counter] = to_window(((triangles[i].nodes[1].x + triangles[i].nodes[0].x) * 0.5f - min_x) / size_x, ((triangles[i].nodes[1].y + triangles[i].nodes[0].y) * 0.5f - min_y) / size_y);
                 counter++;
             }
             if(segment_isol[0] != segment_isol[2])
             {
-                isol_points[counter] = to_window(((triangles[i].nodes[2].x + triangles[i].nodes[0].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[0].y) * 0.5 - min_y) / size_y);
+                isol_points[counter] = to_window(((triangles[i].nodes[2].x + triangles[i].nodes[0].x) * 0.5f - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[0].y) * 0.5f - min_y) / size_y);
                 counter++;
             }
             if(segment_isol[1] != segment_isol[2])
             {
-                isol_points[counter] = to_window(((triangles[i].nodes[2].x + triangles[i].nodes[1].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[1].y) * 0.5 - min_y) / size_y);
+                isol_points[counter] = to_window(((triangles[i].nodes[2].x + triangles[i].nodes[1].x) * 0.5f - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[1].y) * 0.5f - min_y) / size_y);
                 counter++;
             }
 
@@ -676,21 +676,21 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
         QColor( 255,   0,   0 )
     };
 #endif
-    double legend_values[14] =
+    float legend_values[14] =
     {
         min_u[draw_index],
-        61.0 * (step_u_small[draw_index] * (255.0 / 76.0)) + min_u[draw_index],
-        50.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        115.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        180.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        245.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        55.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0,
-        120.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0,
-        185.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0,
-        250.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0,
-        60.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0,
-        125.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0,
-        190.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0,
+        61.0f * (step_u_small[draw_index] * (255.0f / 76.0f)) + min_u[draw_index],
+        50.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
+        115.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
+        180.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
+        245.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
+        55.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
+        120.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
+        185.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
+        250.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
+        60.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f,
+        125.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f,
+        190.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f,
         max_u[draw_index]
     };
 #else
@@ -752,48 +752,48 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
         QColor( 255,   0,   0 )
     };
 #endif
-    double legend_values[14] =
+    float legend_values[14] =
     {
         min_u[draw_index],
-        59.0 * step_u_small[draw_index] + min_u[draw_index],
-        118.0 * step_u_small[draw_index] + min_u[draw_index],
-        177.0 * step_u_small[draw_index] + min_u[draw_index],
-        236.0 * step_u_small[draw_index] + min_u[draw_index],
-        50.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        99.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        157.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        215.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        19.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
-        78.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
-        137.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
-        196.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
+        59.0f * step_u_small[draw_index] + min_u[draw_index],
+        118.0f * step_u_small[draw_index] + min_u[draw_index],
+        177.0f * step_u_small[draw_index] + min_u[draw_index],
+        236.0f * step_u_small[draw_index] + min_u[draw_index],
+        50.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        99.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        157.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        215.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        19.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
+        78.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
+        137.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
+        196.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
         max_u[draw_index]
     };
 #endif
     for(size_t i = 0; i < 14; i++)
     {
-        static const double x0 = 1.0175;
-        static const double y0 = 0;
-        static const double dx = 0.0;
-        static const double dy = 0.07;
-        static const double hx = 0.10;
-        static const double hy = 0.073;
+        static const float x0 = 1.0175f;
+        static const float y0 = 0.0f;
+        static const float dx = 0.0f;
+        static const float dy = 0.07f;
+        static const float hx = 0.10f;
+        static const float hy = 0.073f;
         painter.setBrush(QBrush(legend_colors[i]));
         painter.setPen(QPen(legend_colors[i], 1));
         painter.drawRect(QRect(to_window(x0, y0 + dy * i), to_window(x0 + hx, y0 + dy * i + hy)));
         painter.setFont(fnt_mono);
         painter.setPen(QPen(Qt::black));
         QString st = QString::number(legend_values[i], 'E', 2);
-        painter.drawText(to_window(x0 + dx * i + 0.005, y0 + dy * i + hy / 2.0 - 0.01), st);
+        painter.drawText(to_window(x0 + dx * i + 0.005f, y0 + dy * i + hy / 2.0f - 0.01f), st);
     }
 #endif
 
     if(draw_vectors)
     {
-        painter.setPen(QPen(Qt::black, 1.2));
+        painter.setPen(QPen(Qt::black, 1.2f));
         painter.setBrush(QBrush(Qt::black));
 
-        double vec_len = 10, arrow_len = 1.5;
+        float vec_len = 10.0f, arrow_len = 1.5f;
 
         for(size_t j = 0; j < ny; j += skip_vec)
         {
@@ -801,9 +801,9 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
             {
                 tecplot_node * v = & tec_data[j * nx + i];
                 QPoint begin = to_window((v->coord.x - min_x) / size_x, (v->coord.y - min_y) / size_y);
-                double len_x = v->value[ind_vec_1];
-                double len_y = v->value[ind_vec_2];
-                double norm = sqrt(len_x * len_x + len_y * len_y);
+                float len_x = v->value[ind_vec_1];
+                float len_y = v->value[ind_vec_2];
+                float norm = std::sqrt(len_x * len_x + len_y * len_y);
                 len_x /= norm;
                 len_y /= norm;
                 if(len_x == len_x && len_y == len_y)

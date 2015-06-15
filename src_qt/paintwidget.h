@@ -14,8 +14,8 @@ using namespace std;
 class point
 {
 public:
-    double x, y;
-    point(double x = 0.0, double y = 0.0)
+    float x, y;
+    point(float x = 0.0f, float y = 0.0f)
     {
         this->x = x;
         this->y = y;
@@ -27,7 +27,7 @@ class tecplot_node
 {
 public:
     point coord;
-    vector<double> value;
+    vector<float> value;
 };
 
 // Класс треугольник
@@ -36,7 +36,7 @@ class triangle
 public:
     point nodes[3];
     vector<QColor> color;
-    vector<double> solution[3];
+    vector<float> solution[3];
     triangle() {}
     triangle(const point & node1, const point & node2, const point & node3)
     {
@@ -108,28 +108,28 @@ private:
     vector<tecplot_node> tec_data;
 
     // Минимальные и максимальные значения геометрии + размер
-    double min_x, max_x, size_x;
-    double min_y, max_y, size_y;
+    float min_x, max_x, size_x;
+    float min_y, max_y, size_y;
 
     // Количество шагов координатной сетки
     size_t num_ticks_x, num_ticks_y;
     // Подгонка осей под реальность и вычисление шагов координатной сетки
-    void adjustAxis(double & min, double & max, size_t & numTicks) const;
+    void adjustAxis(float & min, float & max, size_t & numTicks) const;
 
     // Минимальное и максимальное значения решения
-    vector<double> min_u, max_u;
+    vector<float> min_u, max_u;
 
     // Вспомогательные шаги по цвету для закраски
-    vector<double> step_u_big, step_u_small;
+    vector<float> step_u_big, step_u_small;
 
     // Значения изолиний
-    vector<set<double> > isolines;
+    vector<set<float> > isolines;
 
     // Треугольники, которые будем рисовать
     vector<triangle> triangles;
 
     // Геометрия окна
-    QPoint to_window(double x, double y) const;
+    QPoint to_window(float x, float y) const;
 
     // Подписи осей
     string label_x, label_y;

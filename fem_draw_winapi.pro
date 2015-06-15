@@ -27,6 +27,7 @@ win32-g++* {
     QMAKE_LIBS += -lgdi32 -lcomctl32 -luser32
 } else {
     QMAKE_LIBS += gdi32.lib comctl32.lib user32.lib
+    QMAKE_LFLAGS_WINDOWS += -ENTRY:"mainCRTStartup"
 }
 
 *g++*|*clang* {

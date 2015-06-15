@@ -1,3 +1,6 @@
+#include <iostream>
+#include <fstream>
+#include <cstdio>
 #include <windows.h>
 #include <commctrl.h>
 #include "paintwidget.h"
@@ -191,7 +194,7 @@ int main()
     isol_curr = 10;
     smooth_min = 0;
     smooth_max = 7;
-    smooth_curr = 3;
+    smooth_curr = 0;
 
     // Разное
     HINSTANCE hInstance = GetModuleHandle(0);
@@ -323,6 +326,12 @@ int main()
     draw.hwnd = GetDlgItem(hwnd, CNTRL_GDI_WIDGET);
     draw.hdc = GetDC(draw.hwnd);
     SetBkColor(draw.hdc, RGB(255, 255, 255));
+
+    draw.draw_vectors = true;
+    draw.skip_vec = 10;
+    draw.ind_vec_1 = 2;
+    draw.ind_vec_2 = 3;
+    draw.tec_read("../fem_draw/examples/plot.dat");
 
     // Покажем окно и запустим обработчик сообщений
     ShowWindow(hwnd, SW_SHOWNORMAL);

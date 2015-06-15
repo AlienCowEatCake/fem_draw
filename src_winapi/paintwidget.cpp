@@ -1,7 +1,11 @@
+#define NOMINMAX
+
 #include "paintwidget.h"
 #include <fstream>
 #include <limits>
 #include <cstring>
+#include <cstdio>
+#include <cmath>
 
 // Использовать ли фиолетовые оттенки цвета
 // Дает большую комбинацию оттенков, но приводит к
@@ -151,19 +155,19 @@ void paintwidget::tec_read(const string & filename)
     isolines.resize(variables.size());
 
     // Ищем минимальные и максимальные значения координат
-    max_x = max_y = - numeric_limits<double>::max();
-    min_x = min_y = numeric_limits<double>::max();
+    max_x = max_y = - numeric_limits<float>::max();
+    min_x = min_y = numeric_limits<float>::max();
     for(size_t k = 0; k < variables.size(); k++)
     {
-        min_u[k] = numeric_limits<double>::max();
-        max_u[k] = - numeric_limits<double>::max();
+        min_u[k] = numeric_limits<float>::max();
+        max_u[k] = - numeric_limits<float>::max();
     }
 
     // Читаем сами данные
     tec_data.resize(IJK[0] * IJK[1] * IJK[2]);
     for(size_t i = 0; i < tec_data.size(); i++)
     {
-        double coords[3];
+        float coords[3];
         for(size_t j = 0; j < points_coord; j++)
             ifs >> coords[j];
         tec_data[i].coord.x = coords[ind[0]];
@@ -194,10 +198,10 @@ void paintwidget::tec_read(const string & filename)
     // Небольшие корректировки на всякий случай
     size_x = max_x - min_x;
     size_y = max_y - min_y;
-    min_x -= size_x * 0.01;
-    max_x += size_x * 0.01;
-    min_y -= size_y * 0.01;
-    max_y += size_y * 0.01;
+    min_x -= size_x * 0.01f;
+    max_x += size_x * 0.01f;
+    min_y -= size_y * 0.01f;
+    max_y += size_y * 0.01f;
 
     // Поправляем значения мин / макс чтобы влазило в сетку
     adjustAxis(min_x, max_x, num_ticks_x);
@@ -209,15 +213,15 @@ void paintwidget::tec_read(const string & filename)
     for(size_t k = 0; k < variables.size(); k++)
     {
 #if defined USE_PURPLE
-        step_u_big[k] = (max_u[k] - min_u[k]) / 4.0;
+        step_u_big[k] = (max_u[k] - min_u[k]) / 4.0f;
 #else
-        step_u_big[k] = (max_u[k] - min_u[k]) / 3.0;
+        step_u_big[k] = (max_u[k] - min_u[k]) / 3.0f;
 #endif
-        step_u_small[k] = step_u_big[k] / 256.0;
+        step_u_small[k] = step_u_big[k] / 256.0f;
     }
 
     // Устанавливаем рекомендуемое значение для spinBox_2
-    vect_value = (int)(sqrt((double)(IJK[0] * IJK[1] * IJK[2])) / 20);
+    vect_value = (int)(std::sqrt((float)(IJK[0] * IJK[1] * IJK[2])) / 20.0f);
 
     // Как-то так
     is_loaded = true;
@@ -234,8 +238,8 @@ void paintwidget::set_div_num(size_t num)
     vector<triangle> tmp1;
     vector<triangle> tmp2;
     // Посчитаем в локальных координатах
-    tmp1.push_back(triangle(point(0.0, 0.0), point(1.0, 0.0), point(0.0, 1.0)));
-    tmp1.push_back(triangle(point(1.0, 0.0), point(1.0, 1.0), point(0.0, 1.0)));
+    tmp1.push_back(triangle(point(0.0f, 0.0f), point(1.0f, 0.0f), point(0.0f, 1.0f)));
+    tmp1.push_back(triangle(point(1.0f, 0.0f), point(1.0f, 1.0f), point(0.0f, 1.0f)));
     for(size_t i = 0; i < num; i++)
     {
         tmp2.reserve(tmp1.size() * 4);
@@ -243,9 +247,9 @@ void paintwidget::set_div_num(size_t num)
         {
             point middles[3] =
             {
-                point((tmp1[j].nodes[0].x + tmp1[j].nodes[1].x) * 0.5, (tmp1[j].nodes[0].y + tmp1[j].nodes[1].y) * 0.5),
-                point((tmp1[j].nodes[0].x + tmp1[j].nodes[2].x) * 0.5, (tmp1[j].nodes[0].y + tmp1[j].nodes[2].y) * 0.5),
-                point((tmp1[j].nodes[1].x + tmp1[j].nodes[2].x) * 0.5, (tmp1[j].nodes[1].y + tmp1[j].nodes[2].y) * 0.5)
+                point((tmp1[j].nodes[0].x + tmp1[j].nodes[1].x) * 0.5f, (tmp1[j].nodes[0].y + tmp1[j].nodes[1].y) * 0.5f),
+                point((tmp1[j].nodes[0].x + tmp1[j].nodes[2].x) * 0.5f, (tmp1[j].nodes[0].y + tmp1[j].nodes[2].y) * 0.5f),
+                point((tmp1[j].nodes[1].x + tmp1[j].nodes[2].x) * 0.5f, (tmp1[j].nodes[1].y + tmp1[j].nodes[2].y) * 0.5f)
             };
             tmp2.push_back(triangle(tmp1[j].nodes[0], middles[0], middles[1]));
             tmp2.push_back(triangle(middles[0], tmp1[j].nodes[1], middles[2]));
@@ -263,12 +267,12 @@ void paintwidget::set_div_num(size_t num)
     {
         for(size_t j = 0; j < ny - 1; j++)
         {
-            double x0 = tec_data[i * nx + j].coord.x;
-            double y0 = tec_data[i * nx + j].coord.y;
-            double x1 = tec_data[(i + 1) * nx + j + 1].coord.x;
-            double y1 = tec_data[(i + 1) * nx + j + 1].coord.y;
-            double hx = x1 - x0;
-            double hy = y1 - y0;
+            float x0 = tec_data[i * nx + j].coord.x;
+            float y0 = tec_data[i * nx + j].coord.y;
+            float x1 = tec_data[(i + 1) * nx + j + 1].coord.x;
+            float y1 = tec_data[(i + 1) * nx + j + 1].coord.y;
+            float hx = x1 - x0;
+            float hy = y1 - y0;
 
             for(size_t tn = 0; tn < tmp1.size(); tn++)
             {
@@ -288,9 +292,9 @@ void paintwidget::set_div_num(size_t num)
                     // Строим билинейную интерполяцию
                     for(size_t m = 0; m < variables.size(); m++)
                     {
-                        double r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j].value[m] +
+                        float r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j].value[m] +
                                     (tmp_tr.nodes[k].x - x0) / hx * tec_data[i * nx + j + 1].value[m];
-                        double r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[(i + 1) * nx + j].value[m] +
+                        float r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[(i + 1) * nx + j].value[m] +
                                     (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
                         tmp_tr.solution[k][m] = (y1 - tmp_tr.nodes[k].y) / hy * r1 +
                                              (tmp_tr.nodes[k].y - y0) / hy * r2;
@@ -298,22 +302,22 @@ void paintwidget::set_div_num(size_t num)
                 }
 
                 // Барицентр треугольника
-                double cx = 0.0, cy = 0.0;
+                float cx = 0.0f, cy = 0.0f;
                 for(size_t k = 0; k < 3; k++)
                 {
                     cx += tmp_tr.nodes[k].x;
                     cy += tmp_tr.nodes[k].y;
                 }
-                point barycenter(cx / 3.0, cy / 3.0);
+                point barycenter(cx / 3.0f, cy / 3.0f);
 
                 // Решение в барицентре
-                vector<double> center(variables.size());
+                vector<float> center(variables.size());
                 // Строим билинейную интерполяцию
                 for(size_t m = 0; m < variables.size(); m++)
                 {
-                    double r1 = (x1 - barycenter.x) / hx * tec_data[i * nx + j].value[m] +
+                    float r1 = (x1 - barycenter.x) / hx * tec_data[i * nx + j].value[m] +
                                 (barycenter.x - x0) / hx * tec_data[i * nx + j + 1].value[m];
-                    double r2 = (x1 - barycenter.x) / hx * tec_data[(i + 1) * nx + j].value[m] +
+                    float r2 = (x1 - barycenter.x) / hx * tec_data[(i + 1) * nx + j].value[m] +
                                 (barycenter.x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
                     center[m] = (y1 - barycenter.y) / hy * r1 +
                                          (barycenter.y - y0) / hy * r2;
@@ -324,15 +328,15 @@ void paintwidget::set_div_num(size_t num)
 #if defined USE_PURPLE
                     // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
                     unsigned short r_color = 0, g_color = 0, b_color = 0;
-                    if(center[v] > min_u[v] + step_u_big[v] * 3.0)
+                    if(center[v] > min_u[v] + step_u_big[v] * 3.0f)
                     {
                         r_color = 255;
-                        g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 3.0)) / step_u_small[v]);
+                        g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 3.0f)) / step_u_small[v]);
                         b_color = 0;
                     }
-                    else if(center[v] > min_u[v] + step_u_big[v] * 2.0)
+                    else if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
                     {
-                        r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0)) / step_u_small[v]);
+                        r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
                         g_color = 255;
                         b_color = 0;
                     }
@@ -345,7 +349,7 @@ void paintwidget::set_div_num(size_t num)
                     }
                     else
                     {
-                        unsigned short tmp = 76 - (unsigned short)((center[v] - min_u[v]) / (step_u_small[v] * (255.0 / 76.0)));
+                        unsigned short tmp = 76 - (unsigned short)((center[v] - min_u[v]) / (step_u_small[v] * (255.0f / 76.0f)));
                         r_color = tmp;
                         g_color = 0;
                         b_color = 255 - tmp;
@@ -353,10 +357,10 @@ void paintwidget::set_div_num(size_t num)
 #else
                     // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
                     unsigned short r_color = 0, g_color = 0, b_color = 0;
-                    if(center[v] > min_u[v] + step_u_big[v] * 2.0)
+                    if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
                     {
                         r_color = 255;
-                        g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0)) / step_u_small[v]);
+                        g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
                         b_color = 0;
                     }
                     else if(center[v] > min_u[v] + step_u_big[v])
@@ -382,9 +386,7 @@ void paintwidget::set_div_num(size_t num)
 #endif
 
                     // Задаем посчитанный цвет
-                    tmp_tr.color[v].rgbtRed = r_color;
-                    tmp_tr.color[v].rgbtGreen = g_color;
-                    tmp_tr.color[v].rgbtBlue = b_color;
+                    tmp_tr.color[v] = RGB(r_color, g_color, b_color);
                 }
 
                 // И заносим в вектор
@@ -425,52 +427,52 @@ void paintwidget::set_isolines_num(size_t isolines_num)
     for(size_t j = 0; j < variables.size(); j++)
     {
         isolines[j].clear();
-        double isolines_step = (max_u[j] - min_u[j]) / (double)(isolines_num + 1);
+        float isolines_step = (max_u[j] - min_u[j]) / (float)(isolines_num + 1);
         for(size_t i = 0; i < isolines_num; i++)
-            isolines[j].insert(min_u[j] + isolines_step * (double)(i + 1));
+            isolines[j].insert(min_u[j] + isolines_step * (float)(i + 1));
     }
 }
 
 // Подгонка осей под реальность и вычисление шагов координатной сетки
-void paintwidget::adjustAxis(double & min, double & max, size_t & numTicks) const
+void paintwidget::adjustAxis(float & min, float & max, size_t & numTicks) const
 {
-    static const double axis_epsilon = 1.0 / 10000.0;
+    static const float axis_epsilon = 1.0f / 10000.0f;
     if(max - min < axis_epsilon)
     {
-        min -= 2.0 * axis_epsilon;
-        max += 2.0 * axis_epsilon;
+        min -= 2.0f * axis_epsilon;
+        max += 2.0f * axis_epsilon;
     }
 
     static const size_t MinTicks = 10;
-    double grossStep = (max - min) / MinTicks;
-    double step = pow(10, floor(log10(grossStep)));
+    float grossStep = (max - min) / MinTicks;
+    float step = std::pow(10.0f, std::floor(std::log10(grossStep)));
 
-    if (5 * step < grossStep)
-        step *= 5;
-    else if (2 * step < grossStep)
-        step *= 2;
+    if (5.0f * step < grossStep)
+        step *= 5.0f;
+    else if (2.0f * step < grossStep)
+        step *= 2.0f;
 
-    numTicks = (size_t)(ceil(max / step) - floor(min / step));
-    min = floor(min / step) * step;
-    max = ceil(max / step) * step;
+    numTicks = (size_t)(std::ceil(max / step) - std::floor(min / step));
+    min = std::floor(min / step) * step;
+    max = std::ceil(max / step) * step;
 }
 
 // Геометрия окна
-void paintwidget::to_window(double x, double y, int & xl, int & yl) const
+void paintwidget::to_window(float x, float y, int & xl, int & yl) const
 {
     // В OpenGL это был бы glOrtho
-    static const double gl_x0 = -0.06;
-    static const double gl_y0 = -0.06;
+    static const float gl_x0 = -0.06f;
+    static const float gl_y0 = -0.06f;
 #if defined USE_LEGEND
-    static const double gl_x1 = 1.125;
+    static const float gl_x1 = 1.125f;
 #else
-    static const double gl_x1 = 1.015;
+    static const float gl_x1 = 1.015f;
 #endif
-    static const double gl_y1 = 1.02;
-    static const double gl_hx = gl_x1 - gl_x0;
-    static const double gl_hy = gl_y1 - gl_y0;
-    xl = (int)((x - gl_x0) / gl_hx * (double)width);
-    yl = height - (int)((y - gl_y0) / gl_hy * (double)height);
+    static const float gl_y1 = 1.02f;
+    static const float gl_hx = gl_x1 - gl_x0;
+    static const float gl_hy = gl_y1 - gl_y0;
+    xl = (int)((x - gl_x0) / gl_hx * (float)width);
+    yl = height - (int)((y - gl_y0) / gl_hy * (float)height);
 }
 
 
@@ -504,7 +506,7 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
     TEXTMETRIC tm;
     GetTextMetrics(hdc, &tm);
     SelectObject(hdc, hOldFont);
-    double font_correct = (double)tm.tmHeight / (double)height * 0.9;
+    float font_correct = (float)tm.tmHeight / (float)height * 0.9f;
 
     // Заливка области белым цветом
     HPEN hAreaPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
@@ -524,18 +526,18 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
     hOldPen = SelectPen(hdc, hGridPen);
     for(size_t i = 0; i <= num_ticks_x; i++)
     {
-        double xd = (double)i / (double)num_ticks_x;
-        to_window(xd, -0.01, x, y);
+        float xd = (float)i / (float)num_ticks_x;
+        to_window(xd, -0.01f, x, y);
         MoveToEx(hdc, x, y, &pt);
-        to_window(xd, 1.0, x, y);
+        to_window(xd, 1.0f, x, y);
         LineTo(hdc, x, y);
     }
     for(size_t i = 0; i <= num_ticks_y; i++)
     {
-        double yd = (double)i / (double)num_ticks_y;
-        to_window(-0.01, yd, x, y);
+        float yd = (float)i / (float)num_ticks_y;
+        to_window(-0.01f, yd, x, y);
         MoveToEx(hdc, x, y, &pt);
-        to_window(1.0, yd, x, y);
+        to_window(1.0f, yd, x, y);
         LineTo(hdc, x, y);
     }
     SelectPen(hdc, hOldPen);
@@ -544,13 +546,13 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
     // Координатные оси
     HPEN hAxisPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
     hOldPen = SelectPen(hdc, hAxisPen);
-    to_window(0.0, -0.005, x, y);
+    to_window(0.0f, -0.005f, x, y);
     MoveToEx(hdc, x, y, &pt);
-    to_window(0.0, 1.005, x, y);
+    to_window(0.0f, 1.005f, x, y);
     LineTo(hdc, x, y);
-    to_window(-0.005, 0.0, x, y);
+    to_window(-0.005f, 0.0f, x, y);
     MoveToEx(hdc, x, y, &pt);
-    to_window(1.005, 0.0, x, y);
+    to_window(1.005f, 0.0f, x, y);
     LineTo(hdc, x, y);
     SelectPen(hdc, hOldPen);
     DeletePen(hAxisPen);
@@ -558,9 +560,9 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
     // Подписи осей
     HFONT hAxisFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
     hOldFont = (HFONT)SelectObject(hdc, hAxisFont);
-    to_window(0.99, -0.04 + font_correct, x, y);
+    to_window(0.99f, -0.04f + font_correct, x, y);
     TextOutA(hdc, x, y, label_x.c_str(), 1);
-    to_window(-0.05, 0.99 + font_correct, x, y);
+    to_window(-0.05f, 0.99f + font_correct, x, y);
     TextOutA(hdc, x, y, label_y.c_str(), 1);
     SelectObject(hdc, hOldFont);
 
@@ -569,20 +571,20 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
     hOldFont = (HFONT)SelectObject(hdc, hGridFont);
     for(size_t i = 0; i < num_ticks_x; i++)
     {
-        double xd = (double)i / (double)num_ticks_x;
-        double x_real = (double)(floor((xd * size_x + min_x) * 10000.0 + 0.5)) / 10000.0;
+        float xd = (float)i / (float)num_ticks_x;
+        float x_real = (float)(std::floor((xd * size_x + min_x) * 10000.0f + 0.5f)) / 10000.0f;
         char st[17];
         sprintf(st, "%.2f", x_real);
-        to_window(xd - 0.01, -0.04 + font_correct, x, y);
+        to_window(xd - 0.01f, -0.04f + font_correct, x, y);
         TextOutA(hdc, x, y, st, (int)strlen(st));
     }
     for(size_t i = 0; i < num_ticks_y; i++)
     {
-        double yd = (double)i / (double)num_ticks_y;
-        double y_real = (double)(floor((yd * size_y + min_y) * 10000.0 + 0.5)) / 10000.0;
+        float yd = (float)i / (float)num_ticks_y;
+        float y_real = (float)(std::floor((yd * size_y + min_y) * 10000.0f + 0.5f)) / 10000.0f;
         char st[17];
         sprintf(st, "%.2f", y_real);
-        to_window(-0.052, yd - 0.01 + font_correct, x, y);
+        to_window(-0.052f, yd - 0.01f + font_correct, x, y);
         TextOutA(hdc, x, y, st, (int)strlen(st));
     }
     SelectObject(hdc, hOldFont);
@@ -598,7 +600,7 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
             HBRUSH hTrBrush;
 
             // Задаем посчитанный цвет
-            hTrBrush = CreateSolidBrush(RGB(triangles[i].color[draw_index].rgbtRed, triangles[i].color[draw_index].rgbtGreen, triangles[i].color[draw_index].rgbtBlue));
+            hTrBrush = CreateSolidBrush(triangles[i].color[draw_index]);
             hOldBrush = SelectBrush(hdc, hTrBrush);
 
             // Рисуем
@@ -626,18 +628,18 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
             // Теперь рисуем изолинии
             // Будем искать наименьшее значение, большее или равное решению
             // Если значения на разных концах ребра будут разными, значит изолиния проходит через это ребро
-            set<double>::const_iterator segment_isol[3];
+            set<float>::const_iterator segment_isol[3];
             for(size_t k = 0; k < 3; k++)
                 segment_isol[k] = isolines[draw_index].lower_bound(triangles[i].solution[k][draw_index]);
 
             // Немного странной фигни
-            vector<pair<double, double> > vct;
+            vector<pair<float, float> > vct;
             if(segment_isol[0] != segment_isol[1])
-                vct.push_back(make_pair(((triangles[i].nodes[1].x + triangles[i].nodes[0].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[1].y + triangles[i].nodes[0].y) * 0.5 - min_y) / size_y));
+                vct.push_back(make_pair(((triangles[i].nodes[1].x + triangles[i].nodes[0].x) * 0.5f - min_x) / size_x, ((triangles[i].nodes[1].y + triangles[i].nodes[0].y) * 0.5f - min_y) / size_y));
             if(segment_isol[0] != segment_isol[2])
-                vct.push_back(make_pair(((triangles[i].nodes[2].x + triangles[i].nodes[0].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[0].y) * 0.5 - min_y) / size_y));
+                vct.push_back(make_pair(((triangles[i].nodes[2].x + triangles[i].nodes[0].x) * 0.5f - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[0].y) * 0.5f - min_y) / size_y));
             if(segment_isol[1] != segment_isol[2])
-                vct.push_back(make_pair(((triangles[i].nodes[2].x + triangles[i].nodes[1].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[1].y) * 0.5 - min_y) / size_y));
+                vct.push_back(make_pair(((triangles[i].nodes[2].x + triangles[i].nodes[1].x) * 0.5f - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[1].y) * 0.5f - min_y) / size_y));
 
             // А теперь нарисуем, согласно вышеприведенному условию
             if(vct.size() > 1)
@@ -718,21 +720,21 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
         RGB( 255,   0,   0 )
     };
 #endif
-    double legend_values[14] =
+    float legend_values[14] =
     {
         min_u[draw_index],
-        61.0 * (step_u_small[draw_index] * (255.0 / 76.0)) + min_u[draw_index],
-        50.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        115.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        180.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        245.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        55.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0,
-        120.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0,
-        185.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0,
-        250.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0,
-        60.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0,
-        125.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0,
-        190.0 * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0,
+        61.0f * (step_u_small[draw_index] * (255.0f / 76.0f)) + min_u[draw_index],
+        50.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
+        115.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
+        180.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
+        245.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
+        55.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
+        120.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
+        185.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
+        250.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
+        60.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f,
+        125.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f,
+        190.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f,
         max_u[draw_index]
     };
 #else
@@ -794,32 +796,32 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
         RGB( 255,   0,   0 )
     };
 #endif
-    double legend_values[14] =
+    float legend_values[14] =
     {
         min_u[draw_index],
-        59.0 * step_u_small[draw_index] + min_u[draw_index],
-        118.0 * step_u_small[draw_index] + min_u[draw_index],
-        177.0 * step_u_small[draw_index] + min_u[draw_index],
-        236.0 * step_u_small[draw_index] + min_u[draw_index],
-        50.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        99.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        157.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        215.0 * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        19.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
-        78.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
-        137.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
-        196.0 * step_u_small[draw_index] + step_u_big[draw_index] * 2.0 + min_u[draw_index],
+        59.0f * step_u_small[draw_index] + min_u[draw_index],
+        118.0f * step_u_small[draw_index] + min_u[draw_index],
+        177.0f * step_u_small[draw_index] + min_u[draw_index],
+        236.0f * step_u_small[draw_index] + min_u[draw_index],
+        50.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        99.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        157.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        215.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
+        19.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
+        78.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
+        137.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
+        196.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
         max_u[draw_index]
     };
 #endif
     for(size_t i = 0; i < 14; i++)
     {
-        static const double x0 = 1.0175;
-        static const double y0 = 0;
-        static const double dx = 0.0;
-        static const double dy = 0.07;
-        static const double hx = 0.103;
-        static const double hy = 0.073;
+        static const float x0 = 1.0175f;
+        static const float y0 = 0.0f;
+        static const float dx = 0.0f;
+        static const float dy = 0.07f;
+        static const float hx = 0.103f;
+        static const float hy = 0.073f;
         HPEN hLegPen = GetStockPen(NULL_PEN);
         hOldPen = SelectPen(hdc, hLegPen);
         HBRUSH hLegBrush;
@@ -837,51 +839,53 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
         HFONT hLegFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
         hOldFont = (HFONT)SelectObject(hdc, hLegFont);
         char st[17];
-        int exponent  = (int)floor(log10(fabs(legend_values[i])));
+        int exponent  = (int)std::floor(std::log10(std::fabs(legend_values[i])));
         if(abs(exponent) < 0) exponent = 0;
-        double base   = legend_values[i] * pow(10.0, -1.0 * exponent);
+        float base   = legend_values[i] * std::pow(10.0f, -1.0f * exponent);
 #if defined _MSC_VER && _MSC_VER >= 1400
         sprintf_s(st, 17, "%.2fE%+03d", base, exponent);
 #else
         sprintf(st, "%.2fE%+03d", base, exponent);
 #endif
-        to_window(x0 + dx * i + 0.004, y0 + dy * i + hy / 2.0 - 0.01 + font_correct, x, y);
+        to_window(x0 + dx * i + 0.004f, y0 + dy * i + hy / 2.0f - 0.01f + font_correct, x, y);
         TextOutA(hdc, x, y, st, (int)strlen(st));
         SelectObject(hdc, hOldFont);
     }
     SetBkColor(hdc, RGB(255, 255, 255));
 #endif
-/*
+
     if(draw_vectors)
     {
-        painter.setPen(QPen(Qt::black, 1.2));
-        painter.setBrush(QBrush(Qt::black));
-
-        double vec_len = 10, arrow_len = 1.5;
-
+        HPEN hVecPen = GetStockPen(BLACK_PEN);
+        hOldPen = SelectPen(hdc, hVecPen);
+        HBRUSH hVecBrush = GetStockBrush(BLACK_BRUSH);
+        hOldBrush = SelectBrush(hdc, hVecBrush);
+        float vec_len = 10.0f;
+        int arrow_len = 2;
         for(size_t j = 0; j < ny; j += skip_vec)
         {
             for(size_t i = 0; i < nx; i += skip_vec)
             {
                 tecplot_node * v = & tec_data[j * nx + i];
-                QPoint begin = to_window((v->coord.x - min_x) / size_x, (v->coord.y - min_y) / size_y);
-                double len_x = v->value[ind_vec_1];
-                double len_y = v->value[ind_vec_2];
-                double norm = sqrt(len_x * len_x + len_y * len_y);
+                int begin_x, begin_y;
+                to_window((v->coord.x - min_x) / size_x, (v->coord.y - min_y) / size_y, begin_x, begin_y);
+                float len_x = v->value[ind_vec_1];
+                float len_y = v->value[ind_vec_2];
+                float norm = std::sqrt(len_x * len_x + len_y * len_y);
                 len_x /= norm;
                 len_y /= norm;
                 if(len_x == len_x && len_y == len_y)
                 {
-                    QPoint end((int)(len_x * vec_len), -(int)(len_y * vec_len));
-                    end.setX(end.x() + begin.x());
-                    end.setY(end.y() + begin.y());
-
-                    painter.drawLine(begin, end);
-                    painter.drawEllipse(QPointF(end), (qreal)arrow_len, (qreal)arrow_len);
+                    int end_x = (int)(len_x * vec_len) + begin_x, end_y = -(int)(len_y * vec_len) + begin_y;
+                    MoveToEx(hdc, begin_x, begin_y, &pt);
+                    LineTo(hdc, end_x, end_y);
+                    Ellipse(hdc, end_x - arrow_len, end_y - arrow_len, end_x + arrow_len, end_y + arrow_len);
                 }
             }
         }
+        SelectPen(hdc, hOldPen);
+        SelectBrush(hdc, hOldBrush);
     }
-*/
+
     EndPaint(hwnd, &ps);
 }
