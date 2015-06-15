@@ -254,7 +254,7 @@ int main()
     AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hFileMenu, TEXT("File"));
     AppendMenu(hFileMenu, MF_STRING, CTRL_MENU_OPEN, TEXT("Open Tecplot File\tCtrl+O"));
     AppendMenu(hFileMenu, MF_STRING, CTRL_MENU_SAVE, TEXT("Save Image\tCtrl+S"));
-    AppendMenu(hFileMenu, MF_SEPARATOR, NULL, TEXT(""));
+    AppendMenu(hFileMenu, MF_SEPARATOR, (UINT)NULL, TEXT(""));
     AppendMenu(hFileMenu, MF_STRING, CTRL_MENU_EXIT, TEXT("Exit\tCtrl+Q"));
     HMENU hInterpMenu = CreatePopupMenu();
     AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hInterpMenu, TEXT("Interpolation"));
