@@ -1,12 +1,34 @@
 #ifndef PAINTWIDGET_H
 #define PAINTWIDGET_H
 
-#include <QWidget>
-#include <QString>
-#include <QPoint>
-#include <QPaintDevice>
+#if defined _WIN32_WINNT && _WIN32_WINNT < 0x0500
+#undef _WIN32_WINNT
+#endif
+#if !defined _WIN32_WINNT
+#define _WIN32_WINNT 0x0500
+#endif
+
+#if defined _MSC_VER && !defined _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+#if defined _MSC_VER
+#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "comctl32.lib")
+#pragma comment(lib, "user32.lib")
+#endif
+
+#include <windows.h>
+#include <windowsx.h>
+#include <cstdio>
+#include <cmath>
+#include <cstring>
+#include <cstdlib>
 #include <set>
 #include <vector>
+#include <string>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -35,7 +57,7 @@ class triangle
 {
 public:
     point nodes[3];
-    vector<QColor> color;
+    vector<RGBTRIPLE> color;
     vector<double> solution[3];
     triangle() {}
     triangle(const point & node1, const point & node2, const point & node3)
@@ -46,13 +68,12 @@ public:
     }
 };
 
-// Класс виджет для рисования на QPaintDevice
-class paintwidget : public QWidget
+// Класс виджет для рисования через WinGDI
+class paintwidget
 {
-    Q_OBJECT
 public:
     // Конструктор
-    paintwidget(QWidget * parent = 0);
+    paintwidget();
 
     // Флаг отрисовки изолиний
     bool draw_isolines;
@@ -85,7 +106,7 @@ public:
     void set_div_num(size_t num);
 
     // Подписи к переменным
-    vector<QString> variables;
+    vector<string> variables;
 
     // Есть данные
     bool is_loaded;
@@ -97,11 +118,15 @@ public:
     size_t div_num;
 
     // Отрисовка сцены на QPaintDevice
-    void draw(QPaintDevice * device, bool transparency);
+    void draw(/*QPaintDevice * device, bool transparency*/);
 
-protected:
     // Отрисовка сцены
-    void paintEvent(QPaintEvent *);
+    void paintEvent();
+
+    // WinAPI, мать его
+    HWND hwnd;
+    HDC hdc;
+    PAINTSTRUCT ps;
 
 private:
     // Текплотовские значения
@@ -114,7 +139,7 @@ private:
     // Количество шагов координатной сетки
     size_t num_ticks_x, num_ticks_y;
     // Подгонка осей под реальность и вычисление шагов координатной сетки
-    void adjustAxis(double & min, double & max, size_t & numTicks);
+    void adjustAxis(double & min, double & max, size_t & numTicks) const;
 
     // Минимальное и максимальное значения решения
     vector<double> min_u, max_u;
@@ -129,7 +154,8 @@ private:
     vector<triangle> triangles;
 
     // Геометрия окна
-    QPoint to_window(double x, double y) const;
+    int height, width;
+    void to_window(double x, double y, int & xl, int & yl) const;
 
     // Подписи осей
     string label_x, label_y;

@@ -1,5 +1,5 @@
 @echo off
-set V_PROJECT=fem_draw
+set V_PROJECT=fem_draw_qt
 set QTDIR=C:\Qt\Qt4.4.3-static
 set MINGWDIR=C:\Qt\MinGW-3.4.2
 set V_BUILDDIR=build_win_qt4.4.3_legacy

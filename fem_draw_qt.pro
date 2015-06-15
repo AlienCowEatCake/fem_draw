@@ -4,12 +4,12 @@
 #
 #-------------------------------------------------
 
-TARGET = fem_draw
+TARGET = fem_draw_qt
 TEMPLATE = app
 CONFIG += warn_on
 
 QT += core gui
-INCLUDEPATH += src
+INCLUDEPATH += src_qt
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets
@@ -17,16 +17,16 @@ greaterThan(QT_MAJOR_VERSION, 4) {
 }
 
 SOURCES += \
-    src/paintwidget.cpp \
-    src/main.cpp \
-    src/mainwindow.cpp
+    src_qt/paintwidget.cpp \
+    src_qt/main.cpp \
+    src_qt/mainwindow.cpp
 
 HEADERS += \
-    src/paintwidget.h \
-    src/mainwindow.h
+    src_qt/paintwidget.h \
+    src_qt/mainwindow.h
 
 FORMS += \
-    src/mainwindow.ui
+    src_qt/mainwindow.ui
 
 RESOURCES += resources/icon.qrc
 

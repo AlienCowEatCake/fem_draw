@@ -1,12 +1,4 @@
-#if defined(HAVE_QT5)
-#include <QtWidgets>
-#else
-#include <QtGui>
-#endif
 #include "paintwidget.h"
-#include <QFont>
-#include <QString>
-#include <QMessageBox>
 #include <fstream>
 #include <limits>
 #include <cstring>
@@ -23,19 +15,13 @@
 // Рисовать ли легенду справа
 #define USE_LEGEND
 
+// Вывести msgbox с ошибкой
 void paintwidget::print_io_error()
 {
-    QMessageBox msgBox;
-    msgBox.setAttribute(Qt::WA_QuitOnClose);
-    msgBox.setStandardButtons(QMessageBox::Ok);
-    msgBox.setDefaultButton(QMessageBox::Ok);
-    msgBox.setWindowTitle(trUtf8("Error"));
-    msgBox.setText(trUtf8("Error: Corrupted file"));
-    msgBox.setIcon(QMessageBox::Critical);
-    msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
-    msgBox.exec();
+    fprintf(stderr, "Error: Corrupted file\n");
 }
 
+// Чтение текплотовских значений из файла
 void paintwidget::tec_read(const string & filename)
 {
     // Чистим старое
@@ -396,7 +382,9 @@ void paintwidget::set_div_num(size_t num)
 #endif
 
                     // Задаем посчитанный цвет
-                    tmp_tr.color[v] = QColor(r_color, g_color, b_color);
+                    tmp_tr.color[v].rgbtRed = r_color;
+                    tmp_tr.color[v].rgbtGreen = g_color;
+                    tmp_tr.color[v].rgbtBlue = b_color;
                 }
 
                 // И заносим в вектор
@@ -407,7 +395,7 @@ void paintwidget::set_div_num(size_t num)
 }
 
 // Конструктор
-paintwidget::paintwidget(QWidget * parent) : QWidget(parent)
+paintwidget::paintwidget()
 {
     isolines_num = 10;
     draw_index = 0;
@@ -420,6 +408,13 @@ paintwidget::paintwidget(QWidget * parent) : QWidget(parent)
     skip_vec = 1;
     div_num = 2;
     vect_value = 1;
+
+    // WinAPI, мать его
+//    hwnd = GetConsoleWindow();
+//    hdc = GetDC(hwnd);
+//    SetBkColor(hdc, RGB(255, 255, 255));
+    hwnd = NULL;
+    hdc = NULL;
 }
 
 // Пересчет значений изолиний
@@ -437,7 +432,7 @@ void paintwidget::set_isolines_num(size_t isolines_num)
 }
 
 // Подгонка осей под реальность и вычисление шагов координатной сетки
-void paintwidget::adjustAxis(double & min, double & max, size_t & numTicks)
+void paintwidget::adjustAxis(double & min, double & max, size_t & numTicks) const
 {
     static const double axis_epsilon = 1.0 / 10000.0;
     if(max - min < axis_epsilon)
@@ -461,96 +456,136 @@ void paintwidget::adjustAxis(double & min, double & max, size_t & numTicks)
 }
 
 // Геометрия окна
-QPoint paintwidget::to_window(double x, double y) const
+void paintwidget::to_window(double x, double y, int & xl, int & yl) const
 {
     // В OpenGL это был бы glOrtho
-    const double gl_x0 = -0.06;
-    const double gl_y0 = -0.06;
+    static const double gl_x0 = -0.06;
+    static const double gl_y0 = -0.06;
 #if defined USE_LEGEND
-    const double gl_x1 = 1.125;
+    static const double gl_x1 = 1.125;
 #else
-    const double gl_x1 = 1.015;
+    static const double gl_x1 = 1.015;
 #endif
-    const double gl_y1 = 1.02;
-    const double gl_hx = gl_x1 - gl_x0;
-    const double gl_hy = gl_y1 - gl_y0;
-    // Перевод
-    int xl = (int)((x - gl_x0) / gl_hx * (double)width());
-    int yl = height() - (int)((y - gl_y0) / gl_hy * (double)height());
-    return QPoint(xl, yl);
+    static const double gl_y1 = 1.02;
+    static const double gl_hx = gl_x1 - gl_x0;
+    static const double gl_hy = gl_y1 - gl_y0;
+    xl = (int)((x - gl_x0) / gl_hx * (double)width);
+    yl = height - (int)((y - gl_y0) / gl_hy * (double)height);
 }
 
+
 // Отрисовка сцены
-void paintwidget::paintEvent(QPaintEvent *)
+void paintwidget::paintEvent()
 {
-    draw(this, false);
+    draw(/*this, false*/);
 }
 
 // Отрисовка сцены на QPaintDevice
-void paintwidget::draw(QPaintDevice * device, bool transparency)
+void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
 {
-    QPainter painter;
-    painter.begin(device);
-    painter.setViewport(0, 0, device->width(), device->height());
+    hdc = BeginPaint(hwnd, &ps);
+
+    // Геометрия окна
+    RECT r;
+    GetClientRect(hwnd, &r);
+    height = r.bottom - r.top;
+    width = r.right - r.left;
+
+    POINT pt;
+    int x, y;
+    HPEN hOldPen;
+    HBRUSH hOldBrush;
+    HFONT hOldFont;
+    POINT tr[3];
+
+    // Узнаем размеры шрифта
+    HFONT hTestFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
+    hOldFont = (HFONT)SelectObject(hdc, hTestFont);
+    TEXTMETRIC tm;
+    GetTextMetrics(hdc, &tm);
+    SelectObject(hdc, hOldFont);
+    double font_correct = (double)tm.tmHeight / (double)height * 0.9;
 
     // Заливка области белым цветом
-    if(!transparency)
-        painter.fillRect(0, 0, device->width(), device->height(), QBrush(Qt::white));
-    else
-        painter.fillRect(0, 0, device->width(), device->height(), QBrush(Qt::transparent));
+    HPEN hAreaPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+    hOldPen = SelectPen(hdc, hAreaPen);
+    HBRUSH hAreaBrush = CreateSolidBrush(RGB(255, 255, 255));
+    hOldBrush = SelectBrush(hdc, hAreaBrush);
+    Rectangle(hdc, 0, 0, width, height);
+    SelectPen(hdc, hOldPen);
+    SelectBrush(hdc, hOldBrush);
+    DeletePen(hAreaPen);
+    DeleteBrush(hAreaBrush);
 
     if(!is_loaded) return;
 
     // Координатная сетка
-    painter.setPen(QPen(Qt::lightGray));
+    HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(217, 217, 217));
+    hOldPen = SelectPen(hdc, hGridPen);
     for(size_t i = 0; i <= num_ticks_x; i++)
     {
-        double x = (double)i / (double)num_ticks_x;
-        painter.drawLine(to_window(x, -0.01), to_window(x, 1.0));
+        double xd = (double)i / (double)num_ticks_x;
+        to_window(xd, -0.01, x, y);
+        MoveToEx(hdc, x, y, &pt);
+        to_window(xd, 1.0, x, y);
+        LineTo(hdc, x, y);
     }
     for(size_t i = 0; i <= num_ticks_y; i++)
     {
-        double y = (double)i / (double)num_ticks_y;
-        painter.drawLine(to_window(-0.01, y), to_window(1.0, y));
+        double yd = (double)i / (double)num_ticks_y;
+        to_window(-0.01, yd, x, y);
+        MoveToEx(hdc, x, y, &pt);
+        to_window(1.0, yd, x, y);
+        LineTo(hdc, x, y);
     }
+    SelectPen(hdc, hOldPen);
+    DeletePen(hGridPen);
 
     // Координатные оси
-    painter.setPen(QPen(Qt::black, 2));
-    painter.drawLine(to_window(0.0, -0.005), to_window(0.0, 1.005));
-    painter.drawLine(to_window(-0.005, 0.0), to_window(1.005, 0.0));
-
-    // Шрифты
-#if defined _WIN32
-    QFont fnt_mono("Courier", 8);
-#else
-    QFont fnt_mono("Courier", 9);
-#endif
-    QFont fnt_serif("Times", 10);
-    fnt_mono.setLetterSpacing(QFont::PercentageSpacing, 82);
-    fnt_serif.setBold(true);
+    HPEN hAxisPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
+    hOldPen = SelectPen(hdc, hAxisPen);
+    to_window(0.0, -0.005, x, y);
+    MoveToEx(hdc, x, y, &pt);
+    to_window(0.0, 1.005, x, y);
+    LineTo(hdc, x, y);
+    to_window(-0.005, 0.0, x, y);
+    MoveToEx(hdc, x, y, &pt);
+    to_window(1.005, 0.0, x, y);
+    LineTo(hdc, x, y);
+    SelectPen(hdc, hOldPen);
+    DeletePen(hAxisPen);
 
     // Подписи осей
-    painter.setFont(fnt_serif);
-    painter.setPen(QPen(Qt::black, 1));
-    painter.drawText(to_window(0.99, -0.04), trUtf8(label_x.c_str()));
-    painter.drawText(to_window(-0.05, 0.99), trUtf8(label_y.c_str()));
+    HFONT hAxisFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    hOldFont = (HFONT)SelectObject(hdc, hAxisFont);
+    to_window(0.99, -0.04 + font_correct, x, y);
+    TextOutA(hdc, x, y, label_x.c_str(), 1);
+    to_window(-0.05, 0.99 + font_correct, x, y);
+    TextOutA(hdc, x, y, label_y.c_str(), 1);
+    SelectObject(hdc, hOldFont);
 
     // Отрисовка шкалы
-    painter.setFont(fnt_mono);
+    HFONT hGridFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
+    hOldFont = (HFONT)SelectObject(hdc, hGridFont);
     for(size_t i = 0; i < num_ticks_x; i++)
     {
-        double x = (double)i / (double)num_ticks_x;
-        double x_real = (double)(floor((x * size_x + min_x) * 10000.0 + 0.5)) / 10000.0;
-        QString st = QString::number(x_real);
-        painter.drawText(to_window(x - 0.01, -0.04), st);
+        double xd = (double)i / (double)num_ticks_x;
+        double x_real = (double)(floor((xd * size_x + min_x) * 10000.0 + 0.5)) / 10000.0;
+        char st[17];
+        sprintf(st, "%.2f", x_real);
+        to_window(xd - 0.01, -0.04 + font_correct, x, y);
+        TextOutA(hdc, x, y, st, (int)strlen(st));
     }
     for(size_t i = 0; i < num_ticks_y; i++)
     {
-        double y = (double)i / (double)num_ticks_y;
-        double y_real = (double)(floor((y * size_y + min_y) * 10000.0 + 0.5)) / 10000.0;
-        QString st = QString::number(y_real);
-        painter.drawText(to_window(-0.05, y - 0.01), st);
+        double yd = (double)i / (double)num_ticks_y;
+        double y_real = (double)(floor((yd * size_y + min_y) * 10000.0 + 0.5)) / 10000.0;
+        char st[17];
+        sprintf(st, "%.2f", y_real);
+        to_window(-0.052, yd - 0.01 + font_correct, x, y);
+        TextOutA(hdc, x, y, st, (int)strlen(st));
     }
+    SelectObject(hdc, hOldFont);
 
     // Раскрашивать будем если запрошено сие
     if(draw_color)
@@ -558,19 +593,31 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
         // Отрисовка всех треугольников
         for(size_t i = 0; i < triangles.size(); i++)
         {
+            HPEN hTrPen = GetStockPen(NULL_PEN);
+            hOldPen = SelectPen(hdc, hTrPen);
+            HBRUSH hTrBrush;
+
             // Задаем посчитанный цвет
-            painter.setBrush(QBrush(triangles[i].color[draw_index]));
-            painter.setPen(QPen(triangles[i].color[draw_index], 1));
+            hTrBrush = CreateSolidBrush(RGB(triangles[i].color[draw_index].rgbtRed, triangles[i].color[draw_index].rgbtGreen, triangles[i].color[draw_index].rgbtBlue));
+            hOldBrush = SelectBrush(hdc, hTrBrush);
 
             // Рисуем
-            QPoint tr[3];
             for(size_t k = 0; k < 3; k++)
-                tr[k] = to_window((triangles[i].nodes[k].x - min_x) / size_x, (triangles[i].nodes[k].y - min_y) / size_y);
-            painter.drawPolygon(tr, 3);
+            {
+                to_window((triangles[i].nodes[k].x - min_x) / size_x, (triangles[i].nodes[k].y - min_y) / size_y, x, y);
+                tr[k].x = (LONG)x;
+                tr[k].y = (LONG)y;
+            }
+            Polygon(hdc, tr, 3);
+
+            SelectPen(hdc, hOldPen);
+            SelectBrush(hdc, hOldBrush);
+            DeleteBrush(hTrBrush);
         }
     }
 
-    painter.setPen(QPen(Qt::black, 1));
+    HPEN hIsolPen = GetStockPen(BLACK_PEN);
+    hOldPen = SelectPen(hdc, hIsolPen);
     // Изолинии рисуем только если оно нам надо
     if(draw_isolines)
     {
@@ -583,29 +630,26 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
             for(size_t k = 0; k < 3; k++)
                 segment_isol[k] = isolines[draw_index].lower_bound(triangles[i].solution[k][draw_index]);
 
-            // А теперь нарисуем, согласно вышеприведенному условию
-            QPoint isol_points[3];
-            size_t counter = 0;
+            // Немного странной фигни
+            vector<pair<double, double> > vct;
             if(segment_isol[0] != segment_isol[1])
-            {
-                isol_points[counter] = to_window(((triangles[i].nodes[1].x + triangles[i].nodes[0].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[1].y + triangles[i].nodes[0].y) * 0.5 - min_y) / size_y);
-                counter++;
-            }
+                vct.push_back(make_pair(((triangles[i].nodes[1].x + triangles[i].nodes[0].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[1].y + triangles[i].nodes[0].y) * 0.5 - min_y) / size_y));
             if(segment_isol[0] != segment_isol[2])
-            {
-                isol_points[counter] = to_window(((triangles[i].nodes[2].x + triangles[i].nodes[0].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[0].y) * 0.5 - min_y) / size_y);
-                counter++;
-            }
+                vct.push_back(make_pair(((triangles[i].nodes[2].x + triangles[i].nodes[0].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[0].y) * 0.5 - min_y) / size_y));
             if(segment_isol[1] != segment_isol[2])
-            {
-                isol_points[counter] = to_window(((triangles[i].nodes[2].x + triangles[i].nodes[1].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[1].y) * 0.5 - min_y) / size_y);
-                counter++;
-            }
+                vct.push_back(make_pair(((triangles[i].nodes[2].x + triangles[i].nodes[1].x) * 0.5 - min_x) / size_x, ((triangles[i].nodes[2].y + triangles[i].nodes[1].y) * 0.5 - min_y) / size_y));
 
-            if(counter > 1)
-                painter.drawLine(isol_points[0], isol_points[1]);
+            // А теперь нарисуем, согласно вышеприведенному условию
+            if(vct.size() > 1)
+            {
+                to_window(vct[0].first, vct[0].second, x, y);
+                MoveToEx(hdc, x, y, &pt);
+                to_window(vct[1].first, vct[1].second, x, y);
+                LineTo(hdc, x, y);
+            }
         }
     }
+    SelectPen(hdc, hOldPen);
 
 #if defined USE_LEGEND
     // Легенда
@@ -638,40 +682,40 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
  * 4). U = (76 - R) * (step_u_small * (255.0 / 76.0)) + min_u
  */
 #if defined USE_LIGHTNESS
-    static const QColor legend_colors[14] =
+    static const COLORREF legend_colors[14] =
     {
-        QColor(  76 * 3 / 4 + 64,   0 * 3 / 4 + 64, 179 * 3 / 4 + 64 ),
-        QColor(  15 * 3 / 4 + 64,   0 * 3 / 4 + 64, 240 * 3 / 4 + 64 ),
-        QColor(   0 * 3 / 4 + 64,  50 * 3 / 4 + 64, 205 * 3 / 4 + 64 ),
-        QColor(   0 * 3 / 4 + 64, 115 * 3 / 4 + 64, 140 * 3 / 4 + 64 ),
-        QColor(   0 * 3 / 4 + 64, 180 * 3 / 4 + 64,  75 * 3 / 4 + 64 ),
-        QColor(   0 * 3 / 4 + 64, 245 * 3 / 4 + 64,  10 * 3 / 4 + 64 ),
-        QColor(  55 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 120 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 185 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 250 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 255 * 3 / 4 + 64, 195 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 255 * 3 / 4 + 64, 130 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 255 * 3 / 4 + 64,  65 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 255 * 3 / 4 + 64,   0 * 3 / 4 + 64,   0 * 3 / 4 + 64 )
+        RGB(  76 * 3 / 4 + 64,   0 * 3 / 4 + 64, 179 * 3 / 4 + 64 ),
+        RGB(  15 * 3 / 4 + 64,   0 * 3 / 4 + 64, 240 * 3 / 4 + 64 ),
+        RGB(   0 * 3 / 4 + 64,  50 * 3 / 4 + 64, 205 * 3 / 4 + 64 ),
+        RGB(   0 * 3 / 4 + 64, 115 * 3 / 4 + 64, 140 * 3 / 4 + 64 ),
+        RGB(   0 * 3 / 4 + 64, 180 * 3 / 4 + 64,  75 * 3 / 4 + 64 ),
+        RGB(   0 * 3 / 4 + 64, 245 * 3 / 4 + 64,  10 * 3 / 4 + 64 ),
+        RGB(  55 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 120 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 185 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 250 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 255 * 3 / 4 + 64, 195 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 255 * 3 / 4 + 64, 130 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 255 * 3 / 4 + 64,  65 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 255 * 3 / 4 + 64,   0 * 3 / 4 + 64,   0 * 3 / 4 + 64 )
     };
 #else
-    static const QColor legend_colors[14] =
+    static const COLORREF legend_colors[14] =
     {
-        QColor(  76,   0, 179 ),
-        QColor(  15,   0, 240 ),
-        QColor(   0,  50, 205 ),
-        QColor(   0, 115, 140 ),
-        QColor(   0, 180,  75 ),
-        QColor(   0, 245,  10 ),
-        QColor(  55, 255,   0 ),
-        QColor( 120, 255,   0 ),
-        QColor( 185, 255,   0 ),
-        QColor( 250, 255,   0 ),
-        QColor( 255, 195,   0 ),
-        QColor( 255, 130,   0 ),
-        QColor( 255,  65,   0 ),
-        QColor( 255,   0,   0 )
+        RGB(  76,   0, 179 ),
+        RGB(  15,   0, 240 ),
+        RGB(   0,  50, 205 ),
+        RGB(   0, 115, 140 ),
+        RGB(   0, 180,  75 ),
+        RGB(   0, 245,  10 ),
+        RGB(  55, 255,   0 ),
+        RGB( 120, 255,   0 ),
+        RGB( 185, 255,   0 ),
+        RGB( 250, 255,   0 ),
+        RGB( 255, 195,   0 ),
+        RGB( 255, 130,   0 ),
+        RGB( 255,  65,   0 ),
+        RGB( 255,   0,   0 )
     };
 #endif
     double legend_values[14] =
@@ -714,40 +758,40 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
      * 3). U = G * step_u_small + min_u
      */
 #if defined USE_LIGHTNESS
-    static const QColor legend_colors[14] =
+    static const COLORREF legend_colors[14] =
     {
-        QColor(   0 * 3 / 4 + 64,   0 * 3 / 4 + 64, 255 * 3 / 4 + 64 ),
-        QColor(   0 * 3 / 4 + 64,  59 * 3 / 4 + 64, 196 * 3 / 4 + 64 ),
-        QColor(   0 * 3 / 4 + 64, 118 * 3 / 4 + 64, 137 * 3 / 4 + 64 ),
-        QColor(   0 * 3 / 4 + 64, 177 * 3 / 4 + 64,  78 * 3 / 4 + 64 ),
-        QColor(   0 * 3 / 4 + 64, 236 * 3 / 4 + 64,  19 * 3 / 4 + 64 ),
-        QColor(  50 * 3 / 4 + 64, 245 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor(  99 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 157 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 215 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 255 * 3 / 4 + 64, 236 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 255 * 3 / 4 + 64, 177 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 255 * 3 / 4 + 64, 118 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 255 * 3 / 4 + 64,  59 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        QColor( 255 * 3 / 4 + 64,   0 * 3 / 4 + 64,   0 * 3 / 4 + 64 )
+        RGB(   0 * 3 / 4 + 64,   0 * 3 / 4 + 64, 255 * 3 / 4 + 64 ),
+        RGB(   0 * 3 / 4 + 64,  59 * 3 / 4 + 64, 196 * 3 / 4 + 64 ),
+        RGB(   0 * 3 / 4 + 64, 118 * 3 / 4 + 64, 137 * 3 / 4 + 64 ),
+        RGB(   0 * 3 / 4 + 64, 177 * 3 / 4 + 64,  78 * 3 / 4 + 64 ),
+        RGB(   0 * 3 / 4 + 64, 236 * 3 / 4 + 64,  19 * 3 / 4 + 64 ),
+        RGB(  50 * 3 / 4 + 64, 245 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB(  99 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 157 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 215 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 255 * 3 / 4 + 64, 236 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 255 * 3 / 4 + 64, 177 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 255 * 3 / 4 + 64, 118 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 255 * 3 / 4 + 64,  59 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+        RGB( 255 * 3 / 4 + 64,   0 * 3 / 4 + 64,   0 * 3 / 4 + 64 )
     };
 #else
-    static const QColor legend_colors[14] =
+    static const COLORREF legend_colors[14] =
     {
-        QColor(   0,   0, 255 ),
-        QColor(   0,  59, 196 ),
-        QColor(   0, 118, 137 ),
-        QColor(   0, 177,  78 ),
-        QColor(   0, 236,  19 ),
-        QColor(  50, 245,   0 ),
-        QColor(  99, 255,   0 ),
-        QColor( 157, 255,   0 ),
-        QColor( 215, 255,   0 ),
-        QColor( 255, 236,   0 ),
-        QColor( 255, 177,   0 ),
-        QColor( 255, 118,   0 ),
-        QColor( 255,  59,   0 ),
-        QColor( 255,   0,   0 )
+        RGB(   0,   0, 255 ),
+        RGB(   0,  59, 196 ),
+        RGB(   0, 118, 137 ),
+        RGB(   0, 177,  78 ),
+        RGB(   0, 236,  19 ),
+        RGB(  50, 245,   0 ),
+        RGB(  99, 255,   0 ),
+        RGB( 157, 255,   0 ),
+        RGB( 215, 255,   0 ),
+        RGB( 255, 236,   0 ),
+        RGB( 255, 177,   0 ),
+        RGB( 255, 118,   0 ),
+        RGB( 255,  59,   0 ),
+        RGB( 255,   0,   0 )
     };
 #endif
     double legend_values[14] =
@@ -774,18 +818,40 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
         static const double y0 = 0;
         static const double dx = 0.0;
         static const double dy = 0.07;
-        static const double hx = 0.10;
+        static const double hx = 0.103;
         static const double hy = 0.073;
-        painter.setBrush(QBrush(legend_colors[i]));
-        painter.setPen(QPen(legend_colors[i], 1));
-        painter.drawRect(QRect(to_window(x0, y0 + dy * i), to_window(x0 + hx, y0 + dy * i + hy)));
-        painter.setFont(fnt_mono);
-        painter.setPen(QPen(Qt::black));
-        QString st = QString::number(legend_values[i], 'E', 2);
-        painter.drawText(to_window(x0 + dx * i + 0.005, y0 + dy * i + hy / 2.0 - 0.01), st);
-    }
-#endif
+        HPEN hLegPen = GetStockPen(NULL_PEN);
+        hOldPen = SelectPen(hdc, hLegPen);
+        HBRUSH hLegBrush;
+        hLegBrush = CreateSolidBrush(legend_colors[i]);
+        hOldBrush = SelectBrush(hdc, hLegBrush);
+        int coords[4];
+        to_window(x0, y0 + dy * i, coords[0], coords[3]);
+        to_window(x0 + hx, y0 + dy * i + hy, coords[2], coords[1]);
+        Rectangle(hdc, coords[0], coords[1], coords[2], coords[3]);
+        SelectPen(hdc, hOldPen);
+        SelectBrush(hdc, hOldBrush);
+        DeleteBrush(hLegBrush);
 
+        SetBkColor(hdc, legend_colors[i]);
+        HFONT hLegFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
+        hOldFont = (HFONT)SelectObject(hdc, hLegFont);
+        char st[17];
+        int exponent  = (int)floor(log10(fabs(legend_values[i])));
+        if(abs(exponent) < 0) exponent = 0;
+        double base   = legend_values[i] * pow(10.0, -1.0 * exponent);
+#if defined _MSC_VER && _MSC_VER >= 1400
+        sprintf_s(st, 17, "%.2fE%+03d", base, exponent);
+#else
+        sprintf(st, "%.2fE%+03d", base, exponent);
+#endif
+        to_window(x0 + dx * i + 0.004, y0 + dy * i + hy / 2.0 - 0.01 + font_correct, x, y);
+        TextOutA(hdc, x, y, st, (int)strlen(st));
+        SelectObject(hdc, hOldFont);
+    }
+    SetBkColor(hdc, RGB(255, 255, 255));
+#endif
+/*
     if(draw_vectors)
     {
         painter.setPen(QPen(Qt::black, 1.2));
@@ -816,6 +882,6 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
             }
         }
     }
-
-    painter.end();
+*/
+    EndPaint(hwnd, &ps);
 }
