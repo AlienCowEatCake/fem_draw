@@ -108,6 +108,7 @@ void MainWindow::on_actionOpen_Tecplot_File_triggered()
     if(fileName.length() == 0) return;
     ui->widget->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
     ui->widget->tec_read(fileName.toStdString());
+    if(!ui->widget->is_loaded) return;
     // Ненене, еще не все готово!
     ui->widget->is_loaded = false;
 

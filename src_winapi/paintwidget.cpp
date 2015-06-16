@@ -36,7 +36,7 @@ wifstream & getline(wifstream & ifs, string & str)
 // Вывести msgbox с ошибкой
 void paintwidget::print_io_error()
 {
-    fprintf(stderr, "Error: Corrupted file\n");
+    MessageBox(hwnd, TEXT("Error: Corrupted file"), TEXT("Error"), MB_OK | MB_ICONERROR);
 }
 
 // Чтение текплотовских значений из файла
