@@ -23,9 +23,9 @@ RC_FILE += resources/icon.rc
 DEFINES += IDI_ICON1=42
 
 win32-g++* {
-    QMAKE_LIBS += -lgdi32 -lcomctl32 -luser32
+    QMAKE_LIBS += -lgdi32 -lcomctl32 -luser32 -lcomdlg32
 } else {
-    QMAKE_LIBS += gdi32.lib comctl32.lib user32.lib
+    QMAKE_LIBS += gdi32.lib comctl32.lib user32.lib comdlg32.lib
     QMAKE_LFLAGS_WINDOWS += -ENTRY:"mainCRTStartup"
 }
 

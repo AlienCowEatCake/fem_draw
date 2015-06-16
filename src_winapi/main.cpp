@@ -59,15 +59,108 @@ void widget_redraw()
     InvalidateRect(hwnd, &r1, FALSE);
 }
 
+// Событие при открытии файла
+void on_actionOpen_Tecplot_File_triggered()
+{
+    // Запомним старые значения индексов, чтоб потом восстановить
+    size_t old_draw_index = pdraw->draw_index;
+    pdraw->draw_index = 0;
+    size_t old_ind_vec_1 = pdraw->ind_vec_1;
+    pdraw->ind_vec_1 = 0;
+    size_t old_ind_vec_2 = pdraw->ind_vec_2;
+    pdraw->ind_vec_2 = 0;
+
+    // Откроем файл
+    OPENFILENAME ofn;
+    TCHAR szFile[260] = TEXT("");
+    ZeroMemory(& ofn, sizeof(OPENFILENAME));
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = TEXT("Tecplot Data Files\0*.dat\0");
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = TEXT("Open Tecplot File");
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = NULL;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    if(GetOpenFileName(& ofn) != TRUE) return;
+    pdraw->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
+    pdraw->tec_read(ofn.lpstrFile);
+    // Ненене, еще не все готово!
+    pdraw->is_loaded = false;
+
+    // Очистим поля в комбобоксах
+    while(ComboBox_GetCount(GetDlgItem(hwnd, CTRL_COMBOBOX_COLOR)) > 0)
+        ComboBox_DeleteString(GetDlgItem(hwnd, CTRL_COMBOBOX_COLOR), 0);
+    while(ComboBox_GetCount(GetDlgItem(hwnd, CTRL_COMBOBOX_VECTORS_U)) > 0)
+        ComboBox_DeleteString(GetDlgItem(hwnd, CTRL_COMBOBOX_VECTORS_U), 0);
+    while(ComboBox_GetCount(GetDlgItem(hwnd, CTRL_COMBOBOX_VECTORS_V)) > 0)
+        ComboBox_DeleteString(GetDlgItem(hwnd, CTRL_COMBOBOX_VECTORS_V), 0);
+
+    // Заполним поля в комбобоксах
+    for(size_t i = 0; i < pdraw->variables.size(); i++)
+    {
+        LPCTSTR var;
+#if defined UNICODE || defined _UNICODE
+        const int bufsize = 256;
+        WCHAR buf[bufsize];
+        mbstowcs(buf, pdraw->variables[i].c_str(), bufsize);
+        var = buf;
+#else
+        var = pdraw->variables[i].c_str();
+#endif
+        ComboBox_AddString(GetDlgItem(hwnd, CTRL_COMBOBOX_COLOR), var);
+        ComboBox_AddString(GetDlgItem(hwnd, CTRL_COMBOBOX_VECTORS_U), var);
+        ComboBox_AddString(GetDlgItem(hwnd, CTRL_COMBOBOX_VECTORS_V), var);
+    }
+
+    // Попытаемся восстановить старые индексы
+    if(old_draw_index < pdraw->variables.size())
+        ComboBox_SetCurSel(GetDlgItem(hwnd, CTRL_COMBOBOX_COLOR), (int)old_draw_index);
+    else
+        ComboBox_SetCurSel(GetDlgItem(hwnd, CTRL_COMBOBOX_COLOR), 0);
+
+    if(old_ind_vec_1 < pdraw->variables.size())
+        ComboBox_SetCurSel(GetDlgItem(hwnd, CTRL_COMBOBOX_VECTORS_U), (int)old_ind_vec_1);
+    else
+        ComboBox_SetCurSel(GetDlgItem(hwnd, CTRL_COMBOBOX_VECTORS_U), 0);
+
+    if(old_ind_vec_2 < pdraw->variables.size())
+        ComboBox_SetCurSel(GetDlgItem(hwnd, CTRL_COMBOBOX_VECTORS_V), (int)old_ind_vec_2);
+    else
+        ComboBox_SetCurSel(GetDlgItem(hwnd, CTRL_COMBOBOX_VECTORS_V), 0);
+
+    // Устанавливаем оптимальное значение для векторов
+    char vect_buf[16];
+    if(pdraw->vect_value < vect_min)
+        sprintf(vect_buf, "%d", vect_min);
+    else if(pdraw->vect_value > vect_max)
+        sprintf(vect_buf, "%d", vect_max);
+    else
+        sprintf(vect_buf, "%d", pdraw->vect_value);
+    SetWindowTextA(GetDlgItem(hwnd, CTRL_SPINBOX_VECTORS_TEXT), vect_buf);
+
+    // А вот теперь готово
+    pdraw->is_loaded = true;
+    widget_redraw();
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     switch(Msg)
     {
     case WM_COMMAND:    // Нажата кнопка
     {
-        /*
         switch(LOWORD(wParam))
         {
+        case CTRL_MENU_OPEN: // Событие при открытии файла
+        {
+            on_actionOpen_Tecplot_File_triggered();
+            break;
+        }
+
+        /*
         case CNTRL_DRAW_MESH:   // Переключалка рисования сетки
         {
             HWND hwndCheck = GetDlgItem(hwnd, CNTRL_DRAW_MESH);
@@ -153,8 +246,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 }
             }
             break;
-        }
         }*/
+        }
         break;
     }
     case WM_SETTEXT:
@@ -401,21 +494,14 @@ int main()
     SendMessage(GetDlgItem(hwnd, CTRL_CHECKBOX_COLOR), BM_SETCHECK, BST_CHECKED, 0);
     SendMessage(GetDlgItem(hwnd, CTRL_CHECKBOX_ISOLINES), BM_SETCHECK, BST_CHECKED, 0);
     SendMessage(GetDlgItem(hwnd, CTRL_CHECKBOX_VECTORS), BM_SETCHECK, BST_UNCHECKED, 0);
-/*
-    draw.draw_isolines = true;
-    draw.draw_color = true;
+
+    // Начальные значения элементов управления
     draw.set_isolines_num((size_t)isol_curr);
     draw.set_div_num((size_t)smooth_curr);
-    draw.hwnd = GetDlgItem(hwnd, CNTRL_GDI_WIDGET);
+    draw.hwnd = GetDlgItem(hwnd, CTRL_PAINT_WIDGET);
     draw.hdc = GetDC(draw.hwnd);
     SetBkColor(draw.hdc, RGB(255, 255, 255));
 
-    draw.draw_vectors = true;
-    draw.skip_vec = 10;
-    draw.ind_vec_1 = 2;
-    draw.ind_vec_2 = 3;
-    draw.tec_read("../fem_draw/examples/plot.dat");
-*/
     // Покажем окно и запустим обработчик сообщений
     ShowWindow(hwnd, SW_SHOWNORMAL);
     UpdateWindow(hwnd);

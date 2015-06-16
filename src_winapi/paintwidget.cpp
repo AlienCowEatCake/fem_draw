@@ -19,6 +19,20 @@
 // Рисовать ли легенду справа
 #define USE_LEGEND
 
+// getline с поддержкой юникода
+#if defined UNICODE || defined _UNICODE
+wifstream & getline(wifstream & ifs, string & str)
+{
+    const int bufsize = 4096;
+    WCHAR buf[bufsize];
+    ifs.getline(buf, bufsize);
+    char buf2[bufsize];
+    wcstombs(buf2, buf, bufsize);
+    str.assign(buf2);
+    return ifs;
+}
+#endif
+
 // Вывести msgbox с ошибкой
 void paintwidget::print_io_error()
 {
@@ -26,7 +40,7 @@ void paintwidget::print_io_error()
 }
 
 // Чтение текплотовских значений из файла
-void paintwidget::tec_read(const string & filename)
+void paintwidget::tec_read(LPCTSTR filename)
 {
     // Чистим старое
     is_loaded = false;
@@ -37,7 +51,11 @@ void paintwidget::tec_read(const string & filename)
     variables.clear();
 
     // Пошли читать файл
-    ifstream ifs(filename.c_str());
+#if defined UNICODE || defined _UNICODE
+    wifstream ifs(filename);
+#else
+    ifstream ifs(filename);
+#endif
     string tmp;
     // TITLE = "Slice Z = -10"
     getline(ifs, tmp);

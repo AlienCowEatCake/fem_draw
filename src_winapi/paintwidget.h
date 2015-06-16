@@ -16,6 +16,7 @@
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "user32.lib")
+#pragma comment(lib, "comdlg32.lib")
 #endif
 
 #include <windows.h>
@@ -84,7 +85,7 @@ public:
     size_t draw_index;
 
     // Чтение текплотовских значений из файла
-    void tec_read(const string & filename);
+    void tec_read(LPCTSTR filename);
 
     // Количество изолиний
     size_t isolines_num;
