@@ -18,6 +18,18 @@
 #if !defined WC_COMBOBOX
 #define WC_COMBOBOX TEXT("Combobox")
 #endif
+#if !defined VK_ADD
+#define VK_ADD            0x6B
+#endif
+#if !defined VK_SUBTRACT
+#define VK_SUBTRACT       0x6D
+#endif
+#if !defined VK_OEM_MINUS
+#define VK_OEM_MINUS      0xBD
+#endif
+#if !defined VK_OEM_PLUS
+#define VK_OEM_PLUS       0xBB
+#endif
 
 #define CONTROL_PAINT_WIDGET                10000
 #define CONTROL_CHECKBOX_COLOR              10001
@@ -333,6 +345,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     switch(Msg)
     {
+    case WM_HOTKEY:     // Нажато сочетание клавиш
     case WM_COMMAND:    // Нажата кнопка
     {
         switch(LOWORD(wParam))
@@ -512,6 +525,13 @@ int main()
     AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hAboutMenu, TEXT("About"));
     AppendMenu(hAboutMenu, MF_STRING, CONTROL_MENU_ABOUT, TEXT("About FEM Draw"));
     SetMenu(hwnd, hMenu);
+    RegisterHotKey(hwnd, CONTROL_MENU_OPEN, MOD_CONTROL, 0x4F); // Ctrl+O
+    RegisterHotKey(hwnd, CONTROL_MENU_SAVE, MOD_CONTROL, 0x53); // Ctrl+S
+    RegisterHotKey(hwnd, CONTROL_MENU_EXIT, MOD_CONTROL, 0x51); // Ctrl+Q
+    RegisterHotKey(hwnd, CONTROL_MENU_INCREASE_INTERPOLATION, 0, VK_OEM_PLUS);  // +
+    RegisterHotKey(hwnd, CONTROL_MENU_INCREASE_INTERPOLATION, 0, VK_ADD);       // +
+    RegisterHotKey(hwnd, CONTROL_MENU_DECREASE_INTERPOLATION, 0, VK_OEM_MINUS); // -
+    RegisterHotKey(hwnd, CONTROL_MENU_DECREASE_INTERPOLATION, 0, VK_SUBTRACT);  // -
 
     // Замутим чекбокс "Color"
     CreateWindow(
