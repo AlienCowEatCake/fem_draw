@@ -8,6 +8,8 @@
 #include <QFont>
 #include <QString>
 #include <QMessageBox>
+#include <QFile>
+#include <QTextStream>
 #include <fstream>
 #include <limits>
 #include <cstring>
@@ -24,6 +26,13 @@
 // Рисовать ли легенду справа
 #define USE_LEGEND
 
+// getline для QTextStream
+QTextStream & getline(QTextStream & ifs, string & str)
+{
+    str = ifs.readLine().toStdString();
+    return ifs;
+}
+
 // Вывести msgbox с ошибкой
 void paintwidget::print_io_error()
 {
@@ -39,7 +48,7 @@ void paintwidget::print_io_error()
 }
 
 // Чтение текплотовских значений из файла
-void paintwidget::tec_read(const string & filename)
+void paintwidget::tec_read(const QString & filename)
 {
     // Чистим старое
     is_loaded = false;
@@ -50,7 +59,13 @@ void paintwidget::tec_read(const string & filename)
     variables.clear();
 
     // Пошли читать файл
-    ifstream ifs(filename.c_str());
+    QFile qf(filename);
+    if (!qf.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        print_io_error();
+        return;
+    }
+    QTextStream ifs(& qf);
     string tmp;
     // TITLE = "Slice Z = -10"
     getline(ifs, tmp);
@@ -201,12 +216,12 @@ void paintwidget::tec_read(const string & filename)
         }
     }
 
-    if(!ifs.good())
+    if(ifs.status() != QTextStream::Ok)
     {
         print_io_error();
         return;
     }
-    ifs.close();
+    qf.close();
 
     // Небольшие корректировки на всякий случай
     size_x = max_x - min_x;

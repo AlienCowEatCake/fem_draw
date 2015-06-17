@@ -67,7 +67,7 @@ public:
     size_t draw_index;
 
     // Чтение текплотовских значений из файла
-    void tec_read(const string & filename);
+    void tec_read(const QString & filename);
 
     // Количество изолиний
     size_t isolines_num;

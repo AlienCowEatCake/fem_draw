@@ -110,7 +110,7 @@ void MainWindow::on_actionOpen_Tecplot_File_triggered()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Tecplot File"), "", tr("Tecplot Data Files (*.dat *.plt);;All Files (*.*)"));
     if(fileName.length() == 0) return;
     ui->widget->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
-    ui->widget->tec_read(fileName.toStdString());
+    ui->widget->tec_read(fileName);
     if(!ui->widget->is_loaded) return;
     // Ненене, еще не все готово!
     ui->widget->is_loaded = false;
