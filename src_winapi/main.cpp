@@ -60,19 +60,19 @@ int vect_min = 1,   vect_max = 10000, vect_curr = 1;
 
 void widget_redraw()
 {
-    RECT r1, r2;
-    GetWindowRect(pdraw->hwnd, &r1);
-    GetWindowRect(hwnd, &r2);
-    int dx = r2.left + GetSystemMetrics(SM_CXFRAME);
-    int dy = r2.top + GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYMENU);
-    r1.top -= dy;
-    r1.bottom -= dy;
-    r1.left -= dx;
-    r1.right -= dx;
-    InvalidateRect(hwnd, &r1, FALSE);
-//    RECT r;
-//    GetClientRect(hwnd, &r);
-//    InvalidateRect(hwnd, &r, FALSE);
+//    RECT r1, r2;
+//    GetWindowRect(pdraw->hwnd, &r1);
+//    GetWindowRect(hwnd, &r2);
+//    int dx = r2.left + GetSystemMetrics(SM_CXFRAME);
+//    int dy = r2.top + GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYMENU);
+//    r1.top -= dy;
+//    r1.bottom -= dy;
+//    r1.left -= dx;
+//    r1.right -= dx;
+//    InvalidateRect(hwnd, &r1, FALSE);
+    RECT r;
+    GetClientRect(hwnd, &r);
+    InvalidateRect(hwnd, &r, FALSE);
 }
 
 // Событие при открытии файла
@@ -229,7 +229,8 @@ void on_comboBox_Color_currentIndexChanged()
     if((size_t)index != pdraw->draw_index)
     {
         pdraw->draw_index = (size_t)index;
-        widget_redraw();
+        if(pdraw->draw_color || pdraw->draw_isolines)
+            widget_redraw();
     }
 }
 
@@ -262,7 +263,8 @@ void on_spinBox_Isolines_valueChanged()
         {
             isol_curr = val;
             pdraw->set_isolines_num((size_t)isol_curr);
-            widget_redraw();
+            if(pdraw->draw_isolines)
+                widget_redraw();
         }
         else
         {
@@ -305,7 +307,8 @@ void on_spinBox_Vectors_valueChanged()
         {
             vect_curr = val;
             pdraw->skip_vec = (size_t)vect_curr;
-            widget_redraw();
+            if(pdraw->draw_vectors)
+                widget_redraw();
         }
         else
         {
@@ -326,7 +329,8 @@ void on_comboBox_Vectors_U_currentIndexChanged()
     if((size_t)index != pdraw->ind_vec_1)
     {
         pdraw->ind_vec_1 = (size_t)index;
-        widget_redraw();
+        if(pdraw->draw_vectors)
+            widget_redraw();
     }
 }
 
@@ -337,7 +341,8 @@ void on_comboBox_Vectors_V_currentIndexChanged()
     if((size_t)index != pdraw->ind_vec_2)
     {
         pdraw->ind_vec_2 = (size_t)index;
-        widget_redraw();
+        if(pdraw->draw_vectors)
+            widget_redraw();
     }
 }
 
@@ -537,7 +542,7 @@ int main()
     CreateWindow(
                 WC_BUTTON, TEXT("Color"),
                 WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
-                10, 0, 65, 25,
+                10, 0, 64, 25,
                 hwnd, (HMENU)CONTROL_CHECKBOX_COLOR, hInstance, NULL
                 );
     set_tooltip(hInstance, hwnd, CONTROL_CHECKBOX_COLOR, TEXT("Draw color image"));
@@ -555,7 +560,7 @@ int main()
     CreateWindow(
                 WC_BUTTON, TEXT("Isolines"),
                 WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
-                160, 0, 80, 25,
+                160, 0, 79, 25,
                 hwnd, (HMENU)CONTROL_CHECKBOX_ISOLINES, hInstance, NULL
                 );
     set_tooltip(hInstance, hwnd, CONTROL_CHECKBOX_ISOLINES, TEXT("Draw isolines"));
@@ -583,7 +588,7 @@ int main()
     CreateWindow(
                 WC_BUTTON, TEXT("Vectors"),
                 WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | WS_TABSTOP,
-                310, 0, 80, 25,
+                310, 0, 79, 25,
                 hwnd, (HMENU)CONTROL_CHECKBOX_VECTORS, hInstance, NULL
                 );
     set_tooltip(hInstance, hwnd, CONTROL_CHECKBOX_VECTORS, TEXT("Draw vectors"));
@@ -611,7 +616,7 @@ int main()
     CreateWindow(
                 WC_STATIC, TEXT("U:"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
-                455, 0, 25, 25,
+                455, 0, 14, 25,
                 hwnd, (HMENU)CONTROL_LABEL_VECTORS_U, hInstance, NULL
                 );
 
@@ -628,7 +633,7 @@ int main()
     CreateWindow(
                 WC_STATIC, TEXT("V:"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
-                550, 0, 25, 25,
+                550, 0, 14, 25,
                 hwnd, (HMENU)CONTROL_LABEL_VECTORS_V, hInstance, NULL
                 );
 

@@ -622,6 +622,8 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
         float x_real = (float)(std::floor((xd * size_x + min_x) * 10000.0f + 0.5f)) / 10000.0f;
         char st[17];
         sprintf(st, "%.2f", x_real);
+        if(strcmp(st + strlen(st) - 3, ".00") == 0)
+            st[strlen(st) - 3] = '\0';
         to_window(xd - 0.01f, -0.04f + font_correct, x, y);
         TextOutA(hdc, x, y, st, (int)strlen(st));
     }
@@ -631,6 +633,8 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
         float y_real = (float)(std::floor((yd * size_y + min_y) * 10000.0f + 0.5f)) / 10000.0f;
         char st[17];
         sprintf(st, "%.2f", y_real);
+        if(strcmp(st + strlen(st) - 3, ".00") == 0)
+            st[strlen(st) - 3] = '\0';
         to_window(-0.052f, yd - 0.01f + font_correct, x, y);
         TextOutA(hdc, x, y, st, (int)strlen(st));
     }
@@ -681,6 +685,7 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
 
             // Немного странной фигни
             vector<pair<float, float> > vct;
+            vct.reserve(3);
             if(segment_isol[0] != segment_isol[1])
                 vct.push_back(make_pair(((triangles[i].nodes[1].x + triangles[i].nodes[0].x) * 0.5f - min_x) / size_x, ((triangles[i].nodes[1].y + triangles[i].nodes[0].y) * 0.5f - min_y) / size_y));
             if(segment_isol[0] != segment_isol[2])

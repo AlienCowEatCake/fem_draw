@@ -90,8 +90,11 @@ void MainWindow::on_spinBox_valueChanged(int arg1)
     if(ui->widget->isolines_num != (size_t)arg1)
     {
         if(arg1 >= ui->spinBox->minimum() && arg1 <= ui->spinBox->maximum())
+        {
             ui->widget->set_isolines_num(arg1);
-        ui->widget->repaint();
+            if(ui->widget->draw_isolines)
+                ui->widget->repaint();
+        }
     }
 }
 
@@ -166,7 +169,8 @@ void MainWindow::on_comboBox_currentIndexChanged(int index)
     if(ui->widget->draw_index != (size_t)index)
     {
         ui->widget->draw_index = (size_t)index;
-        ui->widget->repaint();
+        if(ui->widget->draw_color || ui->widget->draw_isolines)
+            ui->widget->repaint();
     }
 }
 
@@ -176,7 +180,8 @@ void MainWindow::on_comboBox_2_currentIndexChanged(int index)
     if(ui->widget->ind_vec_1 != (size_t)index)
     {
         ui->widget->ind_vec_1 = (size_t)index;
-        ui->widget->repaint();
+        if(ui->widget->draw_vectors)
+            ui->widget->repaint();
     }
 }
 
@@ -186,7 +191,8 @@ void MainWindow::on_comboBox_3_currentIndexChanged(int index)
     if(ui->widget->ind_vec_2 != (size_t)index)
     {
         ui->widget->ind_vec_2 = (size_t)index;
-        ui->widget->repaint();
+        if(ui->widget->draw_vectors)
+            ui->widget->repaint();
     }
 }
 
@@ -203,8 +209,11 @@ void MainWindow::on_spinBox_2_valueChanged(int arg1)
     if(ui->widget->skip_vec != (size_t)arg1)
     {
         if(arg1 >= ui->spinBox_2->minimum() && arg1 <= ui->spinBox_2->maximum())
+        {
             ui->widget->skip_vec = (size_t)arg1;
-        ui->widget->repaint();
+            if(ui->widget->draw_vectors)
+                ui->widget->repaint();
+        }
     }
 }
 
