@@ -94,7 +94,7 @@ void on_actionOpen_Tecplot_File_triggered()
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = TEXT("Tecplot Data Files\0*.dat\0");
+    ofn.lpstrFilter = TEXT("Tecplot Data Files\0*.dat;*.plt\0All Files\0*.*\0");
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = TEXT("Open Tecplot File");
     ofn.nMaxFileTitle = 0;

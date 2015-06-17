@@ -256,8 +256,12 @@ void paintwidget::set_div_num(size_t num)
     vector<triangle> tmp1;
     vector<triangle> tmp2;
     // Посчитаем в локальных координатах
-    tmp1.push_back(triangle(point(0.0f, 0.0f), point(1.0f, 0.0f), point(0.0f, 1.0f)));
-    tmp1.push_back(triangle(point(1.0f, 0.0f), point(1.0f, 1.0f), point(0.0f, 1.0f)));
+//    tmp1.push_back(triangle(point(0.0f, 0.0f), point(1.0f, 0.0f), point(0.0f, 1.0f)));
+//    tmp1.push_back(triangle(point(1.0f, 0.0f), point(1.0f, 1.0f), point(0.0f, 1.0f)));
+    tmp1.push_back(triangle( point(0.0f, 0.0f), point(1.0f, 0.0f), point(0.5f, 0.5f) ));
+    tmp1.push_back(triangle( point(1.0f, 0.0f), point(1.0f, 1.0f), point(0.5f, 0.5f) ));
+    tmp1.push_back(triangle( point(1.0f, 1.0f), point(0.0f, 1.0f), point(0.5f, 0.5f) ));
+    tmp1.push_back(triangle( point(0.0f, 1.0f), point(0.0f, 0.0f), point(0.5f, 0.5f) ));
     for(size_t i = 0; i < num; i++)
     {
         tmp2.reserve(tmp1.size() * 4);
@@ -291,6 +295,9 @@ void paintwidget::set_div_num(size_t num)
             float y1 = tec_data[(i + 1) * nx + j + 1].coord.y;
             float hx = x1 - x0;
             float hy = y1 - y0;
+            float step_x_i = std::fabs(tec_data[(i + 1) * nx + j].coord.x - x0);
+            float step_x_j = std::fabs(tec_data[i * nx + j + 1].coord.x - x0);
+            bool native_order = (step_x_i > step_x_j) ? true : false;
 
             for(size_t tn = 0; tn < tmp1.size(); tn++)
             {
@@ -310,10 +317,21 @@ void paintwidget::set_div_num(size_t num)
                     // Строим билинейную интерполяцию
                     for(size_t m = 0; m < variables.size(); m++)
                     {
-                        float r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j].value[m] +
-                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[i * nx + j + 1].value[m];
-                        float r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[(i + 1) * nx + j].value[m] +
+                        float r1, r2;
+                        if(native_order)
+                        {
+                            r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j].value[m] +
+                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * nx + j].value[m];
+                            r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j + 1].value[m] +
                                     (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
+                        }
+                        else
+                        {
+                            r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j].value[m] +
+                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[i * nx + j + 1].value[m];
+                            r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[(i + 1) * nx + j].value[m] +
+                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
+                        }
                         tmp_tr.solution[k][m] = (y1 - tmp_tr.nodes[k].y) / hy * r1 +
                                              (tmp_tr.nodes[k].y - y0) / hy * r2;
                     }
@@ -333,10 +351,21 @@ void paintwidget::set_div_num(size_t num)
                 // Строим билинейную интерполяцию
                 for(size_t m = 0; m < variables.size(); m++)
                 {
-                    float r1 = (x1 - barycenter.x) / hx * tec_data[i * nx + j].value[m] +
-                                (barycenter.x - x0) / hx * tec_data[i * nx + j + 1].value[m];
-                    float r2 = (x1 - barycenter.x) / hx * tec_data[(i + 1) * nx + j].value[m] +
+                    float r1, r2;
+                    if(native_order)
+                    {
+                        r1 = (x1 - barycenter.x) / hx * tec_data[i * nx + j].value[m] +
+                                (barycenter.x - x0) / hx * tec_data[(i + 1) * nx + j].value[m];
+                        r2 = (x1 - barycenter.x) / hx * tec_data[i * nx + j + 1].value[m] +
                                 (barycenter.x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
+                    }
+                    else
+                    {
+                        r1 = (x1 - barycenter.x) / hx * tec_data[i * nx + j].value[m] +
+                                (barycenter.x - x0) / hx * tec_data[i * nx + j + 1].value[m];
+                        r2 = (x1 - barycenter.x) / hx * tec_data[(i + 1) * nx + j].value[m] +
+                                (barycenter.x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
+                    }
                     center[m] = (y1 - barycenter.y) / hy * r1 +
                                          (barycenter.y - y0) / hy * r2;
                 }

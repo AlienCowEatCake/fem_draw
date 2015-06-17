@@ -87,9 +87,12 @@ void MainWindow::on_checkBox_3_clicked()
 // Событие при изменении числа изолиний
 void MainWindow::on_spinBox_valueChanged(int arg1)
 {
-    if(arg1 >= ui->spinBox->minimum() && arg1 <= ui->spinBox->maximum())
-        ui->widget->set_isolines_num(arg1);
-    ui->widget->repaint();
+    if(ui->widget->isolines_num != (size_t)arg1)
+    {
+        if(arg1 >= ui->spinBox->minimum() && arg1 <= ui->spinBox->maximum())
+            ui->widget->set_isolines_num(arg1);
+        ui->widget->repaint();
+    }
 }
 
 // Событие при открытии файла
@@ -104,7 +107,7 @@ void MainWindow::on_actionOpen_Tecplot_File_triggered()
     ui->widget->ind_vec_2 = 0;
 
     // Откроем файл
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Tecplot File"), "", tr("Tecplot Data Files (*.dat)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Tecplot File"), "", tr("Tecplot Data Files (*.dat *.plt);;All Files (*.*)"));
     if(fileName.length() == 0) return;
     ui->widget->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
     ui->widget->tec_read(fileName.toStdString());
@@ -160,22 +163,31 @@ void MainWindow::on_actionOpen_Tecplot_File_triggered()
 // Изменение переменной, которую выводим
 void MainWindow::on_comboBox_currentIndexChanged(int index)
 {
-    ui->widget->draw_index = (size_t)index;
-    ui->widget->repaint();
+    if(ui->widget->draw_index != (size_t)index)
+    {
+        ui->widget->draw_index = (size_t)index;
+        ui->widget->repaint();
+    }
 }
 
 // Первая переменная вектора
 void MainWindow::on_comboBox_2_currentIndexChanged(int index)
 {
-    ui->widget->ind_vec_1 = (size_t)index;
-    ui->widget->repaint();
+    if(ui->widget->ind_vec_1 != (size_t)index)
+    {
+        ui->widget->ind_vec_1 = (size_t)index;
+        ui->widget->repaint();
+    }
 }
 
 // Вторая переменная вектора
 void MainWindow::on_comboBox_3_currentIndexChanged(int index)
 {
-    ui->widget->ind_vec_2 = (size_t)index;
-    ui->widget->repaint();
+    if(ui->widget->ind_vec_2 != (size_t)index)
+    {
+        ui->widget->ind_vec_2 = (size_t)index;
+        ui->widget->repaint();
+    }
 }
 
 // Переключение рисовки векторов
@@ -188,24 +200,31 @@ void MainWindow::on_checkBox_4_clicked()
 // Число рисуемых векторов
 void MainWindow::on_spinBox_2_valueChanged(int arg1)
 {
-    if(arg1 >= ui->spinBox_2->minimum() && arg1 <= ui->spinBox_2->maximum())
-        ui->widget->skip_vec = (size_t)arg1;
-    ui->widget->repaint();
+    if(ui->widget->skip_vec != (size_t)arg1)
+    {
+        if(arg1 >= ui->spinBox_2->minimum() && arg1 <= ui->spinBox_2->maximum())
+            ui->widget->skip_vec = (size_t)arg1;
+        ui->widget->repaint();
+    }
 }
 
 // Событие при изменении уровня интерполяции
 void MainWindow::on_actionIncrease_Interpolation_triggered()
 {
     if(ui->widget->div_num < 7)
+    {
         ui->widget->set_div_num(ui->widget->div_num + 1);
-    ui->widget->repaint();
+        ui->widget->repaint();
+    }
 }
 
 void MainWindow::on_actionDecrease_Interpolation_triggered()
 {
     if(ui->widget->div_num > 0)
+    {
         ui->widget->set_div_num(ui->widget->div_num - 1);
-    ui->widget->repaint();
+        ui->widget->repaint();
+    }
 }
 
 // Событие при сохранении
