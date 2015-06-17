@@ -27,7 +27,11 @@ wifstream & getline(wifstream & ifs, string & str)
     WCHAR buf[bufsize];
     ifs.getline(buf, bufsize);
     char buf2[bufsize];
+#if defined _MSC_VER && _MSC_VER >= 1400
+    wcstombs_s(NULL, buf2, buf, bufsize);
+#else
     wcstombs(buf2, buf, bufsize);
+#endif
     str.assign(buf2);
     return ifs;
 }
@@ -74,7 +78,11 @@ void paintwidget::tec_read(LPCTSTR filename)
             if((end_c = strchr(++curr_c, '\"')) != NULL)
             {
                 size_t len = end_c - curr_c;
+#if defined _MSC_VER && _MSC_VER >= 1400
+                strncpy_s(var_c[i], VAR_MAX_LEN, curr_c, len);
+#else
                 strncpy(var_c[i], curr_c, len);
+#endif
                 var_c[i][len] = '\0';
             }
             else
@@ -97,7 +105,11 @@ void paintwidget::tec_read(LPCTSTR filename)
             {
                 char var[VAR_MAX_LEN];
                 size_t len = end_c - curr_c;
+#if defined _MSC_VER && _MSC_VER >= 1400
+                strncpy_s(var, VAR_MAX_LEN, curr_c, len);
+#else
                 strncpy(var, curr_c, len);
+#endif
                 var[len] = '\0';
                 variables.push_back(var);
             }
@@ -118,7 +130,11 @@ void paintwidget::tec_read(LPCTSTR filename)
         if((curr_c = strchr(curr_c, '=')) != NULL)
         {
             int bla;
+#if defined _MSC_VER && _MSC_VER >= 1400
+            if(sscanf_s(++curr_c, "%d", &bla) != 1)
+#else
             if(sscanf(++curr_c, "%d", &bla) != 1)
+#endif
             {
                 // Если точка из двух координат, учтем это
                 if(i == 2)
@@ -621,7 +637,11 @@ void paintwidget::draw(HDC hdc_local)
         float xd = (float)i / (float)num_ticks_x;
         float x_real = (float)(std::floor((xd * size_x + min_x) * 10000.0f + 0.5f)) / 10000.0f;
         char st[17];
+#if defined _MSC_VER && _MSC_VER >= 1400
+        sprintf_s(st, 17, "%.2f", x_real);
+#else
         sprintf(st, "%.2f", x_real);
+#endif
         if(strcmp(st + strlen(st) - 3, ".00") == 0)
             st[strlen(st) - 3] = '\0';
         st[5] = '\0';
@@ -633,7 +653,11 @@ void paintwidget::draw(HDC hdc_local)
         float yd = (float)i / (float)num_ticks_y;
         float y_real = (float)(std::floor((yd * size_y + min_y) * 10000.0f + 0.5f)) / 10000.0f;
         char st[17];
+#if defined _MSC_VER && _MSC_VER >= 1400
+        sprintf_s(st, 17, "%.2f", y_real);
+#else
         sprintf(st, "%.2f", y_real);
+#endif
         if(strcmp(st + strlen(st) - 3, ".00") == 0)
             st[strlen(st) - 3] = '\0';
         st[5] = '\0';

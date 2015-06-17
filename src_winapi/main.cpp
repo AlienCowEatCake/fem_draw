@@ -559,14 +559,15 @@ void set_tooltip(HINSTANCE hInstance, HWND hwnd, int item, LPTSTR text)
     SendMessage(hTooltip, TTM_ADDTOOL, 0, (LPARAM)(LPTOOLINFO) & ti);
 }
 
-int main()
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     // Рисовалка
     paintwidget draw;
     pdraw = & draw;
 
     // Разное
-    HINSTANCE hInstance = GetModuleHandle(0);
+    (void)hPrevInstance;
+    (void)lpCmdLine;
     WNDCLASS wnd;
     memset(&wnd, 0, sizeof(WNDCLASS));
     wnd.style = CS_HREDRAW | CS_VREDRAW;
@@ -763,7 +764,7 @@ int main()
     SetBkColor(draw.hdc, RGB(255, 255, 255));
 
     // Покажем окно и запустим обработчик сообщений
-    ShowWindow(hwnd, SW_SHOWNORMAL);
+    ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
     MSG msg;
     while(GetMessage(&msg, NULL, 0, 0))

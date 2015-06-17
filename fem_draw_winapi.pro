@@ -26,7 +26,6 @@ win32-g++* {
     QMAKE_LIBS += -lgdi32 -lcomctl32 -luser32 -lcomdlg32
 } else {
     QMAKE_LIBS += gdi32.lib comctl32.lib user32.lib comdlg32.lib
-    QMAKE_LFLAGS_WINDOWS += -ENTRY:"mainCRTStartup"
 }
 
 *g++*|*clang* {
@@ -39,6 +38,4 @@ win32-g++* {
 *msvc* {
     QMAKE_CXXFLAGS_RELEASE -= -O2
     QMAKE_CXXFLAGS_RELEASE *= -Ox
-    DEFINES += _CRT_SECURE_NO_WARNINGS
-    DEFINES += _USE_MATH_DEFINES
 }
