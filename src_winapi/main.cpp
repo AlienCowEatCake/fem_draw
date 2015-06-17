@@ -1,10 +1,10 @@
+#include "paintwidget.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <cstdio>
 #include <windows.h>
 #include <commctrl.h>
-#include "paintwidget.h"
 
 #if !defined WC_BUTTON
 #define WC_BUTTON   TEXT("Button")
