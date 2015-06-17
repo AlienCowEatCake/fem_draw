@@ -103,7 +103,12 @@ void on_actionOpen_Tecplot_File_triggered()
     if(GetOpenFileName(& ofn) != TRUE) return;
     pdraw->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
     pdraw->tec_read(ofn.lpstrFile);
-    if(!pdraw->is_loaded) return;
+    if(!pdraw->is_loaded)
+    {
+        SetWindowText(hwnd, TEXT("FEM Draw"));
+        widget_redraw();
+        return;
+    }
     // Ненене, еще не все готово!
     pdraw->is_loaded = false;
 
@@ -158,6 +163,21 @@ void on_actionOpen_Tecplot_File_triggered()
         sprintf(vect_buf, "%d", pdraw->vect_value);
 #endif
     SetWindowTextA(GetDlgItem(hwnd, CONTROL_SPINBOX_VECTORS_TEXT), vect_buf);
+
+    // Установим заголовок окна
+#if defined UNICODE || defined _UNICODE
+    wstring label(ofn.lpstrFile);
+    size_t begin = label.find_last_of(TEXT("\\"));
+    if(begin != wstring::npos)
+        label = label.substr(begin + 1);
+#else
+    string label(ofn.lpstrFile);
+    size_t begin = label.find_last_of(TEXT("\\"));
+    if(begin != string::npos)
+        label = label.substr(begin + 1);
+#endif
+    label.append(TEXT(" - FEM Draw"));
+    SetWindowText(hwnd, label.c_str());
 
     // А вот теперь готово
     pdraw->is_loaded = true;
@@ -504,9 +524,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         }
         break;
     }
-    case WM_SETTEXT:
-        cout << "here" << endl;
-        break;
     case WM_SIZE:       // Изменение размера окна
     {
         RECT r;
@@ -560,7 +577,11 @@ void set_tooltip(HINSTANCE hInstance, HWND hwnd, int item, LPTSTR text)
     SendMessage(hTooltip, TTM_ADDTOOL, 0, (LPARAM)(LPTOOLINFO) & ti);
 }
 
+#if defined UNICODE || defined _UNICODE
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+#else
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#endif
 {
     // Рисовалка
     paintwidget draw;

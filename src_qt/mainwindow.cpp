@@ -114,7 +114,12 @@ void MainWindow::on_actionOpen_Tecplot_File_triggered()
     if(fileName.length() == 0) return;
     ui->widget->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
     ui->widget->tec_read(fileName);
-    if(!ui->widget->is_loaded) return;
+    if(!ui->widget->is_loaded)
+    {
+        this->setWindowTitle(trUtf8("FEM Draw"));
+        ui->widget->repaint();
+        return;
+    }
     // Ненене, еще не все готово!
     ui->widget->is_loaded = false;
 
@@ -157,6 +162,12 @@ void MainWindow::on_actionOpen_Tecplot_File_triggered()
         ui->spinBox_2->setValue(ui->spinBox_2->maximum());
     else
         ui->spinBox_2->setValue(ui->widget->vect_value);
+
+    // Установим заголовок окна
+    QStringList path = fileName.split('/');
+    QString label = path.last();
+    label.append(trUtf8(" - FEM Draw"));
+    this->setWindowTitle(label);
 
     // А вот теперь готово
     ui->widget->is_loaded = true;
