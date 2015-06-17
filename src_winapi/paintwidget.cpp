@@ -475,11 +475,7 @@ paintwidget::paintwidget()
     vect_value = 1;
 
     // WinAPI, мать его
-//    hwnd = GetConsoleWindow();
-//    hdc = GetDC(hwnd);
-//    SetBkColor(hdc, RGB(255, 255, 255));
     hwnd = NULL;
-    hdc = NULL;
 }
 
 // Пересчет значений изолиний
@@ -542,7 +538,7 @@ void paintwidget::to_window(float x, float y, int & xl, int & yl) const
 // Отрисовка сцены
 void paintwidget::paintEvent()
 {
-    hdc = BeginPaint(hwnd, &ps);
+    HDC hdc = BeginPaint(hwnd, &ps);
     draw(hdc);
     EndPaint(hwnd, &ps);
 }
@@ -573,12 +569,12 @@ void paintwidget::draw(HDC hdc_local)
 
     // Заливка области белым цветом
     HPEN hAreaPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-    hOldPen = SelectPen(hdc_local, hAreaPen);
+    hOldPen = (HPEN)SelectObject(hdc_local, hAreaPen);
     HBRUSH hAreaBrush = CreateSolidBrush(RGB(255, 255, 255));
-    hOldBrush = SelectBrush(hdc_local, hAreaBrush);
+    hOldBrush = (HBRUSH)SelectObject(hdc_local, hAreaBrush);
     Rectangle(hdc_local, 0, 0, width, height);
-    SelectPen(hdc_local, hOldPen);
-    SelectBrush(hdc_local, hOldBrush);
+    SelectObject(hdc_local, hOldPen);
+    SelectObject(hdc_local, hOldBrush);
     DeletePen(hAreaPen);
     DeleteBrush(hAreaBrush);
 
@@ -586,7 +582,7 @@ void paintwidget::draw(HDC hdc_local)
 
     // Координатная сетка
     HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(217, 217, 217));
-    hOldPen = SelectPen(hdc_local, hGridPen);
+    hOldPen = (HPEN)SelectObject(hdc_local, hGridPen);
     for(size_t i = 0; i <= num_ticks_x; i++)
     {
         float xd = (float)i / (float)num_ticks_x;
@@ -603,12 +599,12 @@ void paintwidget::draw(HDC hdc_local)
         to_window(1.0f, yd, x, y);
         LineTo(hdc_local, x, y);
     }
-    SelectPen(hdc_local, hOldPen);
+    SelectObject(hdc_local, hOldPen);
     DeletePen(hGridPen);
 
     // Координатные оси
     HPEN hAxisPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
-    hOldPen = SelectPen(hdc_local, hAxisPen);
+    hOldPen = (HPEN)SelectObject(hdc_local, hAxisPen);
     to_window(0.0f, -0.005f, x, y);
     MoveToEx(hdc_local, x, y, &pt);
     to_window(0.0f, 1.005f, x, y);
@@ -617,7 +613,7 @@ void paintwidget::draw(HDC hdc_local)
     MoveToEx(hdc_local, x, y, &pt);
     to_window(1.005f, 0.0f, x, y);
     LineTo(hdc_local, x, y);
-    SelectPen(hdc_local, hOldPen);
+    SelectObject(hdc_local, hOldPen);
     DeletePen(hAxisPen);
 
     // Подписи осей
@@ -673,12 +669,12 @@ void paintwidget::draw(HDC hdc_local)
         for(size_t i = 0; i < triangles.size(); i++)
         {
             HPEN hTrPen = GetStockPen(NULL_PEN);
-            hOldPen = SelectPen(hdc_local, hTrPen);
+            hOldPen = (HPEN)SelectObject(hdc_local, hTrPen);
             HBRUSH hTrBrush;
 
             // Задаем посчитанный цвет
             hTrBrush = CreateSolidBrush(triangles[i].color[draw_index]);
-            hOldBrush = SelectBrush(hdc_local, hTrBrush);
+            hOldBrush = (HBRUSH)SelectObject(hdc_local, hTrBrush);
 
             // Рисуем
             for(size_t k = 0; k < 3; k++)
@@ -689,14 +685,14 @@ void paintwidget::draw(HDC hdc_local)
             }
             Polygon(hdc_local, tr, 3);
 
-            SelectPen(hdc_local, hOldPen);
-            SelectBrush(hdc_local, hOldBrush);
+            SelectObject(hdc_local, hOldPen);
+            SelectObject(hdc_local, hOldBrush);
             DeleteBrush(hTrBrush);
         }
     }
 
     HPEN hIsolPen = GetStockPen(BLACK_PEN);
-    hOldPen = SelectPen(hdc_local, hIsolPen);
+    hOldPen = (HPEN)SelectObject(hdc_local, hIsolPen);
     // Изолинии рисуем только если оно нам надо
     if(draw_isolines)
     {
@@ -729,7 +725,7 @@ void paintwidget::draw(HDC hdc_local)
             }
         }
     }
-    SelectPen(hdc_local, hOldPen);
+    SelectObject(hdc_local, hOldPen);
 
 #if defined USE_LEGEND
     // Легенда
@@ -901,16 +897,16 @@ void paintwidget::draw(HDC hdc_local)
         static const float hx = 0.103f;
         static const float hy = 0.073f;
         HPEN hLegPen = GetStockPen(NULL_PEN);
-        hOldPen = SelectPen(hdc_local, hLegPen);
+        hOldPen = (HPEN)SelectObject(hdc_local, hLegPen);
         HBRUSH hLegBrush;
         hLegBrush = CreateSolidBrush(legend_colors[i]);
-        hOldBrush = SelectBrush(hdc_local, hLegBrush);
+        hOldBrush = (HBRUSH)SelectObject(hdc_local, hLegBrush);
         int coords[4];
         to_window(x0, y0 + dy * i, coords[0], coords[3]);
         to_window(x0 + hx, y0 + dy * i + hy, coords[2], coords[1]);
         Rectangle(hdc_local, coords[0], coords[1], coords[2], coords[3]);
-        SelectPen(hdc_local, hOldPen);
-        SelectBrush(hdc_local, hOldBrush);
+        SelectObject(hdc_local, hOldPen);
+        SelectObject(hdc_local, hOldBrush);
         DeleteBrush(hLegBrush);
 
         SetBkColor(hdc_local, legend_colors[i]);
@@ -935,9 +931,9 @@ void paintwidget::draw(HDC hdc_local)
     if(draw_vectors)
     {
         HPEN hVecPen = GetStockPen(BLACK_PEN);
-        hOldPen = SelectPen(hdc_local, hVecPen);
+        hOldPen = (HPEN)SelectObject(hdc_local, hVecPen);
         HBRUSH hVecBrush = GetStockBrush(BLACK_BRUSH);
-        hOldBrush = SelectBrush(hdc_local, hVecBrush);
+        hOldBrush = (HBRUSH)SelectObject(hdc_local, hVecBrush);
         float vec_len = 10.0f;
         int arrow_len = 2;
         for(size_t j = 0; j < ny; j += skip_vec)
@@ -961,7 +957,7 @@ void paintwidget::draw(HDC hdc_local)
                 }
             }
         }
-        SelectPen(hdc_local, hOldPen);
-        SelectBrush(hdc_local, hOldBrush);
+        SelectObject(hdc_local, hOldPen);
+        SelectObject(hdc_local, hOldBrush);
     }
 }

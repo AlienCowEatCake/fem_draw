@@ -17,7 +17,8 @@ SOURCES += \
     src_winapi/main.cpp
 
 HEADERS += \
-    src_winapi/paintwidget.h
+    src_winapi/paintwidget.h \
+    src_winapi/legacysupport.h
 
 RC_FILE += resources/icon.rc
 DEFINES += IDI_ICON1=42

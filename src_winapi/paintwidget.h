@@ -15,6 +15,7 @@
 #pragma comment(lib, "comdlg32.lib")
 #endif
 
+#include "legacysupport.h"
 #include <windows.h>
 #include <windowsx.h>
 #include <cstring>
@@ -118,7 +119,6 @@ public:
 
     // WinAPI, мать его
     HWND hwnd;
-    HDC hdc;
     PAINTSTRUCT ps;
 
 private:

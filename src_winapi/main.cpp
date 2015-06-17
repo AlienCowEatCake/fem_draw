@@ -234,6 +234,7 @@ void on_actionSave_Image_File_triggered()
     CloseHandle(hFile);
 
     // Удаляем всякий мусор
+    pdraw->draw(hdc1);
     EndPaint(pdraw->hwnd, & pdraw->ps);
     DeleteObject(hbmp);
     DeleteObject(hdc2);
@@ -760,8 +761,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     draw.set_isolines_num((size_t)isol_curr);
     draw.set_div_num((size_t)smooth_curr);
     draw.hwnd = GetDlgItem(hwnd, CONTROL_PAINT_WIDGET);
-    draw.hdc = GetDC(draw.hwnd);
-    SetBkColor(draw.hdc, RGB(255, 255, 255));
 
     // Покажем окно и запустим обработчик сообщений
     ShowWindow(hwnd, nCmdShow);
