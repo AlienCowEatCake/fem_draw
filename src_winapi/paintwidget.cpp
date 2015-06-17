@@ -526,14 +526,14 @@ void paintwidget::to_window(float x, float y, int & xl, int & yl) const
 // Отрисовка сцены
 void paintwidget::paintEvent()
 {
-    draw(/*this, false*/);
+    hdc = BeginPaint(hwnd, &ps);
+    draw(hdc);
+    EndPaint(hwnd, &ps);
 }
 
-// Отрисовка сцены на QPaintDevice
-void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
+// Отрисовка сцены на HDC
+void paintwidget::draw(HDC hdc_local)
 {
-    hdc = BeginPaint(hwnd, &ps);
-
     // Геометрия окна
     RECT r;
     GetClientRect(hwnd, &r);
@@ -549,20 +549,20 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
 
     // Узнаем размеры шрифта
     HFONT hTestFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
-    hOldFont = (HFONT)SelectObject(hdc, hTestFont);
+    hOldFont = (HFONT)SelectObject(hdc_local, hTestFont);
     TEXTMETRIC tm;
-    GetTextMetrics(hdc, &tm);
-    SelectObject(hdc, hOldFont);
+    GetTextMetrics(hdc_local, &tm);
+    SelectObject(hdc_local, hOldFont);
     float font_correct = (float)tm.tmHeight / (float)height * 0.9f;
 
     // Заливка области белым цветом
     HPEN hAreaPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-    hOldPen = SelectPen(hdc, hAreaPen);
+    hOldPen = SelectPen(hdc_local, hAreaPen);
     HBRUSH hAreaBrush = CreateSolidBrush(RGB(255, 255, 255));
-    hOldBrush = SelectBrush(hdc, hAreaBrush);
-    Rectangle(hdc, 0, 0, width, height);
-    SelectPen(hdc, hOldPen);
-    SelectBrush(hdc, hOldBrush);
+    hOldBrush = SelectBrush(hdc_local, hAreaBrush);
+    Rectangle(hdc_local, 0, 0, width, height);
+    SelectPen(hdc_local, hOldPen);
+    SelectBrush(hdc_local, hOldBrush);
     DeletePen(hAreaPen);
     DeleteBrush(hAreaBrush);
 
@@ -570,52 +570,52 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
 
     // Координатная сетка
     HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(217, 217, 217));
-    hOldPen = SelectPen(hdc, hGridPen);
+    hOldPen = SelectPen(hdc_local, hGridPen);
     for(size_t i = 0; i <= num_ticks_x; i++)
     {
         float xd = (float)i / (float)num_ticks_x;
         to_window(xd, -0.01f, x, y);
-        MoveToEx(hdc, x, y, &pt);
+        MoveToEx(hdc_local, x, y, &pt);
         to_window(xd, 1.0f, x, y);
-        LineTo(hdc, x, y);
+        LineTo(hdc_local, x, y);
     }
     for(size_t i = 0; i <= num_ticks_y; i++)
     {
         float yd = (float)i / (float)num_ticks_y;
         to_window(-0.01f, yd, x, y);
-        MoveToEx(hdc, x, y, &pt);
+        MoveToEx(hdc_local, x, y, &pt);
         to_window(1.0f, yd, x, y);
-        LineTo(hdc, x, y);
+        LineTo(hdc_local, x, y);
     }
-    SelectPen(hdc, hOldPen);
+    SelectPen(hdc_local, hOldPen);
     DeletePen(hGridPen);
 
     // Координатные оси
     HPEN hAxisPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
-    hOldPen = SelectPen(hdc, hAxisPen);
+    hOldPen = SelectPen(hdc_local, hAxisPen);
     to_window(0.0f, -0.005f, x, y);
-    MoveToEx(hdc, x, y, &pt);
+    MoveToEx(hdc_local, x, y, &pt);
     to_window(0.0f, 1.005f, x, y);
-    LineTo(hdc, x, y);
+    LineTo(hdc_local, x, y);
     to_window(-0.005f, 0.0f, x, y);
-    MoveToEx(hdc, x, y, &pt);
+    MoveToEx(hdc_local, x, y, &pt);
     to_window(1.005f, 0.0f, x, y);
-    LineTo(hdc, x, y);
-    SelectPen(hdc, hOldPen);
+    LineTo(hdc_local, x, y);
+    SelectPen(hdc_local, hOldPen);
     DeletePen(hAxisPen);
 
     // Подписи осей
     HFONT hAxisFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-    hOldFont = (HFONT)SelectObject(hdc, hAxisFont);
+    hOldFont = (HFONT)SelectObject(hdc_local, hAxisFont);
     to_window(0.99f, -0.04f + font_correct, x, y);
-    TextOutA(hdc, x, y, label_x.c_str(), 1);
+    TextOutA(hdc_local, x, y, label_x.c_str(), 1);
     to_window(-0.05f, 0.99f + font_correct, x, y);
-    TextOutA(hdc, x, y, label_y.c_str(), 1);
-    SelectObject(hdc, hOldFont);
+    TextOutA(hdc_local, x, y, label_y.c_str(), 1);
+    SelectObject(hdc_local, hOldFont);
 
     // Отрисовка шкалы
     HFONT hGridFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
-    hOldFont = (HFONT)SelectObject(hdc, hGridFont);
+    hOldFont = (HFONT)SelectObject(hdc_local, hGridFont);
     for(size_t i = 0; i < num_ticks_x; i++)
     {
         float xd = (float)i / (float)num_ticks_x;
@@ -624,8 +624,9 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
         sprintf(st, "%.2f", x_real);
         if(strcmp(st + strlen(st) - 3, ".00") == 0)
             st[strlen(st) - 3] = '\0';
+        st[5] = '\0';
         to_window(xd - 0.01f, -0.04f + font_correct, x, y);
-        TextOutA(hdc, x, y, st, (int)strlen(st));
+        TextOutA(hdc_local, x, y, st, (int)strlen(st));
     }
     for(size_t i = 0; i < num_ticks_y; i++)
     {
@@ -635,10 +636,11 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
         sprintf(st, "%.2f", y_real);
         if(strcmp(st + strlen(st) - 3, ".00") == 0)
             st[strlen(st) - 3] = '\0';
+        st[5] = '\0';
         to_window(-0.052f, yd - 0.01f + font_correct, x, y);
-        TextOutA(hdc, x, y, st, (int)strlen(st));
+        TextOutA(hdc_local, x, y, st, (int)strlen(st));
     }
-    SelectObject(hdc, hOldFont);
+    SelectObject(hdc_local, hOldFont);
 
     // Раскрашивать будем если запрошено сие
     if(draw_color)
@@ -647,12 +649,12 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
         for(size_t i = 0; i < triangles.size(); i++)
         {
             HPEN hTrPen = GetStockPen(NULL_PEN);
-            hOldPen = SelectPen(hdc, hTrPen);
+            hOldPen = SelectPen(hdc_local, hTrPen);
             HBRUSH hTrBrush;
 
             // Задаем посчитанный цвет
             hTrBrush = CreateSolidBrush(triangles[i].color[draw_index]);
-            hOldBrush = SelectBrush(hdc, hTrBrush);
+            hOldBrush = SelectBrush(hdc_local, hTrBrush);
 
             // Рисуем
             for(size_t k = 0; k < 3; k++)
@@ -661,16 +663,16 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
                 tr[k].x = (LONG)x;
                 tr[k].y = (LONG)y;
             }
-            Polygon(hdc, tr, 3);
+            Polygon(hdc_local, tr, 3);
 
-            SelectPen(hdc, hOldPen);
-            SelectBrush(hdc, hOldBrush);
+            SelectPen(hdc_local, hOldPen);
+            SelectBrush(hdc_local, hOldBrush);
             DeleteBrush(hTrBrush);
         }
     }
 
     HPEN hIsolPen = GetStockPen(BLACK_PEN);
-    hOldPen = SelectPen(hdc, hIsolPen);
+    hOldPen = SelectPen(hdc_local, hIsolPen);
     // Изолинии рисуем только если оно нам надо
     if(draw_isolines)
     {
@@ -697,13 +699,13 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
             if(vct.size() > 1)
             {
                 to_window(vct[0].first, vct[0].second, x, y);
-                MoveToEx(hdc, x, y, &pt);
+                MoveToEx(hdc_local, x, y, &pt);
                 to_window(vct[1].first, vct[1].second, x, y);
-                LineTo(hdc, x, y);
+                LineTo(hdc_local, x, y);
             }
         }
     }
-    SelectPen(hdc, hOldPen);
+    SelectPen(hdc_local, hOldPen);
 
 #if defined USE_LEGEND
     // Легенда
@@ -875,21 +877,21 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
         static const float hx = 0.103f;
         static const float hy = 0.073f;
         HPEN hLegPen = GetStockPen(NULL_PEN);
-        hOldPen = SelectPen(hdc, hLegPen);
+        hOldPen = SelectPen(hdc_local, hLegPen);
         HBRUSH hLegBrush;
         hLegBrush = CreateSolidBrush(legend_colors[i]);
-        hOldBrush = SelectBrush(hdc, hLegBrush);
+        hOldBrush = SelectBrush(hdc_local, hLegBrush);
         int coords[4];
         to_window(x0, y0 + dy * i, coords[0], coords[3]);
         to_window(x0 + hx, y0 + dy * i + hy, coords[2], coords[1]);
-        Rectangle(hdc, coords[0], coords[1], coords[2], coords[3]);
-        SelectPen(hdc, hOldPen);
-        SelectBrush(hdc, hOldBrush);
+        Rectangle(hdc_local, coords[0], coords[1], coords[2], coords[3]);
+        SelectPen(hdc_local, hOldPen);
+        SelectBrush(hdc_local, hOldBrush);
         DeleteBrush(hLegBrush);
 
-        SetBkColor(hdc, legend_colors[i]);
+        SetBkColor(hdc_local, legend_colors[i]);
         HFONT hLegFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
-        hOldFont = (HFONT)SelectObject(hdc, hLegFont);
+        hOldFont = (HFONT)SelectObject(hdc_local, hLegFont);
         char st[17];
         int exponent  = (int)std::floor(std::log10(std::fabs(legend_values[i])));
         if(abs(exponent) < 0) exponent = 0;
@@ -900,18 +902,18 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
         sprintf(st, "%.2fE%+03d", base, exponent);
 #endif
         to_window(x0 + dx * i + 0.004f, y0 + dy * i + hy / 2.0f - 0.01f + font_correct, x, y);
-        TextOutA(hdc, x, y, st, (int)strlen(st));
-        SelectObject(hdc, hOldFont);
+        TextOutA(hdc_local, x, y, st, (int)strlen(st));
+        SelectObject(hdc_local, hOldFont);
     }
-    SetBkColor(hdc, RGB(255, 255, 255));
+    SetBkColor(hdc_local, RGB(255, 255, 255));
 #endif
 
     if(draw_vectors)
     {
         HPEN hVecPen = GetStockPen(BLACK_PEN);
-        hOldPen = SelectPen(hdc, hVecPen);
+        hOldPen = SelectPen(hdc_local, hVecPen);
         HBRUSH hVecBrush = GetStockBrush(BLACK_BRUSH);
-        hOldBrush = SelectBrush(hdc, hVecBrush);
+        hOldBrush = SelectBrush(hdc_local, hVecBrush);
         float vec_len = 10.0f;
         int arrow_len = 2;
         for(size_t j = 0; j < ny; j += skip_vec)
@@ -929,15 +931,13 @@ void paintwidget::draw(/*QPaintDevice * device, bool transparency*/)
                 if(len_x == len_x && len_y == len_y)
                 {
                     int end_x = (int)(len_x * vec_len) + begin_x, end_y = -(int)(len_y * vec_len) + begin_y;
-                    MoveToEx(hdc, begin_x, begin_y, &pt);
-                    LineTo(hdc, end_x, end_y);
-                    Ellipse(hdc, end_x - arrow_len, end_y - arrow_len, end_x + arrow_len, end_y + arrow_len);
+                    MoveToEx(hdc_local, begin_x, begin_y, &pt);
+                    LineTo(hdc_local, end_x, end_y);
+                    Ellipse(hdc_local, end_x - arrow_len, end_y - arrow_len, end_x + arrow_len, end_y + arrow_len);
                 }
             }
         }
-        SelectPen(hdc, hOldPen);
-        SelectBrush(hdc, hOldBrush);
+        SelectPen(hdc_local, hOldPen);
+        SelectBrush(hdc_local, hOldBrush);
     }
-
-    EndPaint(hwnd, &ps);
 }

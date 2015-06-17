@@ -164,6 +164,81 @@ void on_actionOpen_Tecplot_File_triggered()
     widget_redraw();
 }
 
+// Событие при сохранении
+void on_actionSave_Image_File_triggered()
+{
+    // Откроем файл
+    OPENFILENAME ofn;
+    TCHAR szFile[260] = TEXT("draw.bmp");
+    ZeroMemory(& ofn, sizeof(OPENFILENAME));
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = TEXT("BMP Images\0*.bmp\0");
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = TEXT("Save Image File");
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = NULL;
+    ofn.Flags = OFN_PATHMUSTEXIST;
+    if(GetSaveFileName(& ofn) != TRUE) return;
+
+    // Создадим все что нужно и запустим отрисовку
+    RECT r;
+    GetClientRect(pdraw->hwnd, &r);
+    HDC hdc1 = BeginPaint(pdraw->hwnd, & pdraw->ps);
+    HDC hdc2 = CreateCompatibleDC(hdc1);
+    HBITMAP hbmp = CreateCompatibleBitmap(hdc1, r.right - r.left, r.bottom - r.top);
+    SelectObject(hdc2, hbmp);
+    pdraw->draw(hdc2);
+
+    // Сохраним отрисованное в bmp файл
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183402(v=vs.85).aspx
+    BITMAP bmp;
+    GetObject(hbmp, sizeof(BITMAP), &bmp);
+    BITMAPFILEHEADER bmfHeader;
+    BITMAPINFOHEADER bi;
+    bi.biSize = sizeof(BITMAPINFOHEADER);
+    bi.biWidth = bmp.bmWidth;
+    bi.biHeight = bmp.bmHeight;
+    bi.biPlanes = 1;
+    bi.biBitCount = 32;
+    bi.biCompression = BI_RGB;
+    bi.biSizeImage = 0;
+    bi.biXPelsPerMeter = 0;
+    bi.biYPelsPerMeter = 0;
+    bi.biClrUsed = 0;
+    bi.biClrImportant = 0;
+    DWORD dwBmpSize = ((bmp.bmWidth * bi.biBitCount + 31) / 32) * 4 * bmp.bmHeight;
+    HANDLE hDIB = GlobalAlloc(GHND, dwBmpSize);
+    char *lpbitmap = (char *)GlobalLock(hDIB);
+    GetDIBits(hdc2, hbmp, 0, (UINT)bmp.bmHeight, lpbitmap, (BITMAPINFO *)&bi, DIB_RGB_COLORS);
+    HANDLE hFile = CreateFile(ofn.lpstrFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hFile == INVALID_HANDLE_VALUE)
+    {
+        MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
+        EndPaint(pdraw->hwnd, & pdraw->ps);
+        DeleteObject(hbmp);
+        DeleteObject(hdc2);
+    }
+    DWORD dwSizeofDIB = dwBmpSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    bmfHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
+    bmfHeader.bfSize = dwSizeofDIB;
+    bmfHeader.bfType = 0x4D42;
+    DWORD dwBytesWritten = 0;
+    WriteFile(hFile, (LPSTR)&bmfHeader, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL);
+    WriteFile(hFile, (LPSTR)&bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL);
+    WriteFile(hFile, (LPSTR)lpbitmap, dwBmpSize, &dwBytesWritten, NULL);
+    GlobalUnlock(hDIB);
+    GlobalFree(hDIB);
+    CloseHandle(hFile);
+
+    // Удаляем всякий мусор
+    EndPaint(pdraw->hwnd, & pdraw->ps);
+    DeleteObject(hbmp);
+    DeleteObject(hdc2);
+}
+
 // Событие при нажатии кнопки Exit
 void on_actionExit_triggered()
 {
@@ -358,6 +433,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         case CONTROL_MENU_OPEN: // Событие при открытии файла
         {
             on_actionOpen_Tecplot_File_triggered();
+            break;
+        }
+        case CONTROL_MENU_SAVE: // Событие при сохранении
+        {
+            on_actionSave_Image_File_triggered();
             break;
         }
         case CONTROL_MENU_EXIT: // Событие при нажатии кнопки Exit

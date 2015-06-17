@@ -114,8 +114,8 @@ public:
     // Уровень интерполяции
     size_t div_num;
 
-    // Отрисовка сцены на QPaintDevice
-    void draw(/*QPaintDevice * device, bool transparency*/);
+    // Отрисовка сцены на HDC
+    void draw(HDC hdc_local);
 
     // Отрисовка сцены
     void paintEvent();
