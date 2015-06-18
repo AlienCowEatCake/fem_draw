@@ -7,6 +7,8 @@
 #include <commctrl.h>
 // https://github.com/lvandeve/lodepng
 #include "libs/lodepng.h"
+// http://www.jonolick.com/code.html
+#include "libs/jo_images.h"
 
 #if !defined WC_BUTTON
 #define WC_BUTTON   TEXT("Button")

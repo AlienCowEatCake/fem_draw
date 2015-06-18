@@ -14,11 +14,15 @@ INCLUDEPATH += src_winapi
 
 SOURCES += \
     src_winapi/libs/lodepng.cpp \
+    src_winapi/libs/jo_jpeg.cpp \
+    src_winapi/libs/jo_gif.cpp \
+    src_winapi/libs/jo_tga.cpp \
     src_winapi/paintwidget.cpp \
     src_winapi/main.cpp
 
 HEADERS += \
     src_winapi/libs/lodepng.h \
+    src_winapi/libs/jo_images.h \
     src_winapi/paintwidget.h \
     src_winapi/legacysupport.h
 
