@@ -13,10 +13,12 @@ CONFIG += warn_on
 INCLUDEPATH += src_winapi
 
 SOURCES += \
+    src_winapi/libs/lodepng.cpp \
     src_winapi/paintwidget.cpp \
     src_winapi/main.cpp
 
 HEADERS += \
+    src_winapi/libs/lodepng.h \
     src_winapi/paintwidget.h \
     src_winapi/legacysupport.h
 

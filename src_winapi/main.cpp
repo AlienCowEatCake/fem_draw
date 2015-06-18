@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <windows.h>
 #include <commctrl.h>
+// https://github.com/lvandeve/lodepng
+#include "libs/lodepng.h"
 
 #if !defined WC_BUTTON
 #define WC_BUTTON   TEXT("Button")
@@ -99,7 +101,7 @@ void on_actionOpen_Tecplot_File_triggered()
     ofn.lpstrFileTitle = TEXT("Open Tecplot File");
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_READONLY | OFN_HIDEREADONLY;
     if(GetOpenFileName(& ofn) != TRUE) return;
     pdraw->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
     pdraw->tec_read(ofn.lpstrFile);
@@ -189,19 +191,49 @@ void on_actionSave_Image_File_triggered()
 {
     // Откроем файл
     OPENFILENAME ofn;
-    TCHAR szFile[260] = TEXT("draw.bmp");
+    TCHAR szFile[260] = TEXT("draw.png");
     ZeroMemory(& ofn, sizeof(OPENFILENAME));
     ofn.lStructSize = sizeof(OPENFILENAME);
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = szFile;
+    ofn.lpstrDefExt = TEXT("png");
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = TEXT("BMP Images\0*.bmp\0");
+    ofn.lpstrFilter = TEXT("PNG Images\0*.png\0BMP Images\0*.bmp\0All Images\0*.png;*.bmp\0");
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = TEXT("Save Image File");
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
     if(GetSaveFileName(& ofn) != TRUE) return;
+
+    // Определим, что за тип изображения нам надо сохранить
+    enum filetypes { TYPE_PNG, TYPE_BMP };
+    filetypes filetype = TYPE_PNG;
+#if defined UNICODE || defined _UNICODE
+    wstring fileName(ofn.lpstrFile);
+    size_t found = fileName.find_last_of(TEXT("."));
+    if(found == wstring::npos) fileName.append(TEXT(".png"));
+    else
+    {
+        wstring ext = fileName.substr(found + 1).c_str();
+        for(wstring::iterator it = ext.begin(); it != ext.end(); it++)
+            if(*it >= 'A' && *it <= 'Z') *it -= 'A' - 'a';
+        if(ext == TEXT("bmp")) filetype = TYPE_BMP;
+        else if(ext != TEXT("png")) fileName.append(TEXT(".png"));
+    }
+#else
+    string fileName(ofn.lpstrFile);
+    size_t found = fileName.find_last_of(TEXT("."));
+    if(found == string::npos) fileName.append(TEXT(".png"));
+    else
+    {
+        string ext = fileName.substr(found + 1).c_str();
+        for(string::iterator it = ext.begin(); it != ext.end(); it++)
+            if(*it >= 'A' && *it <= 'Z') *it -= 'A' - 'a';
+        if(ext == TEXT("bmp")) filetype = TYPE_BMP;
+        else if(ext != TEXT("png")) fileName.append(TEXT(".png"));
+    }
+#endif
 
     // Создадим все что нужно и запустим отрисовку
     RECT r;
@@ -212,7 +244,7 @@ void on_actionSave_Image_File_triggered()
     SelectObject(hdc2, hbmp);
     pdraw->draw(hdc2);
 
-    // Сохраним отрисованное в bmp файл
+    // Создадим bmp-изображение
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183402(v=vs.85).aspx
     BITMAP bmp;
     GetObject(hbmp, sizeof(BITMAP), &bmp);
@@ -233,27 +265,57 @@ void on_actionSave_Image_File_triggered()
     HANDLE hDIB = GlobalAlloc(GHND, dwBmpSize);
     char *lpbitmap = (char *)GlobalLock(hDIB);
     GetDIBits(hdc2, hbmp, 0, (UINT)bmp.bmHeight, lpbitmap, (BITMAPINFO *)&bi, DIB_RGB_COLORS);
-    HANDLE hFile = CreateFile(ofn.lpstrFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFile(fileName.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if(hFile == INVALID_HANDLE_VALUE)
     {
         MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
+        GlobalUnlock(hDIB);
+        GlobalFree(hDIB);
         EndPaint(pdraw->hwnd, & pdraw->ps);
         DeleteObject(hbmp);
         DeleteObject(hdc2);
     }
-    DWORD dwSizeofDIB = dwBmpSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-    bmfHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
-    bmfHeader.bfSize = dwSizeofDIB;
-    bmfHeader.bfType = 0x4D42;
-    DWORD dwBytesWritten = 0;
-    WriteFile(hFile, (LPSTR)&bmfHeader, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL);
-    WriteFile(hFile, (LPSTR)&bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL);
-    WriteFile(hFile, (LPSTR)lpbitmap, dwBmpSize, &dwBytesWritten, NULL);
+
+    // Сохраним отрисованное в bmp файл
+    if(filetype == TYPE_BMP)
+    {
+        DWORD dwSizeofDIB = dwBmpSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+        bmfHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
+        bmfHeader.bfSize = dwSizeofDIB;
+        bmfHeader.bfType = 0x4D42;
+        DWORD dwBytesWritten = 0;
+        WriteFile(hFile, (LPSTR)&bmfHeader, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL);
+        WriteFile(hFile, (LPSTR)&bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL);
+        WriteFile(hFile, (LPSTR)lpbitmap, dwBmpSize, &dwBytesWritten, NULL);
+    }
+    // Сохраним отрисованное в png файл
+    else if(filetype == TYPE_PNG)
+    {
+        vector<unsigned char> image_raw(bi.biWidth * bi.biHeight * 4);
+        for(unsigned y = 0; y < (unsigned)bi.biHeight; y++)
+        {
+            for(unsigned x = 0; x < (unsigned)bi.biWidth; x++)
+            {
+                unsigned bmpos = 4 * ((bi.biHeight - y - 1) * bi.biWidth + x);
+                unsigned newpos = 4 * (y * bi.biWidth + x);
+                image_raw[newpos + 0] = *(((unsigned char *)lpbitmap) + bmpos + 2);
+                image_raw[newpos + 1] = *(((unsigned char *)lpbitmap) + bmpos + 1);
+                image_raw[newpos + 2] = *(((unsigned char *)lpbitmap) + bmpos + 0);
+                image_raw[newpos + 3] = 255;
+            }
+        }
+        vector<unsigned char> image_png;
+        lodepng::encode(image_png, image_raw, bi.biWidth, bi.biHeight);
+        DWORD dwBytesWritten = 0;
+        WriteFile(hFile, (LPSTR)(&image_png[0]), (DWORD)image_png.size(), &dwBytesWritten, NULL);
+        image_raw.clear();
+        image_png.clear();
+    }
+
+    // Удаляем всякий мусор
     GlobalUnlock(hDIB);
     GlobalFree(hDIB);
     CloseHandle(hFile);
-
-    // Удаляем всякий мусор
     pdraw->draw(hdc1);
     EndPaint(pdraw->hwnd, & pdraw->ps);
     DeleteObject(hbmp);
@@ -298,7 +360,7 @@ void on_actionAbout_FEM_Draw_triggered()
          << TEXT("http://fami-net.dlinkddns.com/gitlab/peter/fem_draw\n")
          << TEXT("License: GNU GPL v3\n\n")
          << TEXT("Copyright (c) 2014 - 2015\n")
-         << TEXT("Zhigalov Peter <peter.zhigalov@gmail.com>");
+         << TEXT("Peter Zhigalov <peter.zhigalov@gmail.com>");
     MessageBox(hwnd, sstr.str().c_str(), TEXT("About"), MB_OK | MB_ICONINFORMATION);
 }
 

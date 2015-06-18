@@ -334,7 +334,7 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
                           "<a href=\"http://fami-net.dlinkddns.com/gitlab/peter/fem_draw\">http://fami-net.dlinkddns.com/gitlab/peter/fem_draw</a><br>"
                           "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
                           "Copyright &copy; 2014 - 2015<br>"
-                          "Zhigalov Peter &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;"));
+                          "Peter Zhigalov &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;"));
     msgBox.setIconPixmap(QPixmap::fromImage(QImage(":/resources/icon_64.png")));
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
     msgBox.exec();
