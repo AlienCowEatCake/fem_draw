@@ -26,6 +26,13 @@ freely, subject to the following restrictions:
 #ifndef LODEPNG_H
 #define LODEPNG_H
 
+/* Begin defines for FEM Draw project */
+#define LODEPNG_NO_COMPILE_DECODER
+#define LODEPNG_NO_COMPILE_DISK
+#define LODEPNG_NO_COMPILE_ANCILLARY_CHUNKS
+#define LODEPNG_NO_COMPILE_ERROR_TEXT
+/* End defines for FEM Draw project */
+
 #include <string.h> /*for size_t*/
 
 #ifdef __cplusplus
