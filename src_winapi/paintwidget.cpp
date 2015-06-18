@@ -24,7 +24,7 @@
 wifstream & getline(wifstream & ifs, string & str)
 {
     const int bufsize = 4096;
-    WCHAR buf[bufsize];
+    wchar_t buf[bufsize];
     ifs.getline(buf, bufsize);
     char buf2[bufsize];
 #if defined _MSC_VER && _MSC_VER >= 1400

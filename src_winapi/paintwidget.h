@@ -23,6 +23,11 @@
 #include <set>
 #include <vector>
 #include <string>
+#include <cassert>
+
+#if defined UNICODE || defined _UNICODE
+#include <cwchar>
+#endif
 
 using namespace std;
 

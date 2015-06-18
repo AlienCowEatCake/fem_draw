@@ -22,20 +22,26 @@
 #ifndef JO_INCLUDE_JPEG_H
 #define JO_INCLUDE_JPEG_H
 
+#include <stdio.h>
+
+#if defined UNICODE || defined _UNICODE
+#include <cwchar>
+#endif
+
 // To get a header file for this, either cut and paste the header,
 // or create jo_jpeg.h, #define JO_JPEG_HEADER_FILE_ONLY, and
 // then include jo_jpeg.c from it.
 
 // Returns false on failure
+#if defined UNICODE || defined _UNICODE
+extern bool jo_write_jpg(const wchar_t *filename, const void *data, int width, int height, int comp, int quality);
+#else
 extern bool jo_write_jpg(const char *filename, const void *data, int width, int height, int comp, int quality);
+#endif
 
 #endif // JO_INCLUDE_JPEG_H
 
 #ifndef JO_JPEG_HEADER_FILE_ONLY
-
-#if defined(_MSC_VER) && _MSC_VER >= 0x1400
-#define _CRT_SECURE_NO_WARNINGS // suppress warnings about fopen()
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -170,7 +176,11 @@ static int jo_processDU(FILE *fp, int &bitBuf, int &bitCnt, float *CDU, float *f
 	return DU[0];
 }
 
+#if defined UNICODE || defined _UNICODE
+bool jo_write_jpg(const wchar_t *filename, const void *data, int width, int height, int comp, int quality) {
+#else
 bool jo_write_jpg(const char *filename, const void *data, int width, int height, int comp, int quality) {
+#endif
 	// Constants that don't pollute global namespace
 	static const unsigned char std_dc_luminance_nrcodes[] = {0,0,1,5,1,1,1,1,1,1,0,0,0,0,0,0,0};
 	static const unsigned char std_dc_luminance_values[] = {0,1,2,3,4,5,6,7,8,9,10,11};
@@ -243,7 +253,25 @@ bool jo_write_jpg(const char *filename, const void *data, int width, int height,
 		return false;
 	}
 
+#if defined UNICODE || defined _UNICODE
+#if defined _MSC_VER && _MSC_VER >= 1400
+	FILE *fp;
+	if(_wfopen_s(&fp, filename, L"wb")) {
+		return false;
+	}
+#else
+	FILE *fp = _wfopen(filename, L"wb");
+#endif // _MSC_VER >= 1400
+#else
+#if defined _MSC_VER && _MSC_VER >= 1400
+	FILE *fp;
+	if(fopen_s(&fp, filename, "wb")) {
+		return false;
+	}
+#else
 	FILE *fp = fopen(filename, "wb");
+#endif
+#endif
 	if(!fp) {
 		return false;
 	}

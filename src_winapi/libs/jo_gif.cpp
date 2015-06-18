@@ -20,6 +20,10 @@
 
 #include <stdio.h>
 
+#if defined UNICODE || defined _UNICODE
+#include <cwchar>
+#endif
+
 // To get a header file for this, either cut and paste the header,
 // or create jo_gif.h, #define JO_GIF_HEADER_FILE_ONLY, and
 // then include jo_gif.cpp from it.
@@ -35,7 +39,11 @@ typedef struct {
 // width/height	| the same for every frame
 // repeat       | 0 = loop forever, 1 = loop once, etc...
 // palSize		| must be power of 2 - 1. so, 255 not 256.
+#if defined UNICODE || defined _UNICODE
+extern jo_gif_t jo_gif_start(const wchar_t *filename, short width, short height, short repeat, int palSize);
+#else
 extern jo_gif_t jo_gif_start(const char *filename, short width, short height, short repeat, int palSize);
+#endif
 
 // gif			| the state (returned from jo_gif_start)
 // rgba         | the pixels
@@ -49,10 +57,6 @@ extern void jo_gif_end(jo_gif_t *gif);
 #endif
 
 #ifndef JO_GIF_HEADER_FILE_ONLY
-
-#if defined(_MSC_VER) && _MSC_VER >= 0x1400
-#define _CRT_SECURE_NO_WARNINGS // suppress warnings about fopen()
-#endif
 
 #include <stdlib.h>
 #include <memory.h>
@@ -224,7 +228,10 @@ static void jo_gif_lzw_write(jo_gif_lzw_t *s, int code) {
 }
 
 static void jo_gif_lzw_encode(unsigned char *in, int len, FILE *fp) {
-	jo_gif_lzw_t state = {fp, 9};
+	jo_gif_lzw_t state;
+	memset(&state, 0, sizeof(jo_gif_lzw_t));
+	state.fp = fp;
+	state.numBits = 9;
 	int maxcode = 511;
 
 	// Note: 30k stack space for dictionary =|
@@ -282,16 +289,37 @@ CONTINUE:
 
 static int jo_gif_clamp(int a, int b, int c) { return a < b ? b : a > c ? c : a; }
 
+#if defined UNICODE || defined _UNICODE
+jo_gif_t jo_gif_start(const wchar_t *filename, short width, short height, short repeat, int numColors) {
+#else
 jo_gif_t jo_gif_start(const char *filename, short width, short height, short repeat, int numColors) {
+#endif
 	numColors = numColors > 255 ? 255 : numColors < 2 ? 2 : numColors;
-	jo_gif_t gif = {};
+	jo_gif_t gif;
+	memset(&gif, 0, sizeof(jo_gif_t));
 	gif.width = width;
 	gif.height = height;
 	gif.repeat = repeat;
 	gif.numColors = numColors;
-	gif.palSize = log2(numColors);
+	gif.palSize = (int)(log((double)numColors) / log(10.0));
 
+#if defined UNICODE || defined _UNICODE
+#if defined _MSC_VER && _MSC_VER >= 1400
+	if(_wfopen_s(&gif.fp, filename, L"wb")) {
+		gif.fp = NULL;
+	}
+#else
+	gif.fp = _wfopen(filename, L"wb");
+#endif // _MSC_VER >= 1400
+#else
+#if defined _MSC_VER && _MSC_VER >= 1400
+	if(fopen_s(&gif.fp, filename, "wb")) {
+		gif.fp = NULL;
+	}
+#else
 	gif.fp = fopen(filename, "wb");
+#endif
+#endif
 	if(!gif.fp) {
 		printf("Error: Could not WriteGif to %s\n", filename);
 		return gif;

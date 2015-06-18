@@ -188,6 +188,24 @@ void on_actionOpen_Tecplot_File_triggered()
     widget_redraw();
 }
 
+// Конвертер из битмапов bmp в другие форматы
+void bmp2rgb(const char * lpbitmap, LONG width, LONG height, unsigned colors, unsigned char * image_rgb)
+{
+    assert(colors == 3 || colors == 4);
+    for(unsigned y = 0; y < (unsigned)height; y++)
+    {
+        for(unsigned x = 0; x < (unsigned)width; x++)
+        {
+            unsigned bmpos = 4 * ((height - y - 1) * width + x);
+            unsigned newpos = colors * (y * width + x);
+            image_rgb[newpos + 0] = *(((unsigned char *)lpbitmap) + bmpos + 2);
+            image_rgb[newpos + 1] = *(((unsigned char *)lpbitmap) + bmpos + 1);
+            image_rgb[newpos + 2] = *(((unsigned char *)lpbitmap) + bmpos + 0);
+            if(colors == 4) image_rgb[newpos + 3] = 255;
+        }
+    }
+}
+
 // Событие при сохранении
 void on_actionSave_Image_File_triggered()
 {
@@ -200,7 +218,7 @@ void on_actionSave_Image_File_triggered()
     ofn.lpstrFile = szFile;
     ofn.lpstrDefExt = TEXT("png");
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = TEXT("PNG Images\0*.png\0BMP Images\0*.bmp\0All Images\0*.png;*.bmp\0");
+    ofn.lpstrFilter = TEXT("PNG Images\0*.png\0BMP Images\0*.bmp\0JPG Images\0*.jpg\0GIF Images\0*.gif\0TGA Images\0*.tga\0All Images\0*.png;*.bmp;*.jpg;*.gif;*.tga\0");
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = TEXT("Save Image File");
     ofn.nMaxFileTitle = 0;
@@ -209,7 +227,7 @@ void on_actionSave_Image_File_triggered()
     if(GetSaveFileName(& ofn) != TRUE) return;
 
     // Определим, что за тип изображения нам надо сохранить
-    enum filetypes { TYPE_PNG, TYPE_BMP };
+    enum filetypes { TYPE_PNG, TYPE_BMP, TYPE_JPG, TYPE_GIF, TYPE_TGA };
     filetypes filetype = TYPE_PNG;
 #if defined UNICODE || defined _UNICODE
     wstring fileName(ofn.lpstrFile);
@@ -221,6 +239,9 @@ void on_actionSave_Image_File_triggered()
         for(wstring::iterator it = ext.begin(); it != ext.end(); it++)
             if(*it >= 'A' && *it <= 'Z') *it -= 'A' - 'a';
         if(ext == TEXT("bmp")) filetype = TYPE_BMP;
+        else if(ext == TEXT("jpg")) filetype = TYPE_JPG;
+        else if(ext == TEXT("gif")) filetype = TYPE_GIF;
+        else if(ext == TEXT("tga")) filetype = TYPE_TGA;
         else if(ext != TEXT("png")) fileName.append(TEXT(".png"));
     }
 #else
@@ -267,20 +288,16 @@ void on_actionSave_Image_File_triggered()
     HANDLE hDIB = GlobalAlloc(GHND, dwBmpSize);
     char *lpbitmap = (char *)GlobalLock(hDIB);
     GetDIBits(hdc2, hbmp, 0, (UINT)bmp.bmHeight, lpbitmap, (BITMAPINFO *)&bi, DIB_RGB_COLORS);
-    HANDLE hFile = CreateFile(fileName.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if(hFile == INVALID_HANDLE_VALUE)
-    {
-        MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
-        GlobalUnlock(hDIB);
-        GlobalFree(hDIB);
-        EndPaint(pdraw->hwnd, & pdraw->ps);
-        DeleteObject(hbmp);
-        DeleteObject(hdc2);
-    }
 
     // Сохраним отрисованное в bmp файл
     if(filetype == TYPE_BMP)
     {
+        HANDLE hFile = CreateFile(fileName.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if(hFile == INVALID_HANDLE_VALUE)
+        {
+            MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
+            goto finish;
+        }
         DWORD dwSizeofDIB = dwBmpSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
         bmfHeader.bfOffBits = (DWORD)sizeof(BITMAPFILEHEADER) + (DWORD)sizeof(BITMAPINFOHEADER);
         bmfHeader.bfSize = dwSizeofDIB;
@@ -289,35 +306,82 @@ void on_actionSave_Image_File_triggered()
         WriteFile(hFile, (LPSTR)&bmfHeader, sizeof(BITMAPFILEHEADER), &dwBytesWritten, NULL);
         WriteFile(hFile, (LPSTR)&bi, sizeof(BITMAPINFOHEADER), &dwBytesWritten, NULL);
         WriteFile(hFile, (LPSTR)lpbitmap, dwBmpSize, &dwBytesWritten, NULL);
+        CloseHandle(hFile);
     }
     // Сохраним отрисованное в png файл
     else if(filetype == TYPE_PNG)
     {
-        vector<unsigned char> image_raw(bi.biWidth * bi.biHeight * 4);
-        for(unsigned y = 0; y < (unsigned)bi.biHeight; y++)
+        HANDLE hFile = CreateFile(fileName.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if(hFile == INVALID_HANDLE_VALUE)
         {
-            for(unsigned x = 0; x < (unsigned)bi.biWidth; x++)
-            {
-                unsigned bmpos = 4 * ((bi.biHeight - y - 1) * bi.biWidth + x);
-                unsigned newpos = 4 * (y * bi.biWidth + x);
-                image_raw[newpos + 0] = *(((unsigned char *)lpbitmap) + bmpos + 2);
-                image_raw[newpos + 1] = *(((unsigned char *)lpbitmap) + bmpos + 1);
-                image_raw[newpos + 2] = *(((unsigned char *)lpbitmap) + bmpos + 0);
-                image_raw[newpos + 3] = 255;
-            }
+            MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
+            goto finish;
         }
+        vector<unsigned char> image_raw(bi.biWidth * bi.biHeight * 4);
+        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 4, &image_raw[0]);
         vector<unsigned char> image_png;
-        lodepng::encode(image_png, image_raw, bi.biWidth, bi.biHeight);
+        unsigned error = lodepng::encode(image_png, image_raw, bi.biWidth, bi.biHeight);
+        if(error)
+        {
+            image_raw.clear();
+            image_png.clear();
+            CloseHandle(hFile);
+            MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
+            goto finish;
+        }
         DWORD dwBytesWritten = 0;
         WriteFile(hFile, (LPSTR)(&image_png[0]), (DWORD)image_png.size(), &dwBytesWritten, NULL);
         image_raw.clear();
         image_png.clear();
+        CloseHandle(hFile);
+    }
+    // Сохраним отрисованное в tga файл
+    else if(filetype == TYPE_TGA)
+    {
+        unsigned char * image_raw = (unsigned char *)malloc(bi.biWidth * bi.biHeight * 3);
+        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 3, image_raw);
+        bool status = jo_write_tga(fileName.c_str(), image_raw, bi.biWidth, bi.biHeight, 3);
+        free(image_raw);
+        if(!status)
+        {
+            MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
+            goto finish;
+        }
+    }
+    // Сохраним отрисованное в jpg файл
+    else if(filetype == TYPE_JPG)
+    {
+        unsigned char * image_raw = (unsigned char *)malloc(bi.biWidth * bi.biHeight * 3);
+        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 3, image_raw);
+        bool status = jo_write_jpg(fileName.c_str(), image_raw, bi.biWidth, bi.biHeight, 3, 0);
+        free(image_raw);
+        if(!status)
+        {
+            MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
+            goto finish;
+        }
+    }
+    // Сохраним отрисованное в gif файл
+    else if(filetype == TYPE_GIF)
+    {
+        unsigned char * image_raw = (unsigned char *)malloc(bi.biWidth * bi.biHeight * 4);
+        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 4, image_raw);
+        jo_gif_t gif = jo_gif_start(fileName.c_str(), (short)bi.biWidth, (short)bi.biHeight, 0, 255);
+        if(!gif.fp)
+        {
+            free(image_raw);
+            MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
+            goto finish;
+        }
+        jo_gif_frame(&gif, image_raw, 0, false);
+        jo_gif_end(&gif);
+        free(image_raw);
     }
 
     // Удаляем всякий мусор
+finish:
     GlobalUnlock(hDIB);
     GlobalFree(hDIB);
-    CloseHandle(hFile);
     pdraw->draw(hdc1);
     EndPaint(pdraw->hwnd, & pdraw->ps);
     DeleteObject(hbmp);
