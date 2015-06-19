@@ -18,6 +18,7 @@
 #ifndef JO_INCLUDE_GIF_H
 #define JO_INCLUDE_GIF_H
 
+#include "../legacysupport.h"
 #include <stdio.h>
 
 #if defined UNICODE || defined _UNICODE
@@ -89,7 +90,8 @@ static void jo_gif_quantize(unsigned char *rgba, int rgbaSize, int sample, unsig
 
 	sample = sample < 1 ? 1 : sample > 30 ? 30 : sample;
 	int network[256][3];
-	int bias[256] = {}, freq[256];
+	int bias[256], freq[256];
+	memset(bias, 0, sizeof(int) * 256);
 	for(int i = 0; i < numColors; ++i) {
 		// Put nurons evenly through the luminance spectrum.
 		network[i][0] = network[i][1] = network[i][2] = (i << 12) / numColors;
@@ -97,7 +99,7 @@ static void jo_gif_quantize(unsigned char *rgba, int rgbaSize, int sample, unsig
 	}
 	// Learn
 	{
-		const int primes[5] = {499, 491, 487, 503};
+		const int primes[4] = {499, 491, 487, 503};
 		int step = 4;
 		for(int i = 0; i < 4; ++i) {
 			if(rgbaSize > primes[i] * 4 && (rgbaSize % primes[i])) { // TODO/Error? primes[i]*4?
@@ -301,7 +303,7 @@ jo_gif_t jo_gif_start(const char *filename, short width, short height, short rep
 	gif.height = height;
 	gif.repeat = repeat;
 	gif.numColors = numColors;
-	gif.palSize = (int)(log((double)numColors) / log(10.0));
+	gif.palSize = (int)(log((double)numColors) / log(2.0));
 
 #if defined UNICODE || defined _UNICODE
 #if defined _MSC_VER && _MSC_VER >= 1400
@@ -321,7 +323,6 @@ jo_gif_t jo_gif_start(const char *filename, short width, short height, short rep
 #endif
 #endif
 	if(!gif.fp) {
-		printf("Error: Could not WriteGif to %s\n", filename);
 		return gif;
 	}
 

@@ -235,7 +235,7 @@ void on_actionSave_Image_File_triggered()
     if(found == wstring::npos) fileName.append(TEXT(".png"));
     else
     {
-        wstring ext = fileName.substr(found + 1).c_str();
+        wstring ext = fileName.substr(found + 1);
         for(wstring::iterator it = ext.begin(); it != ext.end(); it++)
             if(*it >= 'A' && *it <= 'Z') *it -= 'A' - 'a';
         if(ext == TEXT("bmp")) filetype = TYPE_BMP;
@@ -254,6 +254,9 @@ void on_actionSave_Image_File_triggered()
         for(string::iterator it = ext.begin(); it != ext.end(); it++)
             if(*it >= 'A' && *it <= 'Z') *it -= 'A' - 'a';
         if(ext == TEXT("bmp")) filetype = TYPE_BMP;
+        else if(ext == TEXT("jpg")) filetype = TYPE_JPG;
+        else if(ext == TEXT("gif")) filetype = TYPE_GIF;
+        else if(ext == TEXT("tga")) filetype = TYPE_TGA;
         else if(ext != TEXT("png")) fileName.append(TEXT(".png"));
     }
 #endif

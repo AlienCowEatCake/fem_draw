@@ -68,6 +68,11 @@ namespace std
     }
 }
 
+// Нет стандартных математических функций
+#include <math.h>
+inline float floorf(float arg) {return floor(arg);}
+inline float ceilf(float arg) {return ceil(arg);}
+
 #endif
 
 
