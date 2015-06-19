@@ -26,8 +26,7 @@ HEADERS += \
     src_winapi/paintwidget.h \
     src_winapi/legacysupport.h
 
-RC_FILE += resources/icon.rc
-DEFINES += IDI_ICON1=42
+RC_FILE += src_winapi/resources.rc
 
 win32-g++* {
     QMAKE_LIBS += -lgdi32 -lcomctl32 -luser32 -lcomdlg32
