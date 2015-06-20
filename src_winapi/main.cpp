@@ -199,7 +199,7 @@ void bmp2rgb(const char * lpbitmap, LONG width, LONG height, unsigned colors, bo
 void on_actionSave_Image_File_triggered()
 {
     // Разберемся с прозрачностью
-    bool transparent = GetMenuState(hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_BYCOMMAND) & MF_CHECKED;
+    bool transparent = GetMenuState(hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_BYCOMMAND) & MF_CHECKED ? true : false;
 
     // Откроем файл
     OPENFILENAME ofn;
