@@ -13,6 +13,7 @@
 
 HWND hwnd;
 HACCEL haccel;
+HMENU hFileMenu;
 paintwidget * pdraw;
 int min_height, min_width;
 int isol_min = 0,   isol_max = 100,   isol_curr = 10;
@@ -145,8 +146,18 @@ void on_actionOpen_Tecplot_File_triggered()
     widget_redraw();
 }
 
+// Событие при переключении прозрачности
+void on_actionTransparent_Image_triggered()
+{
+    DWORD state = GetMenuState(hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_BYCOMMAND);
+    if(!(state & MF_CHECKED))
+        CheckMenuItem(hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_CHECKED | MF_BYCOMMAND);
+    else
+        CheckMenuItem(hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_UNCHECKED | MF_BYCOMMAND);
+}
+
 // Конвертер из битмапов bmp в другие форматы
-void bmp2rgb(const char * lpbitmap, LONG width, LONG height, unsigned colors, unsigned char * image_rgb)
+void bmp2rgb(const char * lpbitmap, LONG width, LONG height, unsigned colors, bool transparent, unsigned char * image_rgb)
 {
     assert(colors == 3 || colors == 4);
     for(unsigned y = 0; y < (unsigned)height; y++)
@@ -158,7 +169,22 @@ void bmp2rgb(const char * lpbitmap, LONG width, LONG height, unsigned colors, un
             image_rgb[newpos + 0] = *(((unsigned char *)lpbitmap) + bmpos + 2);
             image_rgb[newpos + 1] = *(((unsigned char *)lpbitmap) + bmpos + 1);
             image_rgb[newpos + 2] = *(((unsigned char *)lpbitmap) + bmpos + 0);
-            if(colors == 4) image_rgb[newpos + 3] = 255;
+            if(transparent)
+            {
+                // У винды тупой битмап, в альфа канале ничего не хранит
+                // Так что замутим псевдо-прозрачность: все что белое, будем считать прозрачным
+                if(colors == 4)
+                {
+                    if(image_rgb[newpos + 0] == 255 && image_rgb[newpos + 1] == 255 && image_rgb[newpos + 2] == 255)
+                        image_rgb[newpos + 3] = 0;
+                    else
+                        image_rgb[newpos + 3] = 255;
+                }
+            }
+            else
+            {
+                if(colors == 4) image_rgb[newpos + 3] = 255;
+            }
         }
     }
 }
@@ -166,6 +192,9 @@ void bmp2rgb(const char * lpbitmap, LONG width, LONG height, unsigned colors, un
 // Событие при сохранении
 void on_actionSave_Image_File_triggered()
 {
+    // Разберемся с прозрачностью
+    bool transparent = GetMenuState(hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_BYCOMMAND) & MF_CHECKED;
+
     // Откроем файл
     OPENFILENAME ofn;
     TCHAR szFile[260] = TEXT("draw.png");
@@ -225,7 +254,10 @@ void on_actionSave_Image_File_triggered()
     HDC hdc2 = CreateCompatibleDC(hdc1);
     HBITMAP hbmp = CreateCompatibleBitmap(hdc1, r.right - r.left, r.bottom - r.top);
     SelectObject(hdc2, hbmp);
-    pdraw->draw(hdc2);
+    // Так и не получается придумать, как заставить это работать :(
+    // Поэтому зальем белым, а потом уже уберем, см. конвертер
+    //pdraw->draw(hdc2, transparent);
+    pdraw->draw(hdc2, false);
 
     // Создадим bmp-изображение
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183402(v=vs.85).aspx
@@ -277,11 +309,16 @@ void on_actionSave_Image_File_triggered()
             MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
             goto finish;
         }
-        unsigned char * image_raw = (unsigned char *)malloc(bi.biWidth * bi.biHeight * 3);
-        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 3, image_raw);
+        int num_channels = transparent ? 4 : 3;
+        unsigned char * image_raw = (unsigned char *)malloc(bi.biWidth * bi.biHeight * num_channels);
+        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, num_channels, transparent, image_raw);
         unsigned char * image_png = NULL;
         size_t image_png_size;
-        unsigned error = lodepng_encode24(&image_png, &image_png_size, image_raw, bi.biWidth, bi.biHeight);
+        unsigned error = 1;
+        if(transparent)
+            error = lodepng_encode32(&image_png, &image_png_size, image_raw, bi.biWidth, bi.biHeight);
+        else
+            error = lodepng_encode24(&image_png, &image_png_size, image_raw, bi.biWidth, bi.biHeight);
         if(error)
         {
             free(image_raw);
@@ -299,9 +336,10 @@ void on_actionSave_Image_File_triggered()
     // Сохраним отрисованное в tga файл
     else if(filetype == TYPE_TGA)
     {
-        unsigned char * image_raw = (unsigned char *)malloc(bi.biWidth * bi.biHeight * 3);
-        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 3, image_raw);
-        bool status = jo_write_tga(fileName.c_str(), image_raw, bi.biWidth, bi.biHeight, 3);
+        int num_channels = transparent ? 4 : 3;
+        unsigned char * image_raw = (unsigned char *)malloc(bi.biWidth * bi.biHeight * num_channels);
+        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, num_channels, transparent, image_raw);
+        bool status = jo_write_tga(fileName.c_str(), image_raw, bi.biWidth, bi.biHeight, num_channels);
         free(image_raw);
         if(!status)
         {
@@ -313,7 +351,7 @@ void on_actionSave_Image_File_triggered()
     else if(filetype == TYPE_JPG)
     {
         unsigned char * image_raw = (unsigned char *)malloc(bi.biWidth * bi.biHeight * 3);
-        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 3, image_raw);
+        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 3, false, image_raw);
         bool status = jo_write_jpg(fileName.c_str(), image_raw, bi.biWidth, bi.biHeight, 3, 0);
         free(image_raw);
         if(!status)
@@ -326,7 +364,11 @@ void on_actionSave_Image_File_triggered()
     else if(filetype == TYPE_GIF)
     {
         unsigned char * image_raw = (unsigned char *)malloc(bi.biWidth * bi.biHeight * 4);
-        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 4, image_raw);
+        // Товарищ Jon Olick в своей рисовалке не запилил прозрачность
+        // Пруф: http://www.jonolick.com/home/gif-writer
+        // При этом ему не помешало затребовать памяти на альфа-канал
+        // Ну что же, может быть когда-нибудь запилю как положено, а пока так
+        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 4, false, image_raw);
         jo_gif_t gif = jo_gif_start(fileName.c_str(), (short)bi.biWidth, (short)bi.biHeight, 0, 255);
         if(!gif.fp)
         {
@@ -343,7 +385,7 @@ void on_actionSave_Image_File_triggered()
 finish:
     GlobalUnlock(hDIB);
     GlobalFree(hDIB);
-    pdraw->draw(hdc1);
+    pdraw->draw(hdc1, false);
     EndPaint(pdraw->hwnd, & pdraw->ps);
     DeleteObject(hbmp);
     DeleteObject(hdc2);
@@ -544,6 +586,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             on_actionOpen_Tecplot_File_triggered();
             break;
         }
+        case CONTROL_MENU_TRANSPARENT: // Событие при переключении прозрачности
+        {
+            on_actionTransparent_Image_triggered();
+            break;
+        }
         case CONTROL_MENU_SAVE: // Событие при сохранении
         {
             on_actionSave_Image_File_triggered();
@@ -707,9 +754,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // Замутим меню
     HMENU hMenu = CreateMenu();
-    HMENU hFileMenu = CreatePopupMenu();
+    hFileMenu = CreatePopupMenu();
     AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hFileMenu, TEXT("File"));
     AppendMenu(hFileMenu, MF_STRING, CONTROL_MENU_OPEN, TEXT("Open Tecplot File\tCtrl+O"));
+    AppendMenu(hFileMenu, MF_SEPARATOR, (UINT)NULL, TEXT(""));
+    AppendMenu(hFileMenu, MF_STRING | MF_UNCHECKED, CONTROL_MENU_TRANSPARENT, TEXT("Transparent Image"));
     AppendMenu(hFileMenu, MF_STRING, CONTROL_MENU_SAVE, TEXT("Save Image\tCtrl+S"));
     AppendMenu(hFileMenu, MF_SEPARATOR, (UINT)NULL, TEXT(""));
     AppendMenu(hFileMenu, MF_STRING, CONTROL_MENU_EXIT, TEXT("Exit\tCtrl+Q"));

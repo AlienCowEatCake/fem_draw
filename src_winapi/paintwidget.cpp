@@ -539,12 +539,12 @@ void paintwidget::to_window(float x, float y, int & xl, int & yl) const
 void paintwidget::paintEvent()
 {
     HDC hdc = BeginPaint(hwnd, &ps);
-    draw(hdc);
+    draw(hdc, false);
     EndPaint(hwnd, &ps);
 }
 
 // Отрисовка сцены на HDC
-void paintwidget::draw(HDC hdc_local)
+void paintwidget::draw(HDC hdc_local, bool transparency)
 {
     // Геометрия окна
     RECT r;
@@ -568,15 +568,29 @@ void paintwidget::draw(HDC hdc_local)
     float font_correct = (float)tm.tmHeight / (float)height * 0.9f;
 
     // Заливка области белым цветом
-    HPEN hAreaPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-    hOldPen = (HPEN)SelectObject(hdc_local, hAreaPen);
-    HBRUSH hAreaBrush = CreateSolidBrush(RGB(255, 255, 255));
-    hOldBrush = (HBRUSH)SelectObject(hdc_local, hAreaBrush);
-    Rectangle(hdc_local, 0, 0, width, height);
-    SelectObject(hdc_local, hOldPen);
-    SelectObject(hdc_local, hOldBrush);
-    DeletePen(hAreaPen);
-    DeleteBrush(hAreaBrush);
+    if(!transparency)
+    {
+        HPEN hAreaPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        hOldPen = (HPEN)SelectObject(hdc_local, hAreaPen);
+        HBRUSH hAreaBrush = CreateSolidBrush(RGB(255, 255, 255));
+        hOldBrush = (HBRUSH)SelectObject(hdc_local, hAreaBrush);
+        Rectangle(hdc_local, 0, 0, width, height);
+        SelectObject(hdc_local, hOldPen);
+        SelectObject(hdc_local, hOldBrush);
+        DeletePen(hAreaPen);
+        DeleteBrush(hAreaBrush);
+    }
+    else
+    {
+        HPEN hAreaPen = (HPEN)GetStockObject(NULL_PEN);
+        hOldPen = (HPEN)SelectObject(hdc_local, hAreaPen);
+        HBRUSH hAreaBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+        hOldBrush = (HBRUSH)SelectObject(hdc_local, hAreaBrush);
+        Rectangle(hdc_local, 0, 0, width, height);
+        SelectObject(hdc_local, hOldPen);
+        SelectObject(hdc_local, hOldBrush);
+    }
+    SetBkMode(hdc_local, TRANSPARENT);
 
     if(!is_loaded) return;
 

@@ -23,6 +23,7 @@ SOURCES += \
 HEADERS += \
     src_winapi/libs/lodepng.h \
     src_winapi/libs/jo_images.h \
+    src_winapi/resources.h \
     src_winapi/paintwidget.h \
     src_winapi/legacysupport.h
 

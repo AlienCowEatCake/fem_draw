@@ -17,11 +17,12 @@
 #define CONTROL_LABEL_VECTORS_V             10011
 #define CONTROL_COMBOBOX_VECTORS_V          10012
 #define CONTROL_MENU_OPEN                   10013
-#define CONTROL_MENU_SAVE                   10014
-#define CONTROL_MENU_EXIT                   10015
-#define CONTROL_MENU_INCREASE_INTERPOLATION 10016
-#define CONTROL_MENU_DECREASE_INTERPOLATION 10017
-#define CONTROL_MENU_ABOUT                  10018
+#define CONTROL_MENU_TRANSPARENT            10014
+#define CONTROL_MENU_SAVE                   10015
+#define CONTROL_MENU_EXIT                   10016
+#define CONTROL_MENU_INCREASE_INTERPOLATION 10017
+#define CONTROL_MENU_DECREASE_INTERPOLATION 10018
+#define CONTROL_MENU_ABOUT                  10019
 
 #include <windows.h>
 #include <commctrl.h>

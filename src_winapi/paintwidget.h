@@ -117,7 +117,7 @@ public:
     size_t div_num;
 
     // Отрисовка сцены на HDC
-    void draw(HDC hdc_local);
+    void draw(HDC hdc_local, bool transparency);
 
     // Отрисовка сцены
     void paintEvent();
