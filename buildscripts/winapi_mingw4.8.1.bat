@@ -24,7 +24,7 @@ mkdir %V_BUILDDIR%
 cd %V_BUILDDIR%
 %MINGW-CXX% -c -O3 -DNDEBUG -Wall -Wextra ../src_winapi/libs/lodepng.cpp -o lodepng.cpp.o
 @if not exist "lodepng.cpp.o" goto err
-%MINGW-CXX% -c -O3 -DNDEBUG -Wall -Wextra -Wno-narrowing ../src_winapi/libs/jo_jpeg.cpp -o jo_jpeg.cpp.o
+%MINGW-CXX% -c -O3 -DNDEBUG -Wall -Wextra ../src_winapi/libs/jo_jpeg.cpp -o jo_jpeg.cpp.o
 @if not exist "jo_jpeg.cpp.o" goto err
 %MINGW-CXX% -c -O3 -DNDEBUG -Wall -Wextra ../src_winapi/libs/jo_gif.cpp -o jo_gif.cpp.o
 @if not exist "jo_gif.cpp.o" goto err
