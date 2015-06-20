@@ -29,6 +29,11 @@ HEADERS += \
 RC_FILE += src_winapi/resources.rc
 
 win32-g++* {
+    DEFINES -= UNICODE
+    DEFINES -= _UNICODE
+}
+
+win32-g++* {
     QMAKE_LIBS += -lgdi32 -lcomctl32 -luser32 -lcomdlg32
 } else {
     QMAKE_LIBS += gdi32.lib comctl32.lib user32.lib comdlg32.lib

@@ -581,7 +581,7 @@ void paintwidget::draw(HDC hdc_local)
     if(!is_loaded) return;
 
     // Координатная сетка
-    HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(217, 217, 217));
+    HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(192, 192, 192));
     hOldPen = (HPEN)SelectObject(hdc_local, hGridPen);
     for(size_t i = 0; i <= num_ticks_x; i++)
     {
@@ -718,10 +718,20 @@ void paintwidget::draw(HDC hdc_local)
             // А теперь нарисуем, согласно вышеприведенному условию
             if(vct.size() > 1)
             {
+                // WinAPI почему-то не доводит линии на один пиксель
+                // Исправим это досадное недоразумение
+                float direction_x = vct[1].first - vct[0].first;
+                float direction_y = vct[1].second - vct[0].second;
+                int shift_x = 0, shift_y = 0;
+                if(std::fabs(direction_x) > std::fabs(direction_y))
+                    shift_x = direction_x > 0 ? 1 : -1;
+                else
+                    shift_y = direction_y > 0 ? -1 : 1;
+                // Ну и нарисуем теперь с учетом поправки
                 to_window(vct[0].first, vct[0].second, x, y);
                 MoveToEx(hdc_local, x, y, &pt);
                 to_window(vct[1].first, vct[1].second, x, y);
-                LineTo(hdc_local, x, y);
+                LineTo(hdc_local, x + shift_x, y + shift_y);
             }
         }
     }
