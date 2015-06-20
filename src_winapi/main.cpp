@@ -55,7 +55,7 @@ void on_actionOpen_Tecplot_File_triggered()
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = TEXT("Tecplot Data Files\0*.dat;*.plt\0All Files\0*.*\0");
+    ofn.lpstrFilter = TEXT("Tecplot Data Files (*.dat *.plt)\0*.dat;*.plt\0All Files (*.*)\0*.*\0");
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = TEXT("Open Tecplot File");
     ofn.nMaxFileTitle = 0;
@@ -175,7 +175,7 @@ void on_actionSave_Image_File_triggered()
     ofn.lpstrFile = szFile;
     ofn.lpstrDefExt = TEXT("png");
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = TEXT("PNG Images\0*.png\0BMP Images\0*.bmp\0JPG Images\0*.jpg\0GIF Images\0*.gif\0TGA Images\0*.tga\0All Images\0*.png;*.bmp;*.jpg;*.gif;*.tga\0");
+    ofn.lpstrFilter = TEXT("All Images (*.png *.bmp *.jpg *.gif *.tga)\0*.png;*.bmp;*.jpg;*.gif;*.tga\0PNG Images (*.png)\0*.png\0BMP Images (*.bmp)\0*.bmp\0JPG Images (*.jpg)\0*.jpg\0GIF Images (*.gif)\0*.gif\0TGA Images (*.tga)\0*.tga\0");
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = TEXT("Save Image File");
     ofn.nMaxFileTitle = 0;
