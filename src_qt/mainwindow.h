@@ -23,6 +23,8 @@ public:
     ~MainWindow();
     // Событие при изменении размера окна
     void resizeEvent(QResizeEvent *event);
+    // Открытие файла по имени
+    void open_file(QString filename);
 private slots:
     // Событие при переключении рисования изолиний
     void on_checkBox_2_clicked();

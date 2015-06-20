@@ -12,6 +12,17 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow w;
+    if(argc > 1)
+    {
+        QString filename;
+        for(int i = 1; i < argc; i++)
+        {
+            filename.append(argv[i]);
+            if(i + 1 < argc)
+                filename.append(' ');
+        }
+        w.open_file(filename);
+    }
     w.show();
     return a.exec();
 }

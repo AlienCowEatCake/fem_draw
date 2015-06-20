@@ -64,10 +64,10 @@ MainWindow::~MainWindow()
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);
-    // Подгонка размеров OpenGL виджета при изменении размеров окна
+    // Подгонка размеров виджета при изменении размеров окна
     QRect main = ui->centralwidget->geometry();
-    QRect ogl = ui->widget->geometry();
-    ui->widget->setGeometry(ogl.x(), ogl.y(), main.width() - ogl.x(), main.height() - ogl.y());
+    QRect widget = ui->widget->geometry();
+    ui->widget->setGeometry(widget.x(), widget.y(), main.width() - widget.x(), main.height() - widget.y());
 }
 
 // Событие при переключении рисования изолиний
@@ -98,8 +98,8 @@ void MainWindow::on_spinBox_valueChanged(int arg1)
     }
 }
 
-// Событие при открытии файла
-void MainWindow::on_actionOpen_Tecplot_File_triggered()
+// Открытие файла по имени
+void MainWindow::open_file(QString filename)
 {
     // Запомним старые значения индексов, чтоб потом восстановить
     size_t old_draw_index = ui->widget->draw_index;
@@ -110,10 +110,8 @@ void MainWindow::on_actionOpen_Tecplot_File_triggered()
     ui->widget->ind_vec_2 = 0;
 
     // Откроем файл
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Tecplot File"), "", tr("Tecplot Data Files (*.dat *.plt);;All Files (*.*)"));
-    if(fileName.length() == 0) return;
     ui->widget->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
-    ui->widget->tec_read(fileName);
+    ui->widget->tec_read(filename);
     if(!ui->widget->is_loaded)
     {
         this->setWindowTitle(trUtf8("FEM Draw"));
@@ -164,7 +162,7 @@ void MainWindow::on_actionOpen_Tecplot_File_triggered()
         ui->spinBox_2->setValue(ui->widget->vect_value);
 
     // Установим заголовок окна
-    QStringList path = fileName.split('/');
+    QStringList path = filename.split('/');
     QString label = path.last();
     label.append(trUtf8(" - FEM Draw"));
     this->setWindowTitle(label);
@@ -172,6 +170,15 @@ void MainWindow::on_actionOpen_Tecplot_File_triggered()
     // А вот теперь готово
     ui->widget->is_loaded = true;
     ui->widget->repaint();
+}
+
+
+// Событие при открытии файла
+void MainWindow::on_actionOpen_Tecplot_File_triggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Tecplot File"), "", tr("Tecplot Data Files (*.dat *.plt);;All Files (*.*)"));
+    if(fileName.length() == 0) return;
+    open_file(fileName);
 }
 
 // Изменение переменной, которую выводим

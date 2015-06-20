@@ -37,8 +37,8 @@ void widget_redraw()
     InvalidateRect(hwnd, &r, FALSE);
 }
 
-// Событие при открытии файла
-void on_actionOpen_Tecplot_File_triggered()
+// Открытие файла по имени
+void open_file(LPTSTR filename)
 {
     // Запомним старые значения индексов, чтоб потом восстановить
     size_t old_draw_index = pdraw->draw_index;
@@ -49,22 +49,8 @@ void on_actionOpen_Tecplot_File_triggered()
     pdraw->ind_vec_2 = 0;
 
     // Откроем файл
-    OPENFILENAME ofn;
-    TCHAR szFile[260] = TEXT("");
-    ZeroMemory(& ofn, sizeof(OPENFILENAME));
-    ofn.lStructSize = sizeof(OPENFILENAME);
-    ofn.hwndOwner = hwnd;
-    ofn.lpstrFile = szFile;
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = TEXT("Tecplot Data Files (*.dat *.plt)\0*.dat;*.plt\0All Files (*.*)\0*.*\0");
-    ofn.nFilterIndex = 1;
-    ofn.lpstrFileTitle = TEXT("Open Tecplot File");
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_READONLY | OFN_HIDEREADONLY;
-    if(GetOpenFileName(& ofn) != TRUE) return;
     pdraw->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
-    pdraw->tec_read(ofn.lpstrFile);
+    pdraw->tec_read(filename);
     if(!pdraw->is_loaded)
     {
         SetWindowText(hwnd, TEXT("FEM Draw"));
@@ -128,12 +114,12 @@ void on_actionOpen_Tecplot_File_triggered()
 
     // Установим заголовок окна
 #if defined UNICODE || defined _UNICODE
-    wstring label(ofn.lpstrFile);
+    wstring label(filename);
     size_t begin = label.find_last_of(TEXT("\\"));
     if(begin != wstring::npos)
         label = label.substr(begin + 1);
 #else
-    string label(ofn.lpstrFile);
+    string label(filename);
     size_t begin = label.find_last_of(TEXT("\\"));
     if(begin != string::npos)
         label = label.substr(begin + 1);
@@ -144,6 +130,26 @@ void on_actionOpen_Tecplot_File_triggered()
     // А вот теперь готово
     pdraw->is_loaded = true;
     widget_redraw();
+}
+
+// Событие при открытии файла
+void on_actionOpen_Tecplot_File_triggered()
+{
+    OPENFILENAME ofn;
+    TCHAR szFile[260] = TEXT("");
+    ZeroMemory(& ofn, sizeof(OPENFILENAME));
+    ofn.lStructSize = sizeof(OPENFILENAME);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = TEXT("Tecplot Data Files (*.dat *.plt)\0*.dat;*.plt\0All Files (*.*)\0*.*\0");
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = TEXT("Open Tecplot File");
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = NULL;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_READONLY | OFN_HIDEREADONLY;
+    if(GetOpenFileName(& ofn) != TRUE) return;
+    open_file(ofn.lpstrFile);
 }
 
 // Событие при переключении прозрачности
@@ -724,7 +730,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // Разное
     (void)hPrevInstance;
-    (void)lpCmdLine;
+#if defined UNICODE || defined _UNICODE
+    bool use_arg = wcslen(lpCmdLine) > 0 ? true : false;
+#else
+    bool use_arg = strlen(lpCmdLine) > 0 ? true : false;
+#endif
     WNDCLASS wnd;
     memset(&wnd, 0, sizeof(WNDCLASS));
     wnd.style = CS_HREDRAW | CS_VREDRAW;
@@ -913,6 +923,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     draw.set_isolines_num((size_t)isol_curr);
     draw.set_div_num((size_t)smooth_curr);
     draw.hwnd = GetDlgItem(hwnd, CONTROL_PAINT_WIDGET);
+
+    // Если подан аргумент, значит откроем файл
+    if(use_arg) open_file(lpCmdLine);
 
     // Покажем окно и запустим обработчик сообщений
     ShowWindow(hwnd, nCmdShow);
