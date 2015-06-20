@@ -277,22 +277,23 @@ void on_actionSave_Image_File_triggered()
             MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
             goto finish;
         }
-        vector<unsigned char> image_raw(bi.biWidth * bi.biHeight * 4);
-        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 4, &image_raw[0]);
-        vector<unsigned char> image_png;
-        unsigned error = lodepng::encode(image_png, image_raw, bi.biWidth, bi.biHeight);
+        unsigned char * image_raw = (unsigned char *)malloc(bi.biWidth * bi.biHeight * 3);
+        bmp2rgb(lpbitmap, bi.biWidth, bi.biHeight, 3, image_raw);
+        unsigned char * image_png = NULL;
+        size_t image_png_size;
+        unsigned error = lodepng_encode24(&image_png, &image_png_size, image_raw, bi.biWidth, bi.biHeight);
         if(error)
         {
-            image_raw.clear();
-            image_png.clear();
+            free(image_raw);
+            if(image_png) free(image_png);
             CloseHandle(hFile);
             MessageBox(hwnd, TEXT("Error: Can't save file"), TEXT("Error"), MB_OK | MB_ICONERROR);
             goto finish;
         }
         DWORD dwBytesWritten = 0;
-        WriteFile(hFile, (LPSTR)(&image_png[0]), (DWORD)image_png.size(), &dwBytesWritten, NULL);
-        image_raw.clear();
-        image_png.clear();
+        WriteFile(hFile, (LPSTR)image_png, (DWORD)image_png_size, &dwBytesWritten, NULL);
+        free(image_raw);
+        free(image_png);
         CloseHandle(hFile);
     }
     // Сохраним отрисованное в tga файл
