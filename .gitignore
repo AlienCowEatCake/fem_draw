@@ -67,4 +67,5 @@ Makefile*
 
 /build_*
 /fem_draw
+/fem_draw_qt
 
