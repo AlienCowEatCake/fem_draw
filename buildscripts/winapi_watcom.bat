@@ -22,7 +22,7 @@ cl -c -nologo -G5 -Ox -W3 -MT -TP -DNDEBUG ..\src_winapi\main.cpp -Fomain.cpp.ob
 @if not exist "main.cpp.obj" goto err
 cl -c -nologo -G5 -Ox -W3 -MT -TP -DNDEBUG ..\src_winapi\paintwidget.cpp -Fopaintwidget.cpp.obj
 @if not exist "paintwidget.cpp.obj" goto err
-rc -nologo -foresources.res -i../resources ../src_winapi/resources.rc
+rc -nologo -foresources.res -i../src_winapi -i../resources ../src_winapi/resources.rc
 @if not exist "resources.res" goto err
 link /NOLOGO /SUBSYSTEM:WINDOWS main.cpp.obj paintwidget.cpp.obj resources.res lodepng.cpp.obj jo_jpeg.cpp.obj jo_gif.cpp.obj jo_tga.cpp.obj gdi32.lib comctl32.lib user32.lib comdlg32.lib /OUT:%V_PROJECT%.exe
 @if not exist "%V_PROJECT%.exe" goto err

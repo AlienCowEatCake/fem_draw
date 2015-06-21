@@ -34,7 +34,7 @@ cd %V_BUILDDIR%
 @if not exist "main.cpp.o" goto err
 %MINGW-CXX% -c -O3 -DNDEBUG -Wall -Wextra ../src_winapi/paintwidget.cpp -o paintwidget.cpp.o
 @if not exist "paintwidget.cpp.o" goto err
-%MINGW-WINDRES%  -I../resources ../src_winapi/resources.rc -o resources.rc.o
+%MINGW-WINDRES% -I../src_winapi -I../resources ../src_winapi/resources.rc -o resources.rc.o
 @if not exist "resources.rc.o" goto err
 %MINGW-CXX% -O3 -Wall -Wextra main.cpp.o paintwidget.cpp.o resources.rc.o lodepng.cpp.o jo_jpeg.cpp.o jo_gif.cpp.o jo_tga.cpp.o -lgdi32 -lcomctl32 -luser32 -lcomdlg32 -mwindows -o %V_PROJECT%.exe
 @if not exist "%V_PROJECT%.exe" goto err
