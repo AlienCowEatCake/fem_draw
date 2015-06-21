@@ -60,10 +60,10 @@ namespace std
     template<typename T_string> // Шаблон только чтобы в хедере описать нормально
     istream & getline(istream & is, T_string & str)
     {
-        const int bufsize = 255;
-        char buf[bufsize];
-        is.getline(buf, bufsize);
-        str.assign(buf);
+        str.clear();
+        char c = '\0';
+        while(is.good() && is.get(c) && c != '\n')
+            str.push_back(c);
         return is;
     }
 }
