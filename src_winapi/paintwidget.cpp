@@ -648,13 +648,10 @@ void paintwidget::draw(HDC hdc_local, bool transparency)
         float x_real = (float)(std::floor((xd * size_x + min_x) * 10000.0f + 0.5f)) / 10000.0f;
         char st[17];
 #if defined _MSC_VER && _MSC_VER >= 1400
-        sprintf_s(st, 17, "%.2f", x_real);
+        sprintf_s(st, 17, "%.6g", x_real);
 #else
-        sprintf(st, "%.2f", x_real);
+        sprintf(st, "%.6g", x_real);
 #endif
-        if(strcmp(st + strlen(st) - 3, ".00") == 0)
-            st[strlen(st) - 3] = '\0';
-        st[5] = '\0';
         to_window(xd - 0.01f, -0.04f + font_correct, x, y);
         TextOutA(hdc_local, x, y, st, (int)strlen(st));
     }
@@ -664,13 +661,10 @@ void paintwidget::draw(HDC hdc_local, bool transparency)
         float y_real = (float)(std::floor((yd * size_y + min_y) * 10000.0f + 0.5f)) / 10000.0f;
         char st[17];
 #if defined _MSC_VER && _MSC_VER >= 1400
-        sprintf_s(st, 17, "%.2f", y_real);
+        sprintf_s(st, 17, "%.6g", y_real);
 #else
-        sprintf(st, "%.2f", y_real);
+        sprintf(st, "%.6g", y_real);
 #endif
-        if(strcmp(st + strlen(st) - 3, ".00") == 0)
-            st[strlen(st) - 3] = '\0';
-        st[5] = '\0';
         to_window(-0.052f, yd - 0.01f + font_correct, x, y);
         TextOutA(hdc_local, x, y, st, (int)strlen(st));
     }
