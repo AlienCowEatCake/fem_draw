@@ -1,6 +1,24 @@
 #ifndef LEGACYSUPPORT_H
 #define LEGACYSUPPORT_H
 
+// ===== ALL =============================================================================
+
+// UNICODE для windows.h, _UNICODE для C runtime
+// TEXT для windows.h, _TEXT для C runtime
+// И прочее. Понятое дело, что это стоит использовать совместно.
+
+#if defined _UNICODE
+#if !defined UNICODE
+#define UNICODE
+#endif
+#endif
+
+#if defined UNICODE
+#if !defined _UNICODE
+#define _UNICODE
+#endif
+#endif
+
 // ===== MSVC 6.0 ========================================================================
 
 #if defined _MSC_VER && _MSC_VER <= 1200

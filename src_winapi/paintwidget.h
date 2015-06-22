@@ -1,13 +1,6 @@
 #ifndef PAINTWIDGET_H
 #define PAINTWIDGET_H
 
-#if defined _WIN32_WINNT && _WIN32_WINNT < 0x0400
-#undef _WIN32_WINNT
-#endif
-#if !defined _WIN32_WINNT
-#define _WIN32_WINNT 0x0400
-#endif
-
 #if defined _MSC_VER
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "comctl32.lib")
