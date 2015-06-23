@@ -925,7 +925,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     draw.hwnd = GetDlgItem(hwnd, CONTROL_PAINT_WIDGET);
 
     // Если подан аргумент, значит откроем файл
-    if(use_arg) open_file(lpCmdLine);
+    if(use_arg)
+    {
+        LPTSTR cmd_real = lpCmdLine;
+        if(lpCmdLine[0] == TEXT('"'))
+        {
+            cmd_real++;
+#if defined UNICODE || defined _UNICODE
+            cmd_real[wcslen(cmd_real) - 1] = 0;
+#else
+            cmd_real[strlen(cmd_real) - 1] = 0;
+#endif
+        }
+        open_file(cmd_real);
+    }
 
     // Покажем окно и запустим обработчик сообщений
     ShowWindow(hwnd, nCmdShow);

@@ -14,6 +14,16 @@ int main(int argc, char *argv[])
     MainWindow w;
     if(argc > 1)
     {
+#if defined _WIN32
+        string filename;
+        for(int i = 1; i < argc; i++)
+        {
+            filename.append(argv[i]);
+            if(i + 1 < argc)
+                filename.append(" ");
+        }
+        w.open_file(QString::fromLocal8Bit(filename.c_str()));
+#else
         QString filename;
         for(int i = 1; i < argc; i++)
         {
@@ -22,6 +32,7 @@ int main(int argc, char *argv[])
                 filename.append(' ');
         }
         w.open_file(filename);
+#endif
     }
     w.show();
     return a.exec();

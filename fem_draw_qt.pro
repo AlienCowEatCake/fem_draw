@@ -31,7 +31,7 @@ FORMS += \
 RESOURCES += resources/icon.qrc
 
 win32 {
-  RC_FILE += resources/icon.rc
+    RC_FILE += resources/icon.rc
 }
 
 *g++*|*clang* {
