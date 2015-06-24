@@ -8,12 +8,21 @@
 
 HWND hwnd;
 HACCEL haccel;
-HMENU hFileMenu;
 paintwidget * pdraw;
-int min_height, min_width;
-int isol_min = 0,   isol_max = 100,   isol_curr = 10;
-int smooth_min = 0, smooth_max = 7,   smooth_curr = 0;
-int vect_min = 1,   vect_max = 10000, vect_curr = 1;
+namespace menu
+{
+    HMENU hMenu;
+    HMENU hFileMenu;
+    HMENU hInterpMenu;
+    HMENU hAboutMenu;
+}
+namespace config
+{
+    int min_height, min_width;
+    int isol_min = 0,   isol_max = 100,   isol_curr = 10;
+    int smooth_min = 0, smooth_max = 7,   smooth_curr = 0;
+    int vect_min = 1,   vect_max = 10000, vect_curr = 1;
+}
 
 void widget_redraw()
 {
@@ -81,17 +90,17 @@ void open_file(LPTSTR filename)
     const size_t vect_bufsize = 16;
     char vect_buf[vect_bufsize];
 #if defined _MSC_VER && _MSC_VER >= 1400
-    if(pdraw->vect_value < vect_min)
-        sprintf_s(vect_buf, vect_bufsize, "%d", vect_min);
-    else if(pdraw->vect_value > vect_max)
-        sprintf_s(vect_buf, vect_bufsize, "%d", vect_max);
+    if(pdraw->vect_value < config::vect_min)
+        sprintf_s(vect_buf, vect_bufsize, "%d", config::vect_min);
+    else if(pdraw->vect_value > config::vect_max)
+        sprintf_s(vect_buf, vect_bufsize, "%d", config::vect_max);
     else
         sprintf_s(vect_buf, vect_bufsize, "%d", pdraw->vect_value);
 #else
-    if(pdraw->vect_value < vect_min)
-        sprintf(vect_buf, "%d", vect_min);
-    else if(pdraw->vect_value > vect_max)
-        sprintf(vect_buf, "%d", vect_max);
+    if(pdraw->vect_value < config::vect_min)
+        sprintf(vect_buf, "%d", config::vect_min);
+    else if(pdraw->vect_value > config::vect_max)
+        sprintf(vect_buf, "%d", config::vect_max);
     else
         sprintf(vect_buf, "%d", pdraw->vect_value);
 #endif
@@ -133,11 +142,11 @@ void on_actionOpen_Tecplot_File_triggered()
 // Событие при переключении прозрачности
 void on_actionTransparent_Image_triggered()
 {
-    DWORD state = GetMenuState(hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_BYCOMMAND);
+    DWORD state = GetMenuState(menu::hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_BYCOMMAND);
     if(!(state & MF_CHECKED))
-        CheckMenuItem(hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_CHECKED | MF_BYCOMMAND);
+        CheckMenuItem(menu::hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_CHECKED | MF_BYCOMMAND);
     else
-        CheckMenuItem(hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_UNCHECKED | MF_BYCOMMAND);
+        CheckMenuItem(menu::hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_UNCHECKED | MF_BYCOMMAND);
 }
 
 // Конвертер из битмапов bmp в другие форматы
@@ -177,7 +186,7 @@ void bmp2rgb(const char * lpbitmap, LONG width, LONG height, unsigned colors, bo
 void on_actionSave_Image_File_triggered()
 {
     // Разберемся с прозрачностью
-    bool transparent = GetMenuState(hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_BYCOMMAND) & MF_CHECKED ? true : false;
+    bool transparent = GetMenuState(menu::hFileMenu, (UINT)CONTROL_MENU_TRANSPARENT, MF_BYCOMMAND) & MF_CHECKED ? true : false;
 
     // Откроем файл
     OPENFILENAME ofn;
@@ -447,21 +456,21 @@ void on_spinBox_Isolines_valueChanged()
     char str[bufsize];
     GetWindowTextA(GetDlgItem(hwnd, CONTROL_SPINBOX_ISOLINES_TEXT), str, bufsize);
     int val = atoi(str);
-    if(val != isol_curr)
+    if(val != config::isol_curr)
     {
-        if(val <= isol_max && val >= isol_min)
+        if(val <= config::isol_max && val >= config::isol_min)
         {
-            isol_curr = val;
-            pdraw->set_isolines_num((size_t)isol_curr);
+            config::isol_curr = val;
+            pdraw->set_isolines_num((size_t)config::isol_curr);
             if(pdraw->draw_isolines)
                 widget_redraw();
         }
         else
         {
 #if defined _MSC_VER && _MSC_VER >= 1400
-            sprintf_s(str, bufsize, "%d", isol_curr);
+            sprintf_s(str, bufsize, "%d", config::isol_curr);
 #else
-            sprintf(str, "%d", isol_curr);
+            sprintf(str, "%d", config::isol_curr);
 #endif
             SetWindowTextA(GetDlgItem(hwnd, CONTROL_SPINBOX_ISOLINES_TEXT), str);
         }
@@ -491,21 +500,21 @@ void on_spinBox_Vectors_valueChanged()
     char str[bufsize];
     GetWindowTextA(GetDlgItem(hwnd, CONTROL_SPINBOX_VECTORS_TEXT), str, bufsize);
     int val = atoi(str);
-    if(val != vect_curr)
+    if(val != config::vect_curr)
     {
-        if(val <= vect_max && val >= vect_min)
+        if(val <= config::vect_max && val >= config::vect_min)
         {
-            vect_curr = val;
-            pdraw->skip_vec = (size_t)vect_curr;
+            config::vect_curr = val;
+            pdraw->skip_vec = (size_t)config::vect_curr;
             if(pdraw->draw_vectors)
                 widget_redraw();
         }
         else
         {
 #if defined _MSC_VER && _MSC_VER >= 1400
-            sprintf_s(str, bufsize, "%d", vect_curr);
+            sprintf_s(str, bufsize, "%d", config::vect_curr);
 #else
-            sprintf(str, "%d", vect_curr);
+            sprintf(str, "%d", config::vect_curr);
 #endif
             SetWindowTextA(GetDlgItem(hwnd, CONTROL_SPINBOX_VECTORS_TEXT), str);
         }
@@ -641,8 +650,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         pdraw->paintEvent();
         break;
     case WM_GETMINMAXINFO:  // Задаем минимальные размеры окна
-        ((LPMINMAXINFO)lParam)->ptMinTrackSize.x = (LONG)min_width;
-        ((LPMINMAXINFO)lParam)->ptMinTrackSize.y = (LONG)min_height;
+        ((LPMINMAXINFO)lParam)->ptMinTrackSize.x = (LONG)config::min_width;
+        ((LPMINMAXINFO)lParam)->ptMinTrackSize.y = (LONG)config::min_height;
         break;
     case WM_DESTROY:    // Закрытие окна
         PostQuitMessage(0);
@@ -698,8 +707,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     RegisterClass(&wnd);
 
     // Установка минимальных размеров окна
-    min_height = 500 + 2 * GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION);
-    min_width = 640 + 2 * GetSystemMetrics(SM_CXFRAME);
+    config::min_height = 500 + 2 * GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION);
+    config::min_width = 640 + 2 * GetSystemMetrics(SM_CXFRAME);
 
     // Начинаем создавать главное окно
     int window_width = 640 + 2 * GetSystemMetrics(SM_CXFRAME);
@@ -715,23 +724,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                 );
 
     // Замутим меню
-    HMENU hMenu = CreateMenu();
-    hFileMenu = CreatePopupMenu();
-    AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hFileMenu, TEXT("File"));
-    AppendMenu(hFileMenu, MF_STRING, CONTROL_MENU_OPEN, TEXT("Open Tecplot File\tCtrl+O"));
-    AppendMenu(hFileMenu, MF_SEPARATOR, (UINT)NULL, TEXT(""));
-    AppendMenu(hFileMenu, MF_STRING | MF_UNCHECKED, CONTROL_MENU_TRANSPARENT, TEXT("Transparent Image"));
-    AppendMenu(hFileMenu, MF_STRING, CONTROL_MENU_SAVE, TEXT("Save Image\tCtrl+S"));
-    AppendMenu(hFileMenu, MF_SEPARATOR, (UINT)NULL, TEXT(""));
-    AppendMenu(hFileMenu, MF_STRING, CONTROL_MENU_EXIT, TEXT("Exit\tCtrl+Q"));
-    HMENU hInterpMenu = CreatePopupMenu();
-    AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hInterpMenu, TEXT("Interpolation"));
-    AppendMenu(hInterpMenu, MF_STRING, CONTROL_MENU_INCREASE_INTERPOLATION, TEXT("Increase Interpolation\t="));
-    AppendMenu(hInterpMenu, MF_STRING, CONTROL_MENU_DECREASE_INTERPOLATION, TEXT("Decrease Interpolation\t-"));
-    HMENU hAboutMenu = CreatePopupMenu();
-    AppendMenu(hMenu, MF_STRING | MF_POPUP, (UINT)hAboutMenu, TEXT("About"));
-    AppendMenu(hAboutMenu, MF_STRING, CONTROL_MENU_ABOUT, TEXT("About FEM Draw"));
-    SetMenu(hwnd, hMenu);
+    menu::hMenu = CreateMenu();
+    menu::hFileMenu = CreatePopupMenu();
+    AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT)menu::hFileMenu, TEXT("File"));
+    AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_OPEN, TEXT("Open Tecplot File\tCtrl+O"));
+    AppendMenu(menu::hFileMenu, MF_SEPARATOR, (UINT)NULL, TEXT(""));
+    AppendMenu(menu::hFileMenu, MF_STRING | MF_UNCHECKED, CONTROL_MENU_TRANSPARENT, TEXT("Transparent Image"));
+    AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_SAVE, TEXT("Save Image\tCtrl+S"));
+    AppendMenu(menu::hFileMenu, MF_SEPARATOR, (UINT)NULL, TEXT(""));
+    AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_EXIT, TEXT("Exit\tCtrl+Q"));
+    menu::hInterpMenu = CreatePopupMenu();
+    AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT)menu::hInterpMenu, TEXT("Interpolation"));
+    AppendMenu(menu::hInterpMenu, MF_STRING, CONTROL_MENU_INCREASE_INTERPOLATION, TEXT("Increase Interpolation\t="));
+    AppendMenu(menu::hInterpMenu, MF_STRING, CONTROL_MENU_DECREASE_INTERPOLATION, TEXT("Decrease Interpolation\t-"));
+    menu::hAboutMenu = CreatePopupMenu();
+    AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT)menu::hAboutMenu, TEXT("About"));
+    AppendMenu(menu::hAboutMenu, MF_STRING, CONTROL_MENU_ABOUT, TEXT("About FEM Draw"));
+    SetMenu(hwnd, menu::hMenu);
     haccel = LoadAccelerators(hInstance, TEXT("APP_ACCELERATORS"));
 
     // Замутим чекбокс "Color"
@@ -775,7 +784,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                 UDS_ALIGNRIGHT | UDS_SETBUDDYINT,
                 0, 0, 0, 0,
                 hwnd, CONTROL_SPINBOX_ISOLINES_UPDOWN, hInstance, GetDlgItem(hwnd, CONTROL_SPINBOX_ISOLINES_TEXT),
-                isol_max, isol_min, isol_curr
+                config::isol_max, config::isol_min, config::isol_curr
                 );
     set_tooltip(hInstance, hwnd, CONTROL_SPINBOX_ISOLINES_TEXT, TEXT("Number of isolines"));
     set_tooltip(hInstance, hwnd, CONTROL_SPINBOX_ISOLINES_UPDOWN, TEXT("Number of isolines"));
@@ -803,7 +812,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                 UDS_ALIGNRIGHT | UDS_SETBUDDYINT,
                 0, 0, 0, 0,
                 hwnd, CONTROL_SPINBOX_VECTORS_UPDOWN, hInstance, GetDlgItem(hwnd, CONTROL_SPINBOX_VECTORS_TEXT),
-                vect_max, vect_min, vect_curr
+                config::vect_max, config::vect_min, config::vect_curr
                 );
     set_tooltip(hInstance, hwnd, CONTROL_SPINBOX_VECTORS_TEXT, TEXT("Number of skipped values"));
     set_tooltip(hInstance, hwnd, CONTROL_SPINBOX_VECTORS_UPDOWN, TEXT("Number of skipped values"));
@@ -872,8 +881,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     SendMessage(GetDlgItem(hwnd, CONTROL_CHECKBOX_VECTORS), BM_SETCHECK, BST_UNCHECKED, 0);
 
     // Начальные значения элементов управления
-    draw.set_isolines_num((size_t)isol_curr);
-    draw.set_div_num((size_t)smooth_curr);
+    draw.set_isolines_num((size_t)config::isol_curr);
+    draw.set_div_num((size_t)config::smooth_curr);
     draw.hwnd = GetDlgItem(hwnd, CONTROL_PAINT_WIDGET);
 
     // Если подан аргумент, значит откроем файл
