@@ -397,7 +397,7 @@ void on_actionDecrease_Interpolation_triggered()
 void on_actionAbout_FEM_Draw_triggered()
 {
     u_stringstream sstr;
-    sstr << TEXT("FEM Draw v1.0 beta4 (WinAPI)\n\n")
+    sstr << TEXT("FEM Draw v1.0 beta5 (WinAPI)\n\n")
          << TEXT("http://fami-net.dlinkddns.com/gitlab/peter/fem_draw\n")
          << TEXT("License: GNU GPL v3\n\n")
          << TEXT("Copyright (c) 2014 - 2015\n")
