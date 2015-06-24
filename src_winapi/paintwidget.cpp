@@ -22,9 +22,13 @@
 wifstream & getline(wifstream & ifs, string & str)
 {
     str.clear();
-    wchar_t c = '\0';
-    while(ifs.good() && ifs.get(c) && c != L'\n')
-        str.push_back(c);
+    wchar_t c_w = '\0';
+    while(ifs.good() && ifs.get(c_w) && c_w != L'\n')
+    {
+        char c_c;
+        WideCharToMultiByte(CP_ACP, 0, &c_w, 1, &c_c, 1, 0, 0);
+        str.push_back(c_c);
+    }
     return ifs;
 }
 #endif
@@ -554,6 +558,7 @@ void paintwidget::paintEvent()
     BitBlt(hdc1, 0, 0, bmp.bmWidth, bmp.bmHeight, hdc2, 0, 0, SRCCOPY);
     SelectObject(hdc2, oldhbmp);
     DeleteObject(hdc2);
+    DeleteObject(hdc1);
     EndPaint(hwnd, &ps);
     hbmp_is_valid = true;
 }

@@ -268,6 +268,7 @@ namespace std
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <string.h>
 namespace std
 {
     // Определим класс stringstream из strstream

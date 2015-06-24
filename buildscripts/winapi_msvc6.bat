@@ -3,6 +3,7 @@ set V_PROJECT=fem_draw_winapi
 set V_BUILDDIR=build_winapi_msvc6
 @echo on
 call "%PROGRAMFILES%\Microsoft Visual Studio\VC98\Bin\VCVARS32.BAT"
+call "%PROGRAMFILES(x86)%\Microsoft Visual Studio\VC98\Bin\VCVARS32.BAT"
 @echo on
 
 cd "%~dp0"

@@ -24,9 +24,9 @@ namespace config
     int vect_min = 1,   vect_max = 10000, vect_curr = 1;
 }
 
-void widget_redraw()
+void widget_redraw(bool is_valid)
 {
-    pdraw->hbmp_is_valid = false;
+    pdraw->hbmp_is_valid = is_valid;
     RECT r;
     GetClientRect(pdraw->hwnd, &r);
     InvalidateRect(pdraw->hwnd, &r, FALSE);
@@ -50,7 +50,7 @@ void open_file(LPTSTR filename)
     if(!pdraw->is_loaded)
     {
         SetWindowText(hwnd, TEXT("FEM Draw"));
-        widget_redraw();
+        widget_redraw(false);
         return;
     }
     // Ненене, еще не все готово!
@@ -121,7 +121,7 @@ void open_file(LPTSTR filename)
 
     // А вот теперь готово
     pdraw->is_loaded = true;
-    widget_redraw();
+    widget_redraw(false);
 }
 
 // Событие при открытии файла
@@ -361,9 +361,10 @@ void on_actionSave_Image_File_triggered()
 finish:
     GlobalUnlock(hDIB);
     GlobalFree(hDIB);
-    pdraw->paintEvent();
+    widget_redraw(true);
     EndPaint(pdraw->hwnd, & pdraw->ps);
     DeleteObject(hdc2);
+    DeleteObject(hdc1);
 }
 
 // Событие при нажатии кнопки Exit
@@ -378,7 +379,7 @@ void on_actionIncrease_Interpolation_triggered()
     if(pdraw->div_num < 7)
     {
         pdraw->set_div_num(pdraw->div_num + 1);
-        widget_redraw();
+        widget_redraw(false);
     }
 }
 
@@ -388,7 +389,7 @@ void on_actionDecrease_Interpolation_triggered()
     if(pdraw->div_num > 0)
     {
         pdraw->set_div_num(pdraw->div_num - 1);
-        widget_redraw();
+        widget_redraw(false);
     }
 }
 
@@ -416,7 +417,7 @@ void on_checkBox_Color_clicked()
     if(draw_color != pdraw->draw_color)
     {
         pdraw->draw_color = draw_color;
-        widget_redraw();
+        widget_redraw(false);
     }
 }
 
@@ -428,7 +429,7 @@ void on_comboBox_Color_currentIndexChanged()
     {
         pdraw->draw_index = (size_t)index;
         if(pdraw->draw_color || pdraw->draw_isolines)
-            widget_redraw();
+            widget_redraw(false);
     }
 }
 
@@ -444,7 +445,7 @@ void on_checkBox_Isolines_clicked()
     if(draw_isolines != pdraw->draw_isolines)
     {
         pdraw->draw_isolines = draw_isolines;
-        widget_redraw();
+        widget_redraw(false);
     }
 }
 
@@ -462,7 +463,7 @@ void on_spinBox_Isolines_valueChanged()
             config::isol_curr = val;
             pdraw->set_isolines_num((size_t)config::isol_curr);
             if(pdraw->draw_isolines)
-                widget_redraw();
+                widget_redraw(false);
         }
         else
         {
@@ -488,7 +489,7 @@ void on_checkBox_Vectors_clicked()
     if(draw_vectors != pdraw->draw_vectors)
     {
         pdraw->draw_vectors = draw_vectors;
-        widget_redraw();
+        widget_redraw(false);
     }
 }
 
@@ -506,7 +507,7 @@ void on_spinBox_Vectors_valueChanged()
             config::vect_curr = val;
             pdraw->skip_vec = (size_t)config::vect_curr;
             if(pdraw->draw_vectors)
-                widget_redraw();
+                widget_redraw(false);
         }
         else
         {
@@ -528,7 +529,7 @@ void on_comboBox_Vectors_U_currentIndexChanged()
     {
         pdraw->ind_vec_1 = (size_t)index;
         if(pdraw->draw_vectors)
-            widget_redraw();
+            widget_redraw(false);
     }
 }
 
@@ -540,7 +541,7 @@ void on_comboBox_Vectors_V_currentIndexChanged()
     {
         pdraw->ind_vec_2 = (size_t)index;
         if(pdraw->draw_vectors)
-            widget_redraw();
+            widget_redraw(false);
     }
 }
 
@@ -639,7 +640,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                     0, 0, r.right - r.left, r.bottom - r.top - 25,
                     SWP_NOMOVE | SWP_NOOWNERZORDER
                     );
-        widget_redraw();
+        widget_redraw(false);
         break;
     }
     case WM_PAINT:
