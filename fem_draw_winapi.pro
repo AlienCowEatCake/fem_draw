@@ -25,7 +25,8 @@ HEADERS += \
     src_winapi/libs/jo_images.h \
     src_winapi/resources.h \
     src_winapi/paintwidget.h \
-    src_winapi/legacysupport.h
+    src_winapi/compilersupport.h \
+    src_winapi/common.h
 
 RC_FILE += src_winapi/resources.rc
 
@@ -36,6 +37,7 @@ win32-g++* {
 }
 
 *g++*|*clang* {
+    QMAKE_CXXFLAGS *= -Wno-write-strings
     QMAKE_CXXFLAGS_WARN_ON *= -Wextra
     QMAKE_CXXFLAGS_RELEASE -= -O2
     QMAKE_CXXFLAGS_RELEASE *= -O3

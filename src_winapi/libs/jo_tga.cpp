@@ -2,7 +2,7 @@
 #ifndef JO_INCLUDE_TGA_H
 #define JO_INCLUDE_TGA_H
 
-#include "../legacysupport.h"
+#include "../compilersupport.h"
 #include <stdio.h>
 
 #if defined UNICODE || defined _UNICODE

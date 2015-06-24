@@ -22,7 +22,7 @@
 #ifndef JO_INCLUDE_JPEG_H
 #define JO_INCLUDE_JPEG_H
 
-#include "../legacysupport.h"
+#include "../compilersupport.h"
 #include <stdio.h>
 
 #if defined UNICODE || defined _UNICODE

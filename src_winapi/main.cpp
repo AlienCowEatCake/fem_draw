@@ -1,10 +1,5 @@
 #include "paintwidget.h"
 #include "resources.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cstdio>
-#include <windows.h>
 #include <commctrl.h>
 // https://github.com/lvandeve/lodepng
 #include "libs/lodepng.h"
@@ -22,16 +17,6 @@ int vect_min = 1,   vect_max = 10000, vect_curr = 1;
 
 void widget_redraw()
 {
-//    RECT r1, r2;
-//    GetWindowRect(pdraw->hwnd, &r1);
-//    GetWindowRect(hwnd, &r2);
-//    int dx = r2.left + GetSystemMetrics(SM_CXFRAME);
-//    int dy = r2.top + GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYMENU);
-//    r1.top -= dy;
-//    r1.bottom -= dy;
-//    r1.left -= dx;
-//    r1.right -= dx;
-//    InvalidateRect(hwnd, &r1, FALSE);
     RECT r;
     GetClientRect(hwnd, &r);
     InvalidateRect(hwnd, &r, FALSE);
@@ -113,17 +98,10 @@ void open_file(LPTSTR filename)
     SetWindowTextA(GetDlgItem(hwnd, CONTROL_SPINBOX_VECTORS_TEXT), vect_buf);
 
     // Установим заголовок окна
-#if defined UNICODE || defined _UNICODE
-    wstring label(filename);
+    u_string label(filename);
     size_t begin = label.find_last_of(TEXT("\\"));
-    if(begin != wstring::npos)
+    if(begin != u_string::npos)
         label = label.substr(begin + 1);
-#else
-    string label(filename);
-    size_t begin = label.find_last_of(TEXT("\\"));
-    if(begin != string::npos)
-        label = label.substr(begin + 1);
-#endif
     label.append(TEXT(" - FEM Draw"));
     SetWindowText(hwnd, label.c_str());
 
@@ -221,14 +199,13 @@ void on_actionSave_Image_File_triggered()
     // Определим, что за тип изображения нам надо сохранить
     enum filetypes { TYPE_PNG, TYPE_BMP, TYPE_JPG, TYPE_GIF, TYPE_TGA };
     filetypes filetype = TYPE_PNG;
-#if defined UNICODE || defined _UNICODE
-    wstring fileName(ofn.lpstrFile);
+    u_string fileName(ofn.lpstrFile);
     size_t found = fileName.find_last_of(TEXT("."));
-    if(found == wstring::npos) fileName.append(TEXT(".png"));
+    if(found == u_string::npos) fileName.append(TEXT(".png"));
     else
     {
-        wstring ext = fileName.substr(found + 1);
-        for(wstring::iterator it = ext.begin(); it != ext.end(); it++)
+        u_string ext = fileName.substr(found + 1);
+        for(u_string::iterator it = ext.begin(); it != ext.end(); it++)
             if(*it >= 'A' && *it <= 'Z') *it -= 'A' - 'a';
         if(ext == TEXT("bmp")) filetype = TYPE_BMP;
         else if(ext == TEXT("jpg")) filetype = TYPE_JPG;
@@ -236,22 +213,6 @@ void on_actionSave_Image_File_triggered()
         else if(ext == TEXT("tga")) filetype = TYPE_TGA;
         else if(ext != TEXT("png")) fileName.append(TEXT(".png"));
     }
-#else
-    string fileName(ofn.lpstrFile);
-    size_t found = fileName.find_last_of(TEXT("."));
-    if(found == string::npos) fileName.append(TEXT(".png"));
-    else
-    {
-        string ext = fileName.substr(found + 1).c_str();
-        for(string::iterator it = ext.begin(); it != ext.end(); it++)
-            if(*it >= 'A' && *it <= 'Z') *it -= 'A' - 'a';
-        if(ext == TEXT("bmp")) filetype = TYPE_BMP;
-        else if(ext == TEXT("jpg")) filetype = TYPE_JPG;
-        else if(ext == TEXT("gif")) filetype = TYPE_GIF;
-        else if(ext == TEXT("tga")) filetype = TYPE_TGA;
-        else if(ext != TEXT("png")) fileName.append(TEXT(".png"));
-    }
-#endif
 
     // Создадим все что нужно и запустим отрисовку
     RECT r;
@@ -426,11 +387,7 @@ void on_actionDecrease_Interpolation_triggered()
 // Событие при нажатии кнопки About
 void on_actionAbout_FEM_Draw_triggered()
 {
-#if defined UNICODE || defined _UNICODE
-    wstringstream sstr;
-#else
-    stringstream sstr;
-#endif
+    u_stringstream sstr;
     sstr << TEXT("FEM Draw v1.0 beta4 (WinAPI)\n\n")
          << TEXT("http://fami-net.dlinkddns.com/gitlab/peter/fem_draw\n")
          << TEXT("License: GNU GPL v3\n\n")
@@ -719,9 +676,9 @@ void set_tooltip(HINSTANCE hInstance, HWND hwnd, int item, LPTSTR text)
 }
 
 #if defined UNICODE || defined _UNICODE
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR lpCmdLine, int nCmdShow)
 #else
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow)
 #endif
 {
     // Рисовалка
@@ -729,12 +686,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     pdraw = & draw;
 
     // Разное
-    (void)hPrevInstance;
-#if defined UNICODE || defined _UNICODE
-    bool use_arg = wcslen(lpCmdLine) > 0 ? true : false;
-#else
-    bool use_arg = strlen(lpCmdLine) > 0 ? true : false;
-#endif
+    bool use_arg = u_strlen(lpCmdLine) > 2 ? true : false;
     WNDCLASS wnd;
     memset(&wnd, 0, sizeof(WNDCLASS));
     wnd.style = CS_HREDRAW | CS_VREDRAW;
@@ -931,11 +883,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         if(lpCmdLine[0] == TEXT('"'))
         {
             cmd_real++;
-#if defined UNICODE || defined _UNICODE
-            cmd_real[wcslen(cmd_real) - 1] = 0;
-#else
-            cmd_real[strlen(cmd_real) - 1] = 0;
-#endif
+            cmd_real[u_strlen(cmd_real) - 1] = 0;
         }
         open_file(cmd_real);
     }

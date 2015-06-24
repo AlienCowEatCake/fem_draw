@@ -1,5 +1,5 @@
-#ifndef LEGACYSUPPORT_H
-#define LEGACYSUPPORT_H
+#ifndef COMPILERSUPPORT_H
+#define COMPILERSUPPORT_H
 
 // ===== ALL =============================================================================
 
@@ -172,6 +172,7 @@ namespace std
             const int bufsize = FILENAME_MAX;
             char * tmp = (char *)malloc(sizeof(char) * bufsize);
             WideCharToMultiByte(CP_ACP, 0, filename, -1, tmp, bufsize, 0, 0);
+            tmp[bufsize - 1] = 0;
             ifstream::open(tmp, mode);
             free(tmp);
         }
@@ -181,6 +182,13 @@ namespace std
             ifstream::getline(s_c, n);
             MultiByteToWideChar(CP_ACP, 0, s_c, n, s, n);
             free(s_c);
+            return * this;
+        }
+        wifstream & get(wchar_t & c)
+        {
+            char c_c;
+            if(ifstream::get(c_c))
+                MultiByteToWideChar(CP_ACP, 0, &c_c, 1, &c, 1);
             return * this;
         }
         template<typename T>
@@ -197,9 +205,10 @@ namespace std
 #define wWinMain \
     WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) \
     { \
-        const int bufsize = FILENAME_MAX; \
+        const int bufsize = 8192; \
         wchar_t * tmp = (wchar_t *)malloc(sizeof(wchar_t) * bufsize); \
         MultiByteToWideChar(CP_ACP, 0, lpCmdLine, -1, tmp, bufsize); \
+        tmp[bufsize - 1] = 0; \
         int status = wWinMain(hInstance, hPrevInstance, tmp, nCmdShow); \
         free(tmp); \
         return status; \
@@ -213,6 +222,10 @@ namespace std
 // ===== MSVC 6.0 ========================================================================
 
 #if defined _MSC_VER && _MSC_VER <= 1200
+
+#if defined UNICODE || defined _UNICODE
+#error No unicode support for old MSVC!
+#endif
 
 // Область видимости for сделана очень странно
 #define for if (false) ; else for
@@ -240,6 +253,10 @@ namespace std
 // ===== Open WATCOM 1.9 =================================================================
 
 #if defined __WATCOMC__
+
+#if defined UNICODE || defined _UNICODE
+#error No unicode support for WATCOMC!
+#endif
 
 // В cstdlib забиты макросы min и max, они ломают numeric_limits
 // Это отменит передефайнивание, но сохранит работоспособность лимитов
@@ -288,4 +305,4 @@ inline float ceilf(float arg) {return ceil(arg);}
 #endif
 
 
-#endif // LEGACYSUPPORT_H
+#endif // COMPILERSUPPORT_H

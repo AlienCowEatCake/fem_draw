@@ -8,19 +8,11 @@
 #pragma comment(lib, "comdlg32.lib")
 #endif
 
-#include "legacysupport.h"
+#include "common.h"
 #include <windows.h>
 #include <windowsx.h>
-#include <cstring>
-#include <cstdlib>
 #include <set>
 #include <vector>
-#include <string>
-#include <cassert>
-
-#if defined UNICODE || defined _UNICODE
-#include <cwchar>
-#endif
 
 using namespace std;
 

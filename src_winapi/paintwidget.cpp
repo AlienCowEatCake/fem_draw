@@ -1,9 +1,7 @@
 #define NOMINMAX
 
 #include "paintwidget.h"
-#include <fstream>
 #include <limits>
-#include <cstring>
 #include <cstdio>
 #include <cmath>
 
@@ -23,17 +21,10 @@
 #if defined UNICODE || defined _UNICODE
 wifstream & getline(wifstream & ifs, string & str)
 {
-    const int bufsize = 4096;
-    wchar_t buf[bufsize];
-    ifs.getline(buf, bufsize);
-    char buf2[bufsize];
-//#if defined _MSC_VER && _MSC_VER >= 1400
-//    wcstombs_s(NULL, buf2, buf, bufsize);
-//#else
-//    wcstombs(buf2, buf, bufsize);
-//#endif
-    WideCharToMultiByte(CP_ACP, 0, buf, bufsize, buf2, bufsize, 0, 0);
-    str.assign(buf2);
+    str.clear();
+    wchar_t c = '\0';
+    while(ifs.good() && ifs.get(c) && c != L'\n')
+        str.push_back(c);
     return ifs;
 }
 #endif
@@ -56,11 +47,7 @@ void paintwidget::tec_read(LPCTSTR filename)
     variables.clear();
 
     // Пошли читать файл
-#if defined UNICODE || defined _UNICODE
-    wifstream ifs(filename);
-#else
-    ifstream ifs(filename);
-#endif
+    u_ifstream ifs(filename);
     string tmp;
     // TITLE = "Slice Z = -10"
     getline(ifs, tmp);
