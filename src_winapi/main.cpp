@@ -28,8 +28,9 @@ void widget_redraw()
 {
     pdraw->hbmp_is_valid = false;
     RECT r;
-    GetClientRect(hwnd, &r);
-    InvalidateRect(hwnd, &r, FALSE);
+    GetClientRect(pdraw->hwnd, &r);
+    InvalidateRect(pdraw->hwnd, &r, FALSE);
+    pdraw->paintEvent();
 }
 
 // Открытие файла по имени
@@ -76,16 +77,19 @@ void open_file(LPTSTR filename)
         ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_COLOR), (int)old_draw_index);
     else
         ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_COLOR), 0);
+    pdraw->draw_index = (size_t)ComboBox_GetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_COLOR));
 
     if(old_ind_vec_1 < pdraw->variables.size())
         ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_U), (int)old_ind_vec_1);
     else
         ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_U), 0);
+    pdraw->ind_vec_1 = (size_t)ComboBox_GetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_U));
 
     if(old_ind_vec_2 < pdraw->variables.size())
         ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_V), (int)old_ind_vec_2);
     else
         ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_V), 0);
+    pdraw->ind_vec_2 = (size_t)ComboBox_GetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_V));
 
     // Устанавливаем оптимальное значение для векторов
     const size_t vect_bufsize = 16;
