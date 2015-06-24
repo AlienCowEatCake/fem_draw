@@ -59,6 +59,9 @@ public:
     // Конструктор
     paintwidget();
 
+    // Деструктор
+    ~paintwidget();
+
     // Флаг отрисовки изолиний
     bool draw_isolines;
 
@@ -101,15 +104,16 @@ public:
     // Уровень интерполяции
     size_t div_num;
 
-    // Отрисовка сцены на HDC
-    void draw(HDC hdc_local, bool transparency);
-
     // Отрисовка сцены
     void paintEvent();
+
+    // Флаг валидности изображения
+    bool hbmp_is_valid;
 
     // WinAPI, мать его
     HWND hwnd;
     PAINTSTRUCT ps;
+    HBITMAP hbmp;
 
 private:
     // Текплотовские значения
@@ -148,6 +152,9 @@ private:
 
     // Вывести msgbox с ошибкой
     void print_io_error();
+
+    // Отрисовка сцены на HDC
+    void draw(HDC hdc_local);
 };
 
 #endif // PAINTWIDGET_H

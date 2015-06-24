@@ -464,6 +464,14 @@ paintwidget::paintwidget()
 
     // WinAPI, мать его
     hwnd = NULL;
+    hbmp = NULL;
+    hbmp_is_valid = false;
+}
+
+// Деструктор
+paintwidget::~paintwidget()
+{
+    if(hbmp) DeleteObject(hbmp);
 }
 
 // Пересчет значений изолиний
@@ -522,17 +530,36 @@ void paintwidget::to_window(float x, float y, int & xl, int & yl) const
     yl = height - (int)((y - gl_y0) / gl_hy * (float)height);
 }
 
-
 // Отрисовка сцены
 void paintwidget::paintEvent()
 {
-    HDC hdc = BeginPaint(hwnd, &ps);
-    draw(hdc, false);
+    RECT r;
+    GetClientRect(hwnd, &r);
+    HDC hdc1 = BeginPaint(hwnd, &ps);
+    HDC hdc2 = CreateCompatibleDC(hdc1);
+    BITMAP bmp;
+    HGDIOBJ oldhbmp;
+    if(!hbmp || !hbmp_is_valid)
+    {
+        if(hbmp) DeleteObject(hbmp);
+        hbmp = CreateCompatibleBitmap(hdc1, r.right - r.left, r.bottom - r.top);
+        oldhbmp = SelectObject(hdc2, hbmp);
+        draw(hdc2);
+    }
+    else
+    {
+        oldhbmp = SelectObject(hdc2, hbmp);
+    }
+    GetObject(hbmp, sizeof(bmp), &bmp);
+    BitBlt(hdc1, 0, 0, bmp.bmWidth, bmp.bmHeight, hdc2, 0, 0, SRCCOPY);
+    SelectObject(hdc2, oldhbmp);
+    DeleteObject(hdc2);
     EndPaint(hwnd, &ps);
+    hbmp_is_valid = true;
 }
 
 // Отрисовка сцены на HDC
-void paintwidget::draw(HDC hdc_local, bool transparency)
+void paintwidget::draw(HDC hdc_local)
 {
     // Геометрия окна
     RECT r;
@@ -556,28 +583,13 @@ void paintwidget::draw(HDC hdc_local, bool transparency)
     float font_correct = (float)tm.tmHeight / (float)height * 0.9f;
 
     // Заливка области белым цветом
-    if(!transparency)
-    {
-        HPEN hAreaPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-        hOldPen = (HPEN)SelectObject(hdc_local, hAreaPen);
-        HBRUSH hAreaBrush = CreateSolidBrush(RGB(255, 255, 255));
-        hOldBrush = (HBRUSH)SelectObject(hdc_local, hAreaBrush);
-        Rectangle(hdc_local, 0, 0, width, height);
-        SelectObject(hdc_local, hOldPen);
-        SelectObject(hdc_local, hOldBrush);
-        DeletePen(hAreaPen);
-        DeleteBrush(hAreaBrush);
-    }
-    else
-    {
-        HPEN hAreaPen = (HPEN)GetStockObject(NULL_PEN);
-        hOldPen = (HPEN)SelectObject(hdc_local, hAreaPen);
-        HBRUSH hAreaBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
-        hOldBrush = (HBRUSH)SelectObject(hdc_local, hAreaBrush);
-        Rectangle(hdc_local, 0, 0, width, height);
-        SelectObject(hdc_local, hOldPen);
-        SelectObject(hdc_local, hOldBrush);
-    }
+    HPEN hAreaPen = (HPEN)GetStockObject(WHITE_PEN);
+    hOldPen = (HPEN)SelectObject(hdc_local, hAreaPen);
+    HBRUSH hAreaBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    hOldBrush = (HBRUSH)SelectObject(hdc_local, hAreaBrush);
+    Rectangle(hdc_local, 0, 0, width, height);
+    SelectObject(hdc_local, hOldPen);
+    SelectObject(hdc_local, hOldBrush);
     SetBkMode(hdc_local, TRANSPARENT);
 
     if(!is_loaded) return;

@@ -26,6 +26,7 @@ namespace config
 
 void widget_redraw()
 {
+    pdraw->hbmp_is_valid = false;
     RECT r;
     GetClientRect(hwnd, &r);
     InvalidateRect(hwnd, &r, FALSE);
@@ -228,12 +229,7 @@ void on_actionSave_Image_File_triggered()
     GetClientRect(pdraw->hwnd, &r);
     HDC hdc1 = BeginPaint(pdraw->hwnd, & pdraw->ps);
     HDC hdc2 = CreateCompatibleDC(hdc1);
-    HBITMAP hbmp = CreateCompatibleBitmap(hdc1, r.right - r.left, r.bottom - r.top);
-    SelectObject(hdc2, hbmp);
-    // Так и не получается придумать, как заставить это работать :(
-    // Поэтому зальем белым, а потом уже уберем, см. конвертер
-    //pdraw->draw(hdc2, transparent);
-    pdraw->draw(hdc2, false);
+    HBITMAP hbmp = pdraw->hbmp;
 
     // Создадим bmp-изображение
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183402(v=vs.85).aspx
@@ -361,9 +357,8 @@ void on_actionSave_Image_File_triggered()
 finish:
     GlobalUnlock(hDIB);
     GlobalFree(hDIB);
-    pdraw->draw(hdc1, false);
+    pdraw->paintEvent();
     EndPaint(pdraw->hwnd, & pdraw->ps);
-    DeleteObject(hbmp);
     DeleteObject(hdc2);
 }
 
