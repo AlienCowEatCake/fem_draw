@@ -320,6 +320,9 @@ namespace std
 #error No unicode support for WATCOMC!
 #endif
 
+// Нужно заинклудить раньше всех, ибо см ниже
+#include <algorithm>
+
 // В cstdlib забиты макросы min и max, они ломают numeric_limits
 // Это отменит передефайнивание, но сохранит работоспособность лимитов
 #define max max

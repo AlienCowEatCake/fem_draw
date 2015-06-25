@@ -7,8 +7,41 @@
 #include <QPaintDevice>
 #include <set>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
+
+// Класс динамический массив (сокращенный)
+template<typename value_type, typename size_type = size_t>
+class dynarray_t
+{
+public:
+    dynarray_t(size_type n = 0)         { _data = NULL; resize(n); }
+    dynarray_t(const dynarray_t & x)    { * this = x; }
+    ~dynarray_t()                       { delete [] _data; }
+    inline size_type size() const       { return _size; }
+    inline void clear()                 { resize(0); }
+    dynarray_t & operator = (const dynarray_t & x)
+    {
+        if(this != & x) {
+            resize(x._size);
+            for(size_type i = 0; i < _size; ++i)
+                _data[i] = x._data[i];
+        }
+        return * this;
+    }
+    void resize(size_type n)
+    {
+        _size = n;
+        delete [] _data;
+        _data = _size <= 0 ? NULL : new value_type [_size];
+    }
+    inline const value_type & operator [] (size_type n) const   { return _data[n]; }
+    inline value_type & operator [] (size_type n)               { return _data[n]; }
+protected:
+    value_type * _data;
+    size_type _size;
+};
 
 // Класс точка
 class point
@@ -27,7 +60,7 @@ class tecplot_node
 {
 public:
     point coord;
-    vector<float> value;
+    float * value;
 };
 
 // Класс треугольник
@@ -35,8 +68,8 @@ class triangle
 {
 public:
     point nodes[3];
-    vector<QColor> color;
-    vector<float> solution[3];
+    QColor * color;
+    float * solution[3];
     triangle() {}
     triangle(const point & node1, const point & node2, const point & node3)
     {
@@ -53,6 +86,9 @@ class paintwidget : public QWidget
 public:
     // Конструктор
     paintwidget(QWidget * parent = 0);
+
+    // Деструктор
+    ~paintwidget();
 
     // Флаг отрисовки изолиний
     bool draw_isolines;
@@ -105,7 +141,7 @@ protected:
 
 private:
     // Текплотовские значения
-    vector<tecplot_node> tec_data;
+    dynarray_t<tecplot_node> tec_data;
 
     // Минимальные и максимальные значения геометрии + размер
     float min_x, max_x, size_x;
@@ -117,16 +153,16 @@ private:
     void adjustAxis(float & min, float & max, size_t & numTicks) const;
 
     // Минимальное и максимальное значения решения
-    vector<float> min_u, max_u;
+    dynarray_t<float> min_u, max_u;
 
     // Вспомогательные шаги по цвету для закраски
-    vector<float> step_u_big, step_u_small;
+    dynarray_t<float> step_u_big, step_u_small;
 
     // Значения изолиний
-    vector<set<float> > isolines;
+    dynarray_t<set<float> > isolines;
 
     // Треугольники, которые будем рисовать
-    vector<triangle> triangles;
+    dynarray_t<triangle> triangles;
 
     // Геометрия окна
     QPoint to_window(float x, float y) const;

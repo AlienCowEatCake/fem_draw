@@ -47,7 +47,15 @@ void paintwidget::tec_read(LPCTSTR filename)
 {
     // Чистим старое
     is_loaded = false;
+    for(size_t i = 0; i < tec_data.size(); i++)
+        free(tec_data[i].value);
     tec_data.clear();
+    for(size_t i = 0; i < triangles.size(); i++)
+    {
+        free(triangles[i].color);
+        for(size_t k = 0; k < 3; k++)
+            free(triangles[i].solution[k]);
+    }
     triangles.clear();
     for(size_t k = 0; k < isolines.size(); k++)
         isolines[k].clear();
@@ -201,7 +209,7 @@ void paintwidget::tec_read(LPCTSTR filename)
             ifs >> coords[j];
         tec_data[i].coord.x = coords[ind[0]];
         tec_data[i].coord.y = coords[ind[1]];
-        tec_data[i].value.resize(variables.size());
+        tec_data[i].value = (float *)malloc(sizeof(float) * variables.size());
         for(size_t k = 0; k < variables.size(); k++)
             ifs >> tec_data[i].value[k];
 
@@ -286,37 +294,60 @@ void paintwidget::set_div_num(size_t num)
     if(!is_loaded) return;
 #endif
 
-    vector<triangle> tmp1;
-    vector<triangle> tmp2;
-    // Посчитаем в локальных координатах
-//    tmp1.push_back(triangle(point(0.0f, 0.0f), point(1.0f, 0.0f), point(0.0f, 1.0f)));
-//    tmp1.push_back(triangle(point(1.0f, 0.0f), point(1.0f, 1.0f), point(0.0f, 1.0f)));
-    tmp1.push_back(triangle( point(0.0f, 0.0f), point(1.0f, 0.0f), point(0.5f, 0.5f) ));
-    tmp1.push_back(triangle( point(1.0f, 0.0f), point(1.0f, 1.0f), point(0.5f, 0.5f) ));
-    tmp1.push_back(triangle( point(1.0f, 1.0f), point(0.0f, 1.0f), point(0.5f, 0.5f) ));
-    tmp1.push_back(triangle( point(0.0f, 1.0f), point(0.0f, 0.0f), point(0.5f, 0.5f) ));
-    for(size_t i = 0; i < num; i++)
+    // Память не резиновая
+    for(size_t i = 0; i < triangles.size(); i++)
     {
-        tmp2.reserve(tmp1.size() * 4);
-        for(size_t j = 0; j < tmp1.size(); j++)
+        free(triangles[i].color);
+        for(size_t k = 0; k < 3; k++)
+            free(triangles[i].solution[k]);
+    }
+    triangles.clear();
+
+    size_t tmp1_size = 4;
+    for(size_t i = 0; i < num; i++)
+        tmp1_size *= 4;
+    triangle * tmp1;
+    if(num % 2 == 0) tmp1 = (triangle *)malloc(sizeof(triangle) * tmp1_size);
+    else             tmp1 = (triangle *)malloc(sizeof(triangle) * tmp1_size / 4);
+    // Посчитаем в локальных координатах
+    tmp1[0] = triangle( point(0.0f, 0.0f), point(1.0f, 0.0f), point(0.5f, 0.5f) );
+    tmp1[1] = triangle( point(1.0f, 0.0f), point(1.0f, 1.0f), point(0.5f, 0.5f) );
+    tmp1[2] = triangle( point(1.0f, 1.0f), point(0.0f, 1.0f), point(0.5f, 0.5f) );
+    tmp1[3] = triangle( point(0.0f, 1.0f), point(0.0f, 0.0f), point(0.5f, 0.5f) );
+    if(num > 0)
+    {
+        triangle * tmp2;
+        if(num % 2 == 0) tmp2 = (triangle *)malloc(sizeof(triangle) * tmp1_size / 4);
+        else             tmp2 = (triangle *)malloc(sizeof(triangle) * tmp1_size);
+        tmp1_size = 4;
+        for(size_t i = 0; i < num; i++)
         {
-            point middles[3] =
+            size_t curr_index = 0;
+            for(size_t j = 0; j < tmp1_size; j++)
             {
-                point((tmp1[j].nodes[0].x + tmp1[j].nodes[1].x) * 0.5f, (tmp1[j].nodes[0].y + tmp1[j].nodes[1].y) * 0.5f),
-                point((tmp1[j].nodes[0].x + tmp1[j].nodes[2].x) * 0.5f, (tmp1[j].nodes[0].y + tmp1[j].nodes[2].y) * 0.5f),
-                point((tmp1[j].nodes[1].x + tmp1[j].nodes[2].x) * 0.5f, (tmp1[j].nodes[1].y + tmp1[j].nodes[2].y) * 0.5f)
-            };
-            tmp2.push_back(triangle(tmp1[j].nodes[0], middles[0], middles[1]));
-            tmp2.push_back(triangle(middles[0], tmp1[j].nodes[1], middles[2]));
-            tmp2.push_back(triangle(middles[1], middles[2], tmp1[j].nodes[2]));
-            tmp2.push_back(triangle(middles[0], middles[2], middles[1]));
+                point middles[3] =
+                {
+                    point((tmp1[j].nodes[0].x + tmp1[j].nodes[1].x) * 0.5f, (tmp1[j].nodes[0].y + tmp1[j].nodes[1].y) * 0.5f),
+                    point((tmp1[j].nodes[0].x + tmp1[j].nodes[2].x) * 0.5f, (tmp1[j].nodes[0].y + tmp1[j].nodes[2].y) * 0.5f),
+                    point((tmp1[j].nodes[1].x + tmp1[j].nodes[2].x) * 0.5f, (tmp1[j].nodes[1].y + tmp1[j].nodes[2].y) * 0.5f)
+                };
+                tmp2[curr_index++] = triangle(tmp1[j].nodes[0], middles[0], middles[1]);
+                tmp2[curr_index++] = triangle(middles[0], tmp1[j].nodes[1], middles[2]);
+                tmp2[curr_index++] = triangle(middles[1], middles[2], tmp1[j].nodes[2]);
+                tmp2[curr_index++] = triangle(middles[0], middles[2], middles[1]);
+            }
+            tmp1_size *= 4;
+            swap(tmp1, tmp2);
         }
-        tmp2.swap(tmp1);
-        tmp2.clear();
+        free(tmp2);
     }
 
     // Заполняем вектор из треугольников переводя координаты в глобальные и считая цвет
-    triangles.clear();
+    size_t curr_index = 0;
+    size_t triangles_size = 4 * (nx - 1) * (ny - 1);
+    for(size_t i = 0; i < num; i++)
+        triangles_size *= 4;
+    triangles.resize(triangles_size);
     // Обходим все прямоугольники
     for(size_t i = 0; i < nx - 1; i++)
     {
@@ -332,16 +363,16 @@ void paintwidget::set_div_num(size_t num)
             float step_x_j = std::fabs(tec_data[i * nx + j + 1].coord.x - x0);
             bool native_order = (step_x_i > step_x_j) ? true : false;
 
-            for(size_t tn = 0; tn < tmp1.size(); tn++)
+            for(size_t tn = 0; tn < tmp1_size; tn++)
             {
                 triangle tmp_tr;
-                tmp_tr.color.resize(variables.size());
+                tmp_tr.color = (COLORREF *)malloc(sizeof(COLORREF) * variables.size());
                 // Переводим координаты в глобальные
                 for(size_t k = 0; k < 3; k++)
                 {
                     tmp_tr.nodes[k].x = tmp1[tn].nodes[k].x * hx + x0;
                     tmp_tr.nodes[k].y = tmp1[tn].nodes[k].y * hy + y0;
-                    tmp_tr.solution[k].resize(variables.size());
+                    tmp_tr.solution[k] = (float *)malloc(sizeof(float) * variables.size());
                 }
 
                 // Занесем значение решения в узлах
@@ -470,10 +501,11 @@ void paintwidget::set_div_num(size_t num)
                 }
 
                 // И заносим в вектор
-                triangles.push_back(tmp_tr);
+                triangles[curr_index++] = tmp_tr;
             }
         }
     }
+    free(tmp1);
 }
 
 // Конструктор
@@ -495,12 +527,21 @@ paintwidget::paintwidget()
     hwnd = NULL;
     hbmp = NULL;
     hbmp_is_valid = false;
+    memset(&ps, 0, sizeof(PAINTSTRUCT));
 }
 
 // Деструктор
 paintwidget::~paintwidget()
 {
     if(hbmp) DeleteObject(hbmp);
+    for(size_t i = 0; i < tec_data.size(); i++)
+        free(tec_data[i].value);
+    for(size_t i = 0; i < triangles.size(); i++)
+    {
+        free(triangles[i].color);
+        for(size_t k = 0; k < 3; k++)
+            free(triangles[i].solution[k]);
+    }
 }
 
 // Пересчет значений изолиний
@@ -563,6 +604,7 @@ void paintwidget::to_window(float x, float y, int & xl, int & yl) const
 void paintwidget::paintEvent()
 {
     RECT r;
+    memset(&r, 0, sizeof(RECT));
     GetClientRect(hwnd, &r);
     HDC hdc1 = BeginPaint(hwnd, &ps);
     HDC hdc2 = CreateCompatibleDC(hdc1);
@@ -582,9 +624,9 @@ void paintwidget::paintEvent()
     GetObject(hbmp, sizeof(bmp), &bmp);
     BitBlt(hdc1, 0, 0, bmp.bmWidth, bmp.bmHeight, hdc2, 0, 0, SRCCOPY);
     SelectObject(hdc2, oldhbmp);
-    DeleteObject(hdc2);
-    DeleteObject(hdc1);
+    DeleteDC(hdc2);
     EndPaint(hwnd, &ps);
+    ReleaseDC(hwnd, hdc1);
     hbmp_is_valid = true;
 }
 
@@ -593,6 +635,7 @@ void paintwidget::draw(HDC hdc_local)
 {
     // Геометрия окна
     RECT r;
+    memset(&r, 0, sizeof(RECT));
     GetClientRect(hwnd, &r);
     height = r.bottom - r.top;
     width = r.right - r.left;

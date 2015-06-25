@@ -28,6 +28,7 @@ void widget_redraw(bool is_valid)
 {
     pdraw->hbmp_is_valid = is_valid;
     RECT r;
+    memset(&r, 0, sizeof(RECT));
     GetClientRect(pdraw->hwnd, &r);
     InvalidateRect(pdraw->hwnd, &r, FALSE);
     pdraw->paintEvent();
@@ -230,6 +231,7 @@ void on_actionSave_Image_File_triggered()
 
     // Создадим все что нужно и запустим отрисовку
     RECT r;
+    memset(&r, 0, sizeof(RECT));
     GetClientRect(pdraw->hwnd, &r);
     HDC hdc1 = BeginPaint(pdraw->hwnd, & pdraw->ps);
     HDC hdc2 = CreateCompatibleDC(hdc1);
@@ -363,8 +365,8 @@ finish:
     GlobalFree(hDIB);
     widget_redraw(true);
     EndPaint(pdraw->hwnd, & pdraw->ps);
-    DeleteObject(hdc2);
-    DeleteObject(hdc1);
+    DeleteDC(hdc2);
+    ReleaseDC(pdraw->hwnd, hdc1);
 }
 
 // Событие при нажатии кнопки Exit
@@ -643,12 +645,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 //        else fprintf(stderr, "WM_SIZE: ???\n");
 //        fflush(stderr);
         RECT r;
+        memset(&r, 0, sizeof(RECT));
         GetClientRect(hwnd, &r);
         bool is_valid = true;
         if(wParam == SIZE_MAXIMIZED) is_valid = false;
         if(wParam == SIZE_RESTORED)
         {
             RECT r_old;
+            memset(&r_old, 0, sizeof(RECT));
             GetWindowRect(GetDlgItem(hwnd, CONTROL_PAINT_WIDGET), &r_old);
             if(r.right - r.left != r_old.right - r_old.left) is_valid = false;
             if(r.bottom - r.top - 25 != r_old.bottom - r_old.top) is_valid = false;
