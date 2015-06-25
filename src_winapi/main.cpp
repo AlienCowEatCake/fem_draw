@@ -378,8 +378,10 @@ void on_actionIncrease_Interpolation_triggered()
 {
     if(pdraw->div_num < 7)
     {
+        size_t old_value = pdraw->div_num;
         pdraw->set_div_num(pdraw->div_num + 1);
-        widget_redraw(false);
+        if(pdraw->div_num == old_value + 1)
+            widget_redraw(false);
     }
 }
 
@@ -633,14 +635,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_SIZE:       // Изменение размера окна
     {
+//        if(wParam == SIZE_MAXHIDE) fprintf(stderr, "WM_SIZE: SIZE_MAXHIDE\n");
+//        else if(wParam == SIZE_MAXIMIZED) fprintf(stderr, "WM_SIZE: SIZE_MAXIMIZED\n");
+//        else if(wParam == SIZE_MAXSHOW) fprintf(stderr, "WM_SIZE: SIZE_MAXSHOW\n");
+//        else if(wParam == SIZE_MINIMIZED) fprintf(stderr, "WM_SIZE: SIZE_MINIMIZED\n");
+//        else if(wParam == SIZE_RESTORED) fprintf(stderr, "WM_SIZE: SIZE_RESTORED\n");
+//        else fprintf(stderr, "WM_SIZE: ???\n");
+//        fflush(stderr);
         RECT r;
         GetClientRect(hwnd, &r);
-        SetWindowPos(
-                    GetDlgItem(hwnd, CONTROL_PAINT_WIDGET), NULL,
-                    0, 0, r.right - r.left, r.bottom - r.top - 25,
-                    SWP_NOMOVE | SWP_NOOWNERZORDER
-                    );
-        widget_redraw(false);
+        bool is_valid = true;
+        if(wParam == SIZE_MAXIMIZED) is_valid = false;
+        if(wParam == SIZE_RESTORED)
+        {
+            RECT r_old;
+            GetWindowRect(GetDlgItem(hwnd, CONTROL_PAINT_WIDGET), &r_old);
+            if(r.right - r.left != r_old.right - r_old.left) is_valid = false;
+            if(r.bottom - r.top - 25 != r_old.bottom - r_old.top) is_valid = false;
+        }
+        if(!is_valid)
+            SetWindowPos(
+                        GetDlgItem(hwnd, CONTROL_PAINT_WIDGET), NULL,
+                        0, 0, r.right - r.left, r.bottom - r.top - 25,
+                        SWP_NOMOVE | SWP_NOOWNERZORDER
+                        );
+        widget_redraw(is_valid);
         break;
     }
     case WM_PAINT:

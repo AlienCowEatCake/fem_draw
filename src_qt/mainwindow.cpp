@@ -240,8 +240,10 @@ void MainWindow::on_actionIncrease_Interpolation_triggered()
 {
     if(ui->widget->div_num < 7)
     {
+        size_t old_value = ui->widget->div_num;
         ui->widget->set_div_num(ui->widget->div_num + 1);
-        ui->widget->repaint();
+        if(ui->widget->div_num == old_value + 1)
+            ui->widget->repaint();
     }
 }
 

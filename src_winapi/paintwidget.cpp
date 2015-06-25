@@ -17,6 +17,9 @@
 // Рисовать ли легенду справа
 #define USE_LEGEND
 
+// Лимит по памяти - 1 GiB
+#define USE_MEMORY_LIMIT 1024*1024*1024
+
 // getline с поддержкой юникода
 #if defined UNICODE || defined _UNICODE
 wifstream & getline(wifstream & ifs, string & str)
@@ -258,8 +261,30 @@ void paintwidget::tec_read(LPCTSTR filename)
 // Изменение уровня интерполяции
 void paintwidget::set_div_num(size_t num)
 {
+#if defined USE_MEMORY_LIMIT
+    if(!is_loaded) return;
+    // Число прямоугольнков
+    size_t planned_size = (nx - 1) * (ny - 1);
+    // Каждый прямоугольник бьется на 4 треугольника
+    planned_size *= 4;
+    // Каждый треугольник бьется на 4 на кадом разбиении
+    for(size_t i = 0; i < num; i++)
+        planned_size *= 4;
+    // Размер самого треугольника
+    size_t triangle_size = sizeof(triangle);
+    // Размер содержимого векторов в треугольнике
+    triangle_size += (sizeof(COLORREF) + sizeof(float) * 3) * variables.size();
+    // Теперь все перемножаем
+    planned_size *= triangle_size;
+
+    if(planned_size >= USE_MEMORY_LIMIT)
+        return;
+    else
+        this->div_num = num;
+#else
     this->div_num = num;
     if(!is_loaded) return;
+#endif
 
     vector<triangle> tmp1;
     vector<triangle> tmp2;

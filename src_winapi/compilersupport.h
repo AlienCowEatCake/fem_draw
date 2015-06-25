@@ -219,6 +219,68 @@ namespace std
 
 #endif
 
+// ===== MSVC 2003 =======================================================================
+
+#if defined _MSC_VER && _MSC_VER <= 1310 && _MSC_VER > 1200
+
+// Не умеет wifstream
+#if defined UNICODE || defined _UNICODE
+#define wifstream     wifstream_unused
+#include <cwchar>
+#include <fstream>
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
+#include <windows.h>
+#undef wifstream
+
+namespace std
+{
+    // Обертка над обычным ifstream
+    class wifstream : public ifstream
+    {
+    public:
+        wifstream(const wchar_t * filename, ios_base::openmode mode = ios_base::in)
+        {
+            open(filename, mode);
+        }
+        void open(const wchar_t * filename, ios_base::openmode mode = ios_base::in)
+        {
+            const int bufsize = FILENAME_MAX;
+            char * tmp = (char *)malloc(sizeof(char) * bufsize);
+            WideCharToMultiByte(CP_ACP, 0, filename, -1, tmp, bufsize, 0, 0);
+            tmp[bufsize - 1] = 0;
+            ifstream::open(tmp, mode);
+            free(tmp);
+        }
+        wifstream & getline(wchar_t * s, streamsize n)
+        {
+            char * s_c = (char *)malloc(sizeof(char) * n);
+            ifstream::getline(s_c, n);
+            MultiByteToWideChar(CP_ACP, 0, s_c, n, s, n);
+            free(s_c);
+            return * this;
+        }
+        wifstream & get(wchar_t & c)
+        {
+            char c_c;
+            if(ifstream::get(c_c))
+                MultiByteToWideChar(CP_ACP, 0, &c_c, 1, &c, 1);
+            return * this;
+        }
+        template<typename T>
+        wifstream & operator >> (T & val)
+        {
+            * (dynamic_cast<ifstream *>(this)) >> val;
+            return * this;
+        }
+    };
+}
+
+#endif
+
+#endif
+
 // ===== MSVC 6.0 ========================================================================
 
 #if defined _MSC_VER && _MSC_VER <= 1200
