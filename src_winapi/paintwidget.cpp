@@ -277,7 +277,7 @@ void paintwidget::set_div_num(size_t num)
     // Теперь все перемножаем
     planned_size *= triangle_size;
 
-    if(planned_size >= USE_MEMORY_LIMIT)
+    if(planned_size >= USE_MEMORY_LIMIT && num != 0)
         return;
     else
         this->div_num = num;
