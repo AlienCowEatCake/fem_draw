@@ -346,10 +346,7 @@ void paintwidget::set_div_num(size_t num)
 
     // Заполняем вектор из треугольников переводя координаты в глобальные и считая цвет
     size_t curr_index = 0;
-    size_t triangles_size = 4 * (nx - 1) * (ny - 1);
-    for(size_t i = 0; i < num; i++)
-        triangles_size *= 4;
-    triangles.resize(triangles_size);
+    triangles.resize(tmp1_size * (nx - 1) * (ny - 1));
     // Обходим все прямоугольники
     for(size_t i = 0; i < nx - 1; i++)
     {

@@ -344,10 +344,7 @@ void paintwidget::set_div_num(size_t num)
 
     // Заполняем вектор из треугольников переводя координаты в глобальные и считая цвет
     size_t curr_index = 0;
-    size_t triangles_size = 4 * (nx - 1) * (ny - 1);
-    for(size_t i = 0; i < num; i++)
-        triangles_size *= 4;
-    triangles.resize(triangles_size);
+    triangles.resize(tmp1_size * (nx - 1) * (ny - 1));
     // Обходим все прямоугольники
     for(size_t i = 0; i < nx - 1; i++)
     {
@@ -707,9 +704,9 @@ void paintwidget::draw(HDC hdc_local)
     HFONT hAxisFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
     hOldFont = (HFONT)SelectObject(hdc_local, hAxisFont);
     to_window(0.99f, -0.04f + font_correct, x, y);
-    TextOutA(hdc_local, x, y, label_x.c_str(), 1);
+    TextOutA(hdc_local, x, y, label_x.c_str(), (int)label_x.length());
     to_window(-0.05f, 0.99f + font_correct, x, y);
-    TextOutA(hdc_local, x, y, label_y.c_str(), 1);
+    TextOutA(hdc_local, x, y, label_y.c_str(), (int)label_y.length());
     SelectObject(hdc_local, hOldFont);
 
     // Отрисовка шкалы
