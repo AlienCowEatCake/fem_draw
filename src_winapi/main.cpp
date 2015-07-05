@@ -14,6 +14,7 @@ namespace menu
     HMENU hMenu;
     HMENU hFileMenu;
     HMENU hInterpMenu;
+    HMENU hConfigMenu;
     HMENU hAboutMenu;
 }
 namespace config
@@ -397,6 +398,75 @@ void on_actionDecrease_Interpolation_triggered()
     }
 }
 
+// Событие при переключении рисования легенды
+void on_actionShow_Legend_triggered()
+{
+    DWORD state = GetMenuState(menu::hConfigMenu, (UINT)CONTROL_MENU_USELEGEND, MF_BYCOMMAND);
+    if(!(state & MF_CHECKED))
+    {
+        CheckMenuItem(menu::hConfigMenu, (UINT)CONTROL_MENU_USELEGEND, MF_CHECKED | MF_BYCOMMAND);
+        pdraw->use_legend = true;
+    }
+    else
+    {
+        CheckMenuItem(menu::hConfigMenu, (UINT)CONTROL_MENU_USELEGEND, MF_UNCHECKED | MF_BYCOMMAND);
+        pdraw->use_legend = false;
+    }
+    widget_redraw(false);
+}
+
+// Событие при переключении использования светлых цветов
+void on_actionUse_Light_Colors_triggered()
+{
+    DWORD state = GetMenuState(menu::hConfigMenu, (UINT)CONTROL_MENU_USELIGHTCOLORS, MF_BYCOMMAND);
+    if(!(state & MF_CHECKED))
+    {
+        CheckMenuItem(menu::hConfigMenu, (UINT)CONTROL_MENU_USELIGHTCOLORS, MF_CHECKED | MF_BYCOMMAND);
+        pdraw->use_light_colors = true;
+    }
+    else
+    {
+        CheckMenuItem(menu::hConfigMenu, (UINT)CONTROL_MENU_USELIGHTCOLORS, MF_UNCHECKED | MF_BYCOMMAND);
+        pdraw->use_light_colors = false;
+    }
+    pdraw->set_div_num(pdraw->div_num);
+    widget_redraw(false);
+}
+
+// Событие при переключении использования фиолетовых цветов
+void on_actionUse_Purple_Colors_triggered()
+{
+    DWORD state = GetMenuState(menu::hConfigMenu, (UINT)CONTROL_MENU_USEPURPLE, MF_BYCOMMAND);
+    if(!(state & MF_CHECKED))
+    {
+        CheckMenuItem(menu::hConfigMenu, (UINT)CONTROL_MENU_USEPURPLE, MF_CHECKED | MF_BYCOMMAND);
+        pdraw->use_purple = true;
+    }
+    else
+    {
+        CheckMenuItem(menu::hConfigMenu, (UINT)CONTROL_MENU_USEPURPLE, MF_UNCHECKED | MF_BYCOMMAND);
+        pdraw->use_purple = false;
+    }
+    pdraw->set_div_num(pdraw->div_num);
+    widget_redraw(false);
+}
+
+// Событие при переключении использования ограничения памяти
+void on_actionMemory_Limit_triggered()
+{
+    DWORD state = GetMenuState(menu::hConfigMenu, (UINT)CONTROL_MENU_USEMEMORYLIMIT, MF_BYCOMMAND);
+    if(!(state & MF_CHECKED))
+    {
+        CheckMenuItem(menu::hConfigMenu, (UINT)CONTROL_MENU_USEMEMORYLIMIT, MF_CHECKED | MF_BYCOMMAND);
+        pdraw->use_memory_limit = true;
+    }
+    else
+    {
+        CheckMenuItem(menu::hConfigMenu, (UINT)CONTROL_MENU_USEMEMORYLIMIT, MF_UNCHECKED | MF_BYCOMMAND);
+        pdraw->use_memory_limit = false;
+    }
+}
+
 // Событие при нажатии кнопки About
 void on_actionAbout_FEM_Draw_triggered()
 {
@@ -587,6 +657,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             on_actionDecrease_Interpolation_triggered();
             break;
         }
+        case CONTROL_MENU_USELEGEND: // Событие при переключении рисования легенды
+        {
+            on_actionShow_Legend_triggered();
+            break;
+        }
+        case CONTROL_MENU_USELIGHTCOLORS: // Событие при переключении использования светлых цветов
+        {
+            on_actionUse_Light_Colors_triggered();
+            break;
+        }
+        case CONTROL_MENU_USEPURPLE: // Событие при переключении использования фиолетовых цветов
+        {
+            on_actionUse_Purple_Colors_triggered();
+            break;
+        }
+        case CONTROL_MENU_USEMEMORYLIMIT: // Событие при переключении использования ограничения памяти
+        {
+            on_actionMemory_Limit_triggered();
+            break;
+        }
         case CONTROL_MENU_ABOUT: // Событие при нажатии кнопки About
         {
             on_actionAbout_FEM_Draw_triggered();
@@ -760,6 +850,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT)menu::hInterpMenu, TEXT("Interpolation"));
     AppendMenu(menu::hInterpMenu, MF_STRING, CONTROL_MENU_INCREASE_INTERPOLATION, TEXT("Increase Interpolation\t="));
     AppendMenu(menu::hInterpMenu, MF_STRING, CONTROL_MENU_DECREASE_INTERPOLATION, TEXT("Decrease Interpolation\t-"));
+    menu::hConfigMenu = CreatePopupMenu();
+    AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT)menu::hConfigMenu, TEXT("Configuration"));
+    AppendMenu(menu::hConfigMenu, MF_STRING | (pdraw->use_legend ? MF_CHECKED : MF_UNCHECKED), CONTROL_MENU_USELEGEND, TEXT("Show Legend"));
+    AppendMenu(menu::hConfigMenu, MF_STRING | (pdraw->use_light_colors ? MF_CHECKED : MF_UNCHECKED), CONTROL_MENU_USELIGHTCOLORS, TEXT("Use Light Colors"));
+    AppendMenu(menu::hConfigMenu, MF_STRING | (pdraw->use_purple ? MF_CHECKED : MF_UNCHECKED), CONTROL_MENU_USEPURPLE, TEXT("Use Purple Colors"));
+    AppendMenu(menu::hConfigMenu, MF_STRING | (pdraw->use_memory_limit ? MF_CHECKED : MF_UNCHECKED), CONTROL_MENU_USEMEMORYLIMIT, TEXT("1 GiB Memory Limit"));
     menu::hAboutMenu = CreatePopupMenu();
     AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT)menu::hAboutMenu, TEXT("About"));
     AppendMenu(menu::hAboutMenu, MF_STRING, CONTROL_MENU_ABOUT, TEXT("About FEM Draw"));

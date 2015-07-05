@@ -5,27 +5,12 @@
 #include <cstdio>
 #include <cmath>
 
-// Использовать ли фиолетовые оттенки цвета
-// Дает большую комбинацию оттенков, но приводит к
-// некоторому дисбалансу между красным и синим
-//#define USE_PURPLE
-
-// Приглушать ли чрезмерно яркие цвета
-// На мониторе они выглядят ничего, но если печатать...
-#define USE_LIGHTNESS
-
-// Рисовать ли легенду справа
-#define USE_LEGEND
-
-// Лимит по памяти - 1 GiB
-#define USE_MEMORY_LIMIT 1024*1024*1024
-
 // getline с поддержкой юникода
 #if defined UNICODE || defined _UNICODE
 wifstream & getline(wifstream & ifs, string & str)
 {
     str.clear();
-    wchar_t c_w = '\0';
+    wchar_t c_w = 0;
     while(ifs.good() && ifs.get(c_w) && c_w != L'\n')
     {
         char c_c;
@@ -246,17 +231,6 @@ void paintwidget::tec_read(LPCTSTR filename)
     size_x = max_x - min_x;
     size_y = max_y - min_y;
 
-    // Шаги для разбиения по цветовым областям
-    for(size_t k = 0; k < variables.size(); k++)
-    {
-#if defined USE_PURPLE
-        step_u_big[k] = (max_u[k] - min_u[k]) / 4.0f;
-#else
-        step_u_big[k] = (max_u[k] - min_u[k]) / 3.0f;
-#endif
-        step_u_small[k] = step_u_big[k] / 256.0f;
-    }
-
     // Устанавливаем рекомендуемое значение для spinBox_2
     vect_value = (int)(std::sqrt((float)(IJK[0] * IJK[1] * IJK[2])) / 20.0f);
 
@@ -269,30 +243,41 @@ void paintwidget::tec_read(LPCTSTR filename)
 // Изменение уровня интерполяции
 void paintwidget::set_div_num(size_t num)
 {
-#if defined USE_MEMORY_LIMIT
-    if(!is_loaded) return;
-    // Число прямоугольнков
-    size_t planned_size = (nx - 1) * (ny - 1);
-    // Каждый прямоугольник бьется на 4 треугольника
-    planned_size *= 4;
-    // Каждый треугольник бьется на 4 на кадом разбиении
-    for(size_t i = 0; i < num; i++)
+    if(use_memory_limit)
+    {
+        if(!is_loaded) return;
+        // Число прямоугольнков
+        size_t planned_size = (nx - 1) * (ny - 1);
+        // Каждый прямоугольник бьется на 4 треугольника
         planned_size *= 4;
-    // Размер самого треугольника
-    size_t triangle_size = sizeof(triangle);
-    // Размер содержимого векторов в треугольнике
-    triangle_size += (sizeof(COLORREF) + sizeof(float) * 3) * variables.size();
-    // Теперь все перемножаем
-    planned_size *= triangle_size;
+        // Каждый треугольник бьется на 4 на кадом разбиении
+        for(size_t i = 0; i < num; i++)
+            planned_size *= 4;
+        // Размер самого треугольника
+        size_t triangle_size = sizeof(triangle);
+        // Размер содержимого векторов в треугольнике
+        triangle_size += (sizeof(COLORREF) + sizeof(float) * 3) * variables.size();
+        // Теперь все перемножаем
+        planned_size *= triangle_size;
 
-    if(planned_size >= USE_MEMORY_LIMIT && num != 0)
-        return;
+        // Лимит по памяти - 1 GiB
+        if(planned_size >= 1024*1024*1024 && num != 0)
+            return;
+        else
+            this->div_num = num;
+    }
     else
+    {
         this->div_num = num;
-#else
-    this->div_num = num;
-    if(!is_loaded) return;
-#endif
+        if(!is_loaded) return;
+    }
+
+    // Шаги для разбиения по цветовым областям
+    for(size_t k = 0; k < variables.size(); k++)
+    {
+        step_u_big[k] = (max_u[k] - min_u[k]) / (use_purple ? 4.0f : 3.0f);
+        step_u_small[k] = step_u_big[k] / 256.0f;
+    }
 
     // Память не резиновая
     for(size_t i = 0; i < triangles.size(); i++)
@@ -433,65 +418,67 @@ void paintwidget::set_div_num(size_t num)
 
                 for(size_t v = 0; v < variables.size(); v++)
                 {
-#if defined USE_PURPLE
                     // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
                     unsigned short r_color = 0, g_color = 0, b_color = 0;
-                    if(center[v] > min_u[v] + step_u_big[v] * 3.0f)
+                    if(use_purple)
                     {
-                        r_color = 255;
-                        g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 3.0f)) / step_u_small[v]);
-                        b_color = 0;
-                    }
-                    else if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
-                    {
-                        r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
-                        g_color = 255;
-                        b_color = 0;
-                    }
-                    else if(center[v] > min_u[v] + step_u_big[v])
-                    {
-                        unsigned short tmp = (unsigned short)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
-                        r_color = 0;
-                        g_color = tmp;
-                        b_color = 255 - tmp;
+                        if(center[v] > min_u[v] + step_u_big[v] * 3.0f)
+                        {
+                            r_color = 255;
+                            g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 3.0f)) / step_u_small[v]);
+                            b_color = 0;
+                        }
+                        else if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
+                        {
+                            r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
+                            g_color = 255;
+                            b_color = 0;
+                        }
+                        else if(center[v] > min_u[v] + step_u_big[v])
+                        {
+                            unsigned short tmp = (unsigned short)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
+                            r_color = 0;
+                            g_color = tmp;
+                            b_color = 255 - tmp;
+                        }
+                        else
+                        {
+                            unsigned short tmp = 76 - (unsigned short)((center[v] - min_u[v]) / (step_u_small[v] * (255.0f / 76.0f)));
+                            r_color = tmp;
+                            g_color = 0;
+                            b_color = 255 - tmp;
+                        }
                     }
                     else
                     {
-                        unsigned short tmp = 76 - (unsigned short)((center[v] - min_u[v]) / (step_u_small[v] * (255.0f / 76.0f)));
-                        r_color = tmp;
-                        g_color = 0;
-                        b_color = 255 - tmp;
+                        if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
+                        {
+                            r_color = 255;
+                            g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
+                            b_color = 0;
+                        }
+                        else if(center[v] > min_u[v] + step_u_big[v])
+                        {
+                            r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
+                            g_color = 255;
+                            b_color = 0;
+                        }
+                        else
+                        {
+                            unsigned short tmp = (unsigned short)((center[v] - min_u[v]) / step_u_small[v]);
+                            r_color = 0;
+                            g_color = tmp;
+                            b_color = 255 - tmp;
+                        }
                     }
-#else
-                    // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
-                    unsigned short r_color = 0, g_color = 0, b_color = 0;
-                    if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
-                    {
-                        r_color = 255;
-                        g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
-                        b_color = 0;
-                    }
-                    else if(center[v] > min_u[v] + step_u_big[v])
-                    {
-                        r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
-                        g_color = 255;
-                        b_color = 0;
-                    }
-                    else
-                    {
-                        unsigned short tmp = (unsigned short)((center[v] - min_u[v]) / step_u_small[v]);
-                        r_color = 0;
-                        g_color = tmp;
-                        b_color = 255 - tmp;
-                    }
-#endif
 
-#if defined USE_LIGHTNESS
-                    // Приглушаем кислотные цвета
-                    r_color = r_color * 3 / 4 + 64;
-                    g_color = g_color * 3 / 4 + 64;
-                    b_color = b_color * 3 / 4 + 64;
-#endif
+                    if(use_light_colors)
+                    {
+                        // Приглушаем кислотные цвета
+                        r_color = r_color * 3 / 4 + 64;
+                        g_color = g_color * 3 / 4 + 64;
+                        b_color = b_color * 3 / 4 + 64;
+                    }
 
                     // Задаем посчитанный цвет
                     tmp_tr.color[v] = RGB(r_color, g_color, b_color);
@@ -525,6 +512,11 @@ paintwidget::paintwidget()
     hbmp = NULL;
     hbmp_is_valid = false;
     memset(&ps, 0, sizeof(PAINTSTRUCT));
+
+    use_purple = false;
+    use_legend = true;
+    use_light_colors = true;
+    use_memory_limit = true;
 }
 
 // Деструктор
@@ -583,16 +575,12 @@ void paintwidget::adjustAxis(float & min, float & max, size_t & numTicks) const
 void paintwidget::to_window(float x, float y, int & xl, int & yl) const
 {
     // В OpenGL это был бы glOrtho
-    static const float gl_x0 = -0.06f;
-    static const float gl_y0 = -0.06f;
-#if defined USE_LEGEND
-    static const float gl_x1 = 1.125f;
-#else
-    static const float gl_x1 = 1.015f;
-#endif
-    static const float gl_y1 = 1.02f;
-    static const float gl_hx = gl_x1 - gl_x0;
-    static const float gl_hy = gl_y1 - gl_y0;
+    const float gl_x0 = -0.06f;
+    const float gl_y0 = -0.06f;
+    const float gl_x1 = use_legend ? 1.125f : 1.015f;
+    const float gl_y1 = 1.02f;
+    const float gl_hx = gl_x1 - gl_x0;
+    const float gl_hy = gl_y1 - gl_y0;
     xl = (int)((x - gl_x0) / gl_hx * (float)width);
     yl = height - (int)((y - gl_y0) / gl_hy * (float)height);
 }
@@ -626,6 +614,126 @@ void paintwidget::paintEvent()
     ReleaseDC(hwnd, hdc1);
     hbmp_is_valid = true;
 }
+
+// Матрицы цветов для рисования легенды
+// Для спектра с фиолетовым цветом
+/*
+ * Матрица цветов:
+ * 255,   0,   0        glColor3d(1.0, 0.0, 0.0);
+ * 255,  65,   0        glColor3d(1.0, 0.254901961, 0.0);
+ * 255, 130,   0        glColor3d(1.0, 0.509803922, 0.0);
+ * 255, 195,   0        glColor3d(1.0, 0.764705882, 0.0);
+ * 250, 255,   0        glColor3d(0.980392157, 1.0, 0.0);
+ * 185, 255,   0        glColor3d(0.725490196, 1.0, 0.0);
+ * 120, 255,   0        glColor3d(0.470588235, 1.0, 0.0);
+ *  55, 255,   0        glColor3d(0.215686275, 1.0, 0.0);
+ *   0, 245,  10        glColor3d(0.0, 0.960784314, 0.039215686);
+ *   0, 180,  75        glColor3d(0.0, 0.705882353, 0.294117647);
+ *   0, 115, 140        glColor3d(0.0, 0.450980392, 0.549019608);
+ *   0,  50, 205        glColor3d(0.0, 0.196078431, 0.803921569);
+ *  15,   0, 240        glColor3d(0.058823529, 0.0, 0.941176471);
+ *  76,   0, 179        glColor3d(0.298039216, 0.0, 0.701960784);
+ *
+ * 1). G = 255 - (center_u - (min_u + step_u_big * 3.0)) / step_u_small
+ * 2). R = (center_u - (min_u + step_u_big * 2.0)) / step_u_small
+ * 3). G = (center_u - (min_u + step_u_big)) / step_u_small
+ * 4). R = 76 - (center_u - min_u) / (step_u_small * (255.0 / 76.0))
+ *
+ * 1). U = (255 - G) * step_u_small + min_u + step_u_big * 3.0
+ * 2). U = R * step_u_small + min_u + step_u_big * 2.0
+ * 3). U = G * step_u_small + min_u + step_u_big
+ * 4). U = (76 - R) * (step_u_small * (255.0 / 76.0)) + min_u
+ */
+const COLORREF purple_light_legend_colors[14] =
+{
+    RGB(  76 * 3 / 4 + 64,   0 * 3 / 4 + 64, 179 * 3 / 4 + 64 ),
+    RGB(  15 * 3 / 4 + 64,   0 * 3 / 4 + 64, 240 * 3 / 4 + 64 ),
+    RGB(   0 * 3 / 4 + 64,  50 * 3 / 4 + 64, 205 * 3 / 4 + 64 ),
+    RGB(   0 * 3 / 4 + 64, 115 * 3 / 4 + 64, 140 * 3 / 4 + 64 ),
+    RGB(   0 * 3 / 4 + 64, 180 * 3 / 4 + 64,  75 * 3 / 4 + 64 ),
+    RGB(   0 * 3 / 4 + 64, 245 * 3 / 4 + 64,  10 * 3 / 4 + 64 ),
+    RGB(  55 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 120 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 185 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 250 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 255 * 3 / 4 + 64, 195 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 255 * 3 / 4 + 64, 130 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 255 * 3 / 4 + 64,  65 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 255 * 3 / 4 + 64,   0 * 3 / 4 + 64,   0 * 3 / 4 + 64 )
+};
+const COLORREF purple_normal_legend_colors[14] =
+{
+    RGB(  76,   0, 179 ),
+    RGB(  15,   0, 240 ),
+    RGB(   0,  50, 205 ),
+    RGB(   0, 115, 140 ),
+    RGB(   0, 180,  75 ),
+    RGB(   0, 245,  10 ),
+    RGB(  55, 255,   0 ),
+    RGB( 120, 255,   0 ),
+    RGB( 185, 255,   0 ),
+    RGB( 250, 255,   0 ),
+    RGB( 255, 195,   0 ),
+    RGB( 255, 130,   0 ),
+    RGB( 255,  65,   0 ),
+    RGB( 255,   0,   0 )
+};
+// Для спектра без фиолетового цвета
+/*
+ * Матрица цветов:
+ * 255,   0,   0
+ * 255,  59,   0
+ * 255, 118,   0
+ * 255, 177,   0
+ * 255, 236,   0
+ * 215, 255,   0
+ * 157, 255,   0
+ *  99, 255,   0
+ *  50, 255,   0
+ *   0, 236,  19
+ *   0, 177,  78
+ *   0, 118, 137
+ *   0,  59, 196
+ *   0,   0, 255
+ *
+ * 1). U = (255 - G) * step_u_small + min_u + step_u_big * 2.0
+ * 2). U = R * step_u_small + min_u + step_u_big
+ * 3). U = G * step_u_small + min_u
+ */
+const COLORREF default_light_legend_colors[14] =
+{
+    RGB(   0 * 3 / 4 + 64,   0 * 3 / 4 + 64, 255 * 3 / 4 + 64 ),
+    RGB(   0 * 3 / 4 + 64,  59 * 3 / 4 + 64, 196 * 3 / 4 + 64 ),
+    RGB(   0 * 3 / 4 + 64, 118 * 3 / 4 + 64, 137 * 3 / 4 + 64 ),
+    RGB(   0 * 3 / 4 + 64, 177 * 3 / 4 + 64,  78 * 3 / 4 + 64 ),
+    RGB(   0 * 3 / 4 + 64, 236 * 3 / 4 + 64,  19 * 3 / 4 + 64 ),
+    RGB(  50 * 3 / 4 + 64, 245 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB(  99 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 157 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 215 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 255 * 3 / 4 + 64, 236 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 255 * 3 / 4 + 64, 177 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 255 * 3 / 4 + 64, 118 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 255 * 3 / 4 + 64,  59 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
+    RGB( 255 * 3 / 4 + 64,   0 * 3 / 4 + 64,   0 * 3 / 4 + 64 )
+};
+const COLORREF default_normal_legend_colors[14] =
+{
+    RGB(   0,   0, 255 ),
+    RGB(   0,  59, 196 ),
+    RGB(   0, 118, 137 ),
+    RGB(   0, 177,  78 ),
+    RGB(   0, 236,  19 ),
+    RGB(  50, 245,   0 ),
+    RGB(  99, 255,   0 ),
+    RGB( 157, 255,   0 ),
+    RGB( 215, 255,   0 ),
+    RGB( 255, 236,   0 ),
+    RGB( 255, 177,   0 ),
+    RGB( 255, 118,   0 ),
+    RGB( 255,  59,   0 ),
+    RGB( 255,   0,   0 )
+};
 
 // Отрисовка сцены на HDC
 void paintwidget::draw(HDC hdc_local)
@@ -815,206 +923,96 @@ void paintwidget::draw(HDC hdc_local)
     }
     SelectObject(hdc_local, hOldPen);
 
-#if defined USE_LEGEND
     // Легенда
-#if defined USE_PURPLE
-/*
- * Матрица цветов:
- * 255,   0,   0        glColor3d(1.0, 0.0, 0.0);
- * 255,  65,   0        glColor3d(1.0, 0.254901961, 0.0);
- * 255, 130,   0        glColor3d(1.0, 0.509803922, 0.0);
- * 255, 195,   0        glColor3d(1.0, 0.764705882, 0.0);
- * 250, 255,   0        glColor3d(0.980392157, 1.0, 0.0);
- * 185, 255,   0        glColor3d(0.725490196, 1.0, 0.0);
- * 120, 255,   0        glColor3d(0.470588235, 1.0, 0.0);
- *  55, 255,   0        glColor3d(0.215686275, 1.0, 0.0);
- *   0, 245,  10        glColor3d(0.0, 0.960784314, 0.039215686);
- *   0, 180,  75        glColor3d(0.0, 0.705882353, 0.294117647);
- *   0, 115, 140        glColor3d(0.0, 0.450980392, 0.549019608);
- *   0,  50, 205        glColor3d(0.0, 0.196078431, 0.803921569);
- *  15,   0, 240        glColor3d(0.058823529, 0.0, 0.941176471);
- *  76,   0, 179        glColor3d(0.298039216, 0.0, 0.701960784);
- *
- * 1). G = 255 - (center_u - (min_u + step_u_big * 3.0)) / step_u_small
- * 2). R = (center_u - (min_u + step_u_big * 2.0)) / step_u_small
- * 3). G = (center_u - (min_u + step_u_big)) / step_u_small
- * 4). R = 76 - (center_u - min_u) / (step_u_small * (255.0 / 76.0))
- *
- * 1). U = (255 - G) * step_u_small + min_u + step_u_big * 3.0
- * 2). U = R * step_u_small + min_u + step_u_big * 2.0
- * 3). U = G * step_u_small + min_u + step_u_big
- * 4). U = (76 - R) * (step_u_small * (255.0 / 76.0)) + min_u
- */
-#if defined USE_LIGHTNESS
-    static const COLORREF legend_colors[14] =
+    if(use_legend)
     {
-        RGB(  76 * 3 / 4 + 64,   0 * 3 / 4 + 64, 179 * 3 / 4 + 64 ),
-        RGB(  15 * 3 / 4 + 64,   0 * 3 / 4 + 64, 240 * 3 / 4 + 64 ),
-        RGB(   0 * 3 / 4 + 64,  50 * 3 / 4 + 64, 205 * 3 / 4 + 64 ),
-        RGB(   0 * 3 / 4 + 64, 115 * 3 / 4 + 64, 140 * 3 / 4 + 64 ),
-        RGB(   0 * 3 / 4 + 64, 180 * 3 / 4 + 64,  75 * 3 / 4 + 64 ),
-        RGB(   0 * 3 / 4 + 64, 245 * 3 / 4 + 64,  10 * 3 / 4 + 64 ),
-        RGB(  55 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 120 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 185 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 250 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 255 * 3 / 4 + 64, 195 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 255 * 3 / 4 + 64, 130 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 255 * 3 / 4 + 64,  65 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 255 * 3 / 4 + 64,   0 * 3 / 4 + 64,   0 * 3 / 4 + 64 )
-    };
-#else
-    static const COLORREF legend_colors[14] =
-    {
-        RGB(  76,   0, 179 ),
-        RGB(  15,   0, 240 ),
-        RGB(   0,  50, 205 ),
-        RGB(   0, 115, 140 ),
-        RGB(   0, 180,  75 ),
-        RGB(   0, 245,  10 ),
-        RGB(  55, 255,   0 ),
-        RGB( 120, 255,   0 ),
-        RGB( 185, 255,   0 ),
-        RGB( 250, 255,   0 ),
-        RGB( 255, 195,   0 ),
-        RGB( 255, 130,   0 ),
-        RGB( 255,  65,   0 ),
-        RGB( 255,   0,   0 )
-    };
-#endif
-    float legend_values[14] =
-    {
-        min_u[draw_index],
-        61.0f * (step_u_small[draw_index] * (255.0f / 76.0f)) + min_u[draw_index],
-        50.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        115.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        180.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        245.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index],
-        55.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
-        120.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
-        185.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
-        250.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f,
-        60.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f,
-        125.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f,
-        190.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f,
-        max_u[draw_index]
-    };
-#else
-    /*
-     * Матрица цветов:
-     * 255,   0,   0
-     * 255,  59,   0
-     * 255, 118,   0
-     * 255, 177,   0
-     * 255, 236,   0
-     * 215, 255,   0
-     * 157, 255,   0
-     *  99, 255,   0
-     *  50, 255,   0
-     *   0, 236,  19
-     *   0, 177,  78
-     *   0, 118, 137
-     *   0,  59, 196
-     *   0,   0, 255
-     *
-     * 1). U = (255 - G) * step_u_small + min_u + step_u_big * 2.0
-     * 2). U = R * step_u_small + min_u + step_u_big
-     * 3). U = G * step_u_small + min_u
-     */
-#if defined USE_LIGHTNESS
-    static const COLORREF legend_colors[14] =
-    {
-        RGB(   0 * 3 / 4 + 64,   0 * 3 / 4 + 64, 255 * 3 / 4 + 64 ),
-        RGB(   0 * 3 / 4 + 64,  59 * 3 / 4 + 64, 196 * 3 / 4 + 64 ),
-        RGB(   0 * 3 / 4 + 64, 118 * 3 / 4 + 64, 137 * 3 / 4 + 64 ),
-        RGB(   0 * 3 / 4 + 64, 177 * 3 / 4 + 64,  78 * 3 / 4 + 64 ),
-        RGB(   0 * 3 / 4 + 64, 236 * 3 / 4 + 64,  19 * 3 / 4 + 64 ),
-        RGB(  50 * 3 / 4 + 64, 245 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB(  99 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 157 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 215 * 3 / 4 + 64, 255 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 255 * 3 / 4 + 64, 236 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 255 * 3 / 4 + 64, 177 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 255 * 3 / 4 + 64, 118 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 255 * 3 / 4 + 64,  59 * 3 / 4 + 64,   0 * 3 / 4 + 64 ),
-        RGB( 255 * 3 / 4 + 64,   0 * 3 / 4 + 64,   0 * 3 / 4 + 64 )
-    };
-#else
-    static const COLORREF legend_colors[14] =
-    {
-        RGB(   0,   0, 255 ),
-        RGB(   0,  59, 196 ),
-        RGB(   0, 118, 137 ),
-        RGB(   0, 177,  78 ),
-        RGB(   0, 236,  19 ),
-        RGB(  50, 245,   0 ),
-        RGB(  99, 255,   0 ),
-        RGB( 157, 255,   0 ),
-        RGB( 215, 255,   0 ),
-        RGB( 255, 236,   0 ),
-        RGB( 255, 177,   0 ),
-        RGB( 255, 118,   0 ),
-        RGB( 255,  59,   0 ),
-        RGB( 255,   0,   0 )
-    };
-#endif
-    float legend_values[14] =
-    {
-        min_u[draw_index],
-        59.0f * step_u_small[draw_index] + min_u[draw_index],
-        118.0f * step_u_small[draw_index] + min_u[draw_index],
-        177.0f * step_u_small[draw_index] + min_u[draw_index],
-        236.0f * step_u_small[draw_index] + min_u[draw_index],
-        50.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        99.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        157.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        215.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index],
-        19.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
-        78.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
-        137.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
-        196.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index],
-        max_u[draw_index]
-    };
-#endif
-    for(size_t i = 0; i < 14; i++)
-    {
-        static const float x0 = 1.0175f;
-        static const float y0 = 0.0f;
-        static const float dx = 0.0f;
-        static const float dy = 0.07f;
-        static const float hx = 0.103f;
-        static const float hy = 0.073f;
-        HPEN hLegPen = GetStockPen(NULL_PEN);
-        hOldPen = (HPEN)SelectObject(hdc_local, hLegPen);
-        HBRUSH hLegBrush;
-        hLegBrush = CreateSolidBrush(legend_colors[i]);
-        hOldBrush = (HBRUSH)SelectObject(hdc_local, hLegBrush);
-        int coords[4];
-        to_window(x0, y0 + dy * i, coords[0], coords[3]);
-        to_window(x0 + hx, y0 + dy * i + hy, coords[2], coords[1]);
-        Rectangle(hdc_local, coords[0], coords[1], coords[2], coords[3]);
-        SelectObject(hdc_local, hOldPen);
-        SelectObject(hdc_local, hOldBrush);
-        DeleteBrush(hLegBrush);
+        const COLORREF * legend_colors;
+        if(use_purple)
+            if(use_light_colors)
+                legend_colors = purple_light_legend_colors;
+            else
+                legend_colors = purple_normal_legend_colors;
+        else
+            if(use_light_colors)
+                legend_colors = default_light_legend_colors;
+            else
+                legend_colors = default_normal_legend_colors;
 
-        SetBkColor(hdc_local, legend_colors[i]);
-        HFONT hLegFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
-        hOldFont = (HFONT)SelectObject(hdc_local, hLegFont);
-        char st[17];
-        int exponent  = (int)std::floor(std::log10(std::fabs(legend_values[i])));
-        if(abs(exponent) < 0) exponent = 0;
-        float base   = legend_values[i] * std::pow(10.0f, -1.0f * exponent);
+        float legend_values[14];
+        if(use_purple)
+        {
+            legend_values [0]  = min_u[draw_index];
+            legend_values [1]  = 61.0f * (step_u_small[draw_index] * (255.0f / 76.0f)) + min_u[draw_index];
+            legend_values [2]  = 50.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index];
+            legend_values [3]  = 115.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index];
+            legend_values [4]  = 180.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index];
+            legend_values [5]  = 245.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index];
+            legend_values [6]  = 55.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f;
+            legend_values [7]  = 120.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f;
+            legend_values [8]  = 185.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f;
+            legend_values [9]  = 250.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 2.0f;
+            legend_values [10] = 60.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f;
+            legend_values [11] = 125.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f;
+            legend_values [12] = 190.0f * step_u_small[draw_index] + min_u[draw_index] + step_u_big[draw_index] * 3.0f;
+            legend_values [13] = max_u[draw_index];
+        }
+        else
+        {
+            legend_values [0]  = min_u[draw_index];
+            legend_values [1]  = 59.0f * step_u_small[draw_index] + min_u[draw_index];
+            legend_values [2]  = 118.0f * step_u_small[draw_index] + min_u[draw_index];
+            legend_values [3]  = 177.0f * step_u_small[draw_index] + min_u[draw_index];
+            legend_values [4]  = 236.0f * step_u_small[draw_index] + min_u[draw_index];
+            legend_values [5]  = 50.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index];
+            legend_values [6]  = 99.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index];
+            legend_values [7]  = 157.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index];
+            legend_values [8]  = 215.0f * step_u_small[draw_index] + step_u_big[draw_index] + min_u[draw_index];
+            legend_values [9]  = 19.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index];
+            legend_values [10] = 78.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index];
+            legend_values [11] = 137.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index];
+            legend_values [12] = 196.0f * step_u_small[draw_index] + step_u_big[draw_index] * 2.0f + min_u[draw_index];
+            legend_values [13] = max_u[draw_index];
+        }
+
+        for(size_t i = 0; i < 14; i++)
+        {
+            static const float x0 = 1.0175f;
+            static const float y0 = 0.0f;
+            static const float dx = 0.0f;
+            static const float dy = 0.07f;
+            static const float hx = 0.103f;
+            static const float hy = 0.073f;
+            HPEN hLegPen = GetStockPen(NULL_PEN);
+            hOldPen = (HPEN)SelectObject(hdc_local, hLegPen);
+            HBRUSH hLegBrush;
+            hLegBrush = CreateSolidBrush(legend_colors[i]);
+            hOldBrush = (HBRUSH)SelectObject(hdc_local, hLegBrush);
+            int coords[4];
+            to_window(x0, y0 + dy * i, coords[0], coords[3]);
+            to_window(x0 + hx, y0 + dy * i + hy, coords[2], coords[1]);
+            Rectangle(hdc_local, coords[0], coords[1], coords[2], coords[3]);
+            SelectObject(hdc_local, hOldPen);
+            SelectObject(hdc_local, hOldBrush);
+            DeleteBrush(hLegBrush);
+
+            SetBkColor(hdc_local, legend_colors[i]);
+            HFONT hLegFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
+            hOldFont = (HFONT)SelectObject(hdc_local, hLegFont);
+            char st[17];
+            int exponent  = (int)std::floor(std::log10(std::fabs(legend_values[i])));
+            if(abs(exponent) < 0) exponent = 0;
+            float base   = legend_values[i] * std::pow(10.0f, -1.0f * exponent);
 #if defined _MSC_VER && _MSC_VER >= 1400
-        sprintf_s(st, 17, "%.2fE%+03d", base, exponent);
+            sprintf_s(st, 17, "%.2fE%+03d", base, exponent);
 #else
-        sprintf(st, "%.2fE%+03d", base, exponent);
+            sprintf(st, "%.2fE%+03d", base, exponent);
 #endif
-        to_window(x0 + dx * i + 0.004f, y0 + dy * i + hy / 2.0f - 0.01f + font_correct, x, y);
-        TextOutA(hdc_local, x, y, st, (int)strlen(st));
-        SelectObject(hdc_local, hOldFont);
+            to_window(x0 + dx * i + 0.004f, y0 + dy * i + hy / 2.0f - 0.01f + font_correct, x, y);
+            TextOutA(hdc_local, x, y, st, (int)strlen(st));
+            SelectObject(hdc_local, hOldFont);
+        }
+        SetBkColor(hdc_local, RGB(255, 255, 255));
     }
-    SetBkColor(hdc_local, RGB(255, 255, 255));
-#endif
 
     if(draw_vectors)
     {

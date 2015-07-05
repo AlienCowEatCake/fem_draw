@@ -22,7 +22,11 @@
 #define CONTROL_MENU_EXIT                   10016
 #define CONTROL_MENU_INCREASE_INTERPOLATION 10017
 #define CONTROL_MENU_DECREASE_INTERPOLATION 10018
-#define CONTROL_MENU_ABOUT                  10019
+#define CONTROL_MENU_USELEGEND              10019
+#define CONTROL_MENU_USELIGHTCOLORS         10020
+#define CONTROL_MENU_USEPURPLE              10021
+#define CONTROL_MENU_USEMEMORYLIMIT         10022
+#define CONTROL_MENU_ABOUT                  10023
 
 #include <windows.h>
 #include <commctrl.h>
