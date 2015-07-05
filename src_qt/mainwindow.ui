@@ -202,8 +202,18 @@
     <addaction name="actionAbout_FEM_Draw"/>
     <addaction name="actionAbout_Qt"/>
    </widget>
+   <widget class="QMenu" name="menuConfiguration">
+    <property name="title">
+     <string>Configuration</string>
+    </property>
+    <addaction name="actionShow_Legend"/>
+    <addaction name="actionUse_Light_Colors"/>
+    <addaction name="actionUse_Purple_Colors"/>
+    <addaction name="actionMemory_Limit"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuInterpolation"/>
+   <addaction name="menuConfiguration"/>
    <addaction name="menuAbout"/>
   </widget>
   <action name="actionOpen_Tecplot_File">
@@ -274,6 +284,38 @@
    </property>
    <property name="text">
     <string>Transparent Image</string>
+   </property>
+  </action>
+  <action name="actionShow_Legend">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Legend</string>
+   </property>
+  </action>
+  <action name="actionUse_Light_Colors">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Use Light Colors</string>
+   </property>
+  </action>
+  <action name="actionUse_Purple_Colors">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Use Purple Colors</string>
+   </property>
+  </action>
+  <action name="actionMemory_Limit">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1 GiB Memory Limit</string>
    </property>
   </action>
  </widget>

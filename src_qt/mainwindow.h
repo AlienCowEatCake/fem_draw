@@ -35,6 +35,14 @@ private slots:
     // Событие при изменении уровня интерполяции
     void on_actionIncrease_Interpolation_triggered();
     void on_actionDecrease_Interpolation_triggered();
+    // Событие при переключении рисования легенды
+    void on_actionShow_Legend_triggered();
+    // Событие при переключении использования светлых цветов
+    void on_actionUse_Light_Colors_triggered();
+    // Событие при переключении использования фиолетовых цветов
+    void on_actionUse_Purple_Colors_triggered();
+    // Событие при переключении использования ограничения памяти
+    void on_actionMemory_Limit_triggered();
     // Событие при нажатии кнопки About
     void on_actionAbout_FEM_Draw_triggered();
     // Событие при переключении закраски цветом

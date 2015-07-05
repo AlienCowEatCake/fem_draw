@@ -135,6 +135,18 @@ public:
     // Отрисовка сцены на QPaintDevice
     void draw(QPaintDevice * device, bool transparency);
 
+    // Использовать ли фиолетовые оттенки цвета
+    // Дает большую комбинацию оттенков, но приводит к
+    // некоторому дисбалансу между красным и синим
+    bool use_purple;
+    // Рисовать ли легенду справа
+    bool use_legend;
+    // Приглушать ли чрезмерно яркие цвета
+    // На мониторе они выглядят ничего, но если печатать...
+    bool use_light_colors;
+    // Лимит по памяти
+    bool use_memory_limit;
+
 protected:
     // Отрисовка сцены
     void paintEvent(QPaintEvent *);

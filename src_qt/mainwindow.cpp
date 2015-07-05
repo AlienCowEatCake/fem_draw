@@ -52,6 +52,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->widget->set_isolines_num(ui->spinBox_Isolines->value());
     ui->widget->skip_vec = ui->spinBox_Vectors->value();
     ui->widget->set_div_num(0);
+    ui->actionShow_Legend->setChecked(ui->widget->use_legend);
+    ui->actionUse_Light_Colors->setChecked(ui->widget->use_light_colors);
+    ui->actionUse_Purple_Colors->setChecked(ui->widget->use_purple);
+    ui->actionMemory_Limit->setChecked(ui->widget->use_memory_limit);
 }
 
 // Деструктор
@@ -246,6 +250,35 @@ void MainWindow::on_actionDecrease_Interpolation_triggered()
         ui->widget->set_div_num(ui->widget->div_num - 1);
         ui->widget->repaint();
     }
+}
+
+// Событие при переключении рисования легенды
+void MainWindow::on_actionShow_Legend_triggered()
+{
+    ui->widget->use_legend = ui->actionShow_Legend->isChecked();
+    ui->widget->repaint();
+}
+
+// Событие при переключении использования светлых цветов
+void MainWindow::on_actionUse_Light_Colors_triggered()
+{
+    ui->widget->use_light_colors = ui->actionUse_Light_Colors->isChecked();
+    ui->widget->set_div_num(ui->widget->div_num);
+    ui->widget->repaint();
+}
+
+// Событие при переключении использования фиолетовых цветов
+void MainWindow::on_actionUse_Purple_Colors_triggered()
+{
+    ui->widget->use_purple = ui->actionUse_Purple_Colors->isChecked();
+    ui->widget->set_div_num(ui->widget->div_num);
+    ui->widget->repaint();
+}
+
+// Событие при переключении использования ограничения памяти
+void MainWindow::on_actionMemory_Limit_triggered()
+{
+    ui->widget->use_memory_limit = ui->actionMemory_Limit->isChecked();
 }
 
 // Событие при нажатии кнопки About
