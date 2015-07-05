@@ -23,34 +23,34 @@ MainWindow::MainWindow(QWidget *parent) :
         this->move(center);
 
     // Список компонент
-    while(ui->comboBox->count() > 0)
-        ui->comboBox->removeItem(0);
-    while(ui->comboBox_2->count() > 0)
-        ui->comboBox_2->removeItem(0);
-    while(ui->comboBox_3->count() > 0)
-        ui->comboBox_3->removeItem(0);
+    while(ui->comboBox_Color->count() > 0)
+        ui->comboBox_Color->removeItem(0);
+    while(ui->comboBox_Vectors_U->count() > 0)
+        ui->comboBox_Vectors_U->removeItem(0);
+    while(ui->comboBox_Vectors_V->count() > 0)
+        ui->comboBox_Vectors_V->removeItem(0);
 
     // Начальные значения элементов управления
-    ui->checkBox_2->setChecked(true);
-    ui->checkBox_3->setChecked(true);
-    ui->checkBox_4->setChecked(false);
-    ui->spinBox->setMinimum(0);
-    ui->spinBox->setMaximum(100);
-    ui->spinBox->setValue(10);
-    ui->spinBox_2->setMinimum(1);
-    ui->spinBox_2->setMaximum(10000);
-    ui->spinBox_2->setValue(1);
+    ui->checkBox_Isolines->setChecked(true);
+    ui->checkBox_Color->setChecked(true);
+    ui->checkBox_Vectors->setChecked(false);
+    ui->spinBox_Isolines->setMinimum(0);
+    ui->spinBox_Isolines->setMaximum(100);
+    ui->spinBox_Isolines->setValue(10);
+    ui->spinBox_Vectors->setMinimum(1);
+    ui->spinBox_Vectors->setMaximum(10000);
+    ui->spinBox_Vectors->setValue(1);
 
     // Немного эстетства
     this->setWindowTitle(trUtf8("FEM Draw"));
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
     // Передача начальных значений виджету
-    ui->widget->draw_isolines = ui->checkBox_2->isChecked();
-    ui->widget->draw_color = ui->checkBox_3->isChecked();
-    ui->widget->draw_vectors = ui->checkBox_4->isChecked();
-    ui->widget->set_isolines_num(ui->spinBox->value());
-    ui->widget->skip_vec = ui->spinBox_2->value();
+    ui->widget->draw_isolines = ui->checkBox_Isolines->isChecked();
+    ui->widget->draw_color = ui->checkBox_Color->isChecked();
+    ui->widget->draw_vectors = ui->checkBox_Vectors->isChecked();
+    ui->widget->set_isolines_num(ui->spinBox_Isolines->value());
+    ui->widget->skip_vec = ui->spinBox_Vectors->value();
     ui->widget->set_div_num(0);
 }
 
@@ -68,34 +68,6 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     QRect main = ui->centralwidget->geometry();
     QRect widget = ui->widget->geometry();
     ui->widget->setGeometry(widget.x(), widget.y(), main.width() - widget.x(), main.height() - widget.y());
-}
-
-// Событие при переключении рисования изолиний
-void MainWindow::on_checkBox_2_clicked()
-{
-    ui->widget->draw_isolines = ui->checkBox_2->isChecked();
-    ui->widget->repaint();
-}
-
-// Событие при переключении закраски цветом
-void MainWindow::on_checkBox_3_clicked()
-{
-    ui->widget->draw_color = ui->checkBox_3->isChecked();
-    ui->widget->repaint();
-}
-
-// Событие при изменении числа изолиний
-void MainWindow::on_spinBox_valueChanged(int arg1)
-{
-    if(ui->widget->isolines_num != (size_t)arg1)
-    {
-        if(arg1 >= ui->spinBox->minimum() && arg1 <= ui->spinBox->maximum())
-        {
-            ui->widget->set_isolines_num(arg1);
-            if(ui->widget->draw_isolines)
-                ui->widget->repaint();
-        }
-    }
 }
 
 // Открытие файла по имени
@@ -122,44 +94,44 @@ void MainWindow::open_file(QString filename)
     ui->widget->is_loaded = false;
 
     // Очистим поля в комбобоксах
-    while(ui->comboBox->count() > 0)
-        ui->comboBox->removeItem(0);
-    while(ui->comboBox_2->count() > 0)
-        ui->comboBox_2->removeItem(0);
-    while(ui->comboBox_3->count() > 0)
-        ui->comboBox_3->removeItem(0);
+    while(ui->comboBox_Color->count() > 0)
+        ui->comboBox_Color->removeItem(0);
+    while(ui->comboBox_Vectors_U->count() > 0)
+        ui->comboBox_Vectors_U->removeItem(0);
+    while(ui->comboBox_Vectors_V->count() > 0)
+        ui->comboBox_Vectors_V->removeItem(0);
 
     // Заполним поля в комбобоксах
     for(size_t i = 0; i < ui->widget->variables.size(); i++)
     {
-        ui->comboBox->addItem(ui->widget->variables[i]);
-        ui->comboBox_2->addItem(ui->widget->variables[i]);
-        ui->comboBox_3->addItem(ui->widget->variables[i]);
+        ui->comboBox_Color->addItem(ui->widget->variables[i]);
+        ui->comboBox_Vectors_U->addItem(ui->widget->variables[i]);
+        ui->comboBox_Vectors_V->addItem(ui->widget->variables[i]);
     }
 
     // Попытаемся восстановить старые индексы
     if(old_draw_index < ui->widget->variables.size())
-        ui->comboBox->setCurrentIndex((int)old_draw_index);
+        ui->comboBox_Color->setCurrentIndex((int)old_draw_index);
     else
-        ui->comboBox->setCurrentIndex(0);
+        ui->comboBox_Color->setCurrentIndex(0);
 
     if(old_ind_vec_1 < ui->widget->variables.size())
-        ui->comboBox_2->setCurrentIndex((int)old_ind_vec_1);
+        ui->comboBox_Vectors_U->setCurrentIndex((int)old_ind_vec_1);
     else
-        ui->comboBox_2->setCurrentIndex(0);
+        ui->comboBox_Vectors_U->setCurrentIndex(0);
 
     if(old_ind_vec_2 < ui->widget->variables.size())
-        ui->comboBox_3->setCurrentIndex((int)old_ind_vec_2);
+        ui->comboBox_Vectors_V->setCurrentIndex((int)old_ind_vec_2);
     else
-        ui->comboBox_3->setCurrentIndex(0);
+        ui->comboBox_Vectors_V->setCurrentIndex(0);
 
     // Устанавливаем оптимальное значение для векторов
-    if(ui->widget->vect_value < ui->spinBox_2->minimum())
-        ui->spinBox_2->setValue(ui->spinBox_2->minimum());
-    else if(ui->widget->vect_value > ui->spinBox_2->maximum())
-        ui->spinBox_2->setValue(ui->spinBox_2->maximum());
+    if(ui->widget->vect_value < ui->spinBox_Vectors->minimum())
+        ui->spinBox_Vectors->setValue(ui->spinBox_Vectors->minimum());
+    else if(ui->widget->vect_value > ui->spinBox_Vectors->maximum())
+        ui->spinBox_Vectors->setValue(ui->spinBox_Vectors->maximum());
     else
-        ui->spinBox_2->setValue(ui->widget->vect_value);
+        ui->spinBox_Vectors->setValue(ui->widget->vect_value);
 
     // Установим заголовок окна
     QStringList path = filename.split('/');
@@ -172,88 +144,12 @@ void MainWindow::open_file(QString filename)
     ui->widget->repaint();
 }
 
-
 // Событие при открытии файла
 void MainWindow::on_actionOpen_Tecplot_File_triggered()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Tecplot File"), "", tr("Tecplot Data Files (*.dat *.plt);;All Files (*.*)"));
     if(fileName.length() == 0) return;
     open_file(fileName);
-}
-
-// Изменение переменной, которую выводим
-void MainWindow::on_comboBox_currentIndexChanged(int index)
-{
-    if(ui->widget->draw_index != (size_t)index)
-    {
-        ui->widget->draw_index = (size_t)index;
-        if(ui->widget->draw_color || ui->widget->draw_isolines)
-            ui->widget->repaint();
-    }
-}
-
-// Первая переменная вектора
-void MainWindow::on_comboBox_2_currentIndexChanged(int index)
-{
-    if(ui->widget->ind_vec_1 != (size_t)index)
-    {
-        ui->widget->ind_vec_1 = (size_t)index;
-        if(ui->widget->draw_vectors)
-            ui->widget->repaint();
-    }
-}
-
-// Вторая переменная вектора
-void MainWindow::on_comboBox_3_currentIndexChanged(int index)
-{
-    if(ui->widget->ind_vec_2 != (size_t)index)
-    {
-        ui->widget->ind_vec_2 = (size_t)index;
-        if(ui->widget->draw_vectors)
-            ui->widget->repaint();
-    }
-}
-
-// Переключение рисовки векторов
-void MainWindow::on_checkBox_4_clicked()
-{
-    ui->widget->draw_vectors = ui->checkBox_4->isChecked();
-    ui->widget->repaint();
-}
-
-// Число рисуемых векторов
-void MainWindow::on_spinBox_2_valueChanged(int arg1)
-{
-    if(ui->widget->skip_vec != (size_t)arg1)
-    {
-        if(arg1 >= ui->spinBox_2->minimum() && arg1 <= ui->spinBox_2->maximum())
-        {
-            ui->widget->skip_vec = (size_t)arg1;
-            if(ui->widget->draw_vectors)
-                ui->widget->repaint();
-        }
-    }
-}
-
-// Событие при изменении уровня интерполяции
-void MainWindow::on_actionIncrease_Interpolation_triggered()
-{
-    if(ui->widget->div_num < 7)
-    {
-        size_t old_value = ui->widget->div_num;
-        ui->widget->set_div_num(ui->widget->div_num + 1);
-        if(ui->widget->div_num == old_value + 1)
-            ui->widget->repaint();
-    }
-}
-
-void MainWindow::on_actionDecrease_Interpolation_triggered()
-{
-    if(ui->widget->div_num > 0)
-    {
-        ui->widget->set_div_num(ui->widget->div_num - 1);
-        ui->widget->repaint();
-    }
 }
 
 // Событие при сохранении
@@ -331,6 +227,27 @@ void MainWindow::on_actionExit_triggered()
     close();
 }
 
+// Событие при изменении уровня интерполяции
+void MainWindow::on_actionIncrease_Interpolation_triggered()
+{
+    if(ui->widget->div_num < 7)
+    {
+        size_t old_value = ui->widget->div_num;
+        ui->widget->set_div_num(ui->widget->div_num + 1);
+        if(ui->widget->div_num == old_value + 1)
+            ui->widget->repaint();
+    }
+}
+
+void MainWindow::on_actionDecrease_Interpolation_triggered()
+{
+    if(ui->widget->div_num > 0)
+    {
+        ui->widget->set_div_num(ui->widget->div_num - 1);
+        ui->widget->repaint();
+    }
+}
+
 // Событие при нажатии кнопки About
 void MainWindow::on_actionAbout_FEM_Draw_triggered()
 {
@@ -348,3 +265,86 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
     msgBox.exec();
 }
+
+// Событие при переключении закраски цветом
+void MainWindow::on_checkBox_Color_clicked()
+{
+    ui->widget->draw_color = ui->checkBox_Color->isChecked();
+    ui->widget->repaint();
+}
+
+// Изменение переменной, которую выводим
+void MainWindow::on_comboBox_Color_currentIndexChanged(int index)
+{
+    if(ui->widget->draw_index != (size_t)index)
+    {
+        ui->widget->draw_index = (size_t)index;
+        if(ui->widget->draw_color || ui->widget->draw_isolines)
+            ui->widget->repaint();
+    }
+}
+
+// Событие при переключении рисования изолиний
+void MainWindow::on_checkBox_Isolines_clicked()
+{
+    ui->widget->draw_isolines = ui->checkBox_Isolines->isChecked();
+    ui->widget->repaint();
+}
+
+// Событие при изменении числа изолиний
+void MainWindow::on_spinBox_Isolines_valueChanged(int arg1)
+{
+    if(ui->widget->isolines_num != (size_t)arg1)
+    {
+        if(arg1 >= ui->spinBox_Isolines->minimum() && arg1 <= ui->spinBox_Isolines->maximum())
+        {
+            ui->widget->set_isolines_num(arg1);
+            if(ui->widget->draw_isolines)
+                ui->widget->repaint();
+        }
+    }
+}
+
+// Переключение рисовки векторов
+void MainWindow::on_checkBox_Vectors_clicked()
+{
+    ui->widget->draw_vectors = ui->checkBox_Vectors->isChecked();
+    ui->widget->repaint();
+}
+
+// Число рисуемых векторов
+void MainWindow::on_spinBox_Vectors_valueChanged(int arg1)
+{
+    if(ui->widget->skip_vec != (size_t)arg1)
+    {
+        if(arg1 >= ui->spinBox_Vectors->minimum() && arg1 <= ui->spinBox_Vectors->maximum())
+        {
+            ui->widget->skip_vec = (size_t)arg1;
+            if(ui->widget->draw_vectors)
+                ui->widget->repaint();
+        }
+    }
+}
+
+// Первая переменная вектора
+void MainWindow::on_comboBox_Vectors_U_currentIndexChanged(int index)
+{
+    if(ui->widget->ind_vec_1 != (size_t)index)
+    {
+        ui->widget->ind_vec_1 = (size_t)index;
+        if(ui->widget->draw_vectors)
+            ui->widget->repaint();
+    }
+}
+
+// Вторая переменная вектора
+void MainWindow::on_comboBox_Vectors_V_currentIndexChanged(int index)
+{
+    if(ui->widget->ind_vec_2 != (size_t)index)
+    {
+        ui->widget->ind_vec_2 = (size_t)index;
+        if(ui->widget->draw_vectors)
+            ui->widget->repaint();
+    }
+}
+

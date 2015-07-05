@@ -28,7 +28,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QCheckBox" name="checkBox_3">
+   <widget class="QCheckBox" name="checkBox_Color">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -44,7 +44,7 @@
      <string>Color</string>
     </property>
    </widget>
-   <widget class="QComboBox" name="comboBox">
+   <widget class="QComboBox" name="comboBox_Color">
     <property name="geometry">
      <rect>
       <x>75</x>
@@ -57,7 +57,7 @@
      <string>Data component for colors and isolines</string>
     </property>
    </widget>
-   <widget class="QCheckBox" name="checkBox_2">
+   <widget class="QCheckBox" name="checkBox_Isolines">
     <property name="geometry">
      <rect>
       <x>160</x>
@@ -73,7 +73,7 @@
      <string>Isolines</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="spinBox">
+   <widget class="QSpinBox" name="spinBox_Isolines">
     <property name="geometry">
      <rect>
       <x>240</x>
@@ -86,7 +86,7 @@
      <string>Number of isolines</string>
     </property>
    </widget>
-   <widget class="QCheckBox" name="checkBox_4">
+   <widget class="QCheckBox" name="checkBox_Vectors">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -102,7 +102,7 @@
      <string>Vectors</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="spinBox_2">
+   <widget class="QSpinBox" name="spinBox_Vectors">
     <property name="geometry">
      <rect>
       <x>390</x>
@@ -115,7 +115,7 @@
      <string>Number of skipped values</string>
     </property>
    </widget>
-   <widget class="QComboBox" name="comboBox_2">
+   <widget class="QComboBox" name="comboBox_Vectors_U">
     <property name="geometry">
      <rect>
       <x>470</x>
@@ -128,7 +128,7 @@
      <string>Data component for first vector axis</string>
     </property>
    </widget>
-   <widget class="QComboBox" name="comboBox_3">
+   <widget class="QComboBox" name="comboBox_Vectors_V">
     <property name="geometry">
      <rect>
       <x>565</x>

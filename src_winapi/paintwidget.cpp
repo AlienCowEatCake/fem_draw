@@ -231,7 +231,7 @@ void paintwidget::tec_read(LPCTSTR filename)
     size_x = max_x - min_x;
     size_y = max_y - min_y;
 
-    // Устанавливаем рекомендуемое значение для spinBox_2
+    // Устанавливаем рекомендуемое значение для spinBox_Vectors
     vect_value = (int)(std::sqrt((float)(IJK[0] * IJK[1] * IJK[2])) / 20.0f);
 
     // Как-то так

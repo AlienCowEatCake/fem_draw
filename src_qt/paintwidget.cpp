@@ -259,7 +259,7 @@ void paintwidget::tec_read(const QString & filename)
         step_u_small[k] = step_u_big[k] / 256.0f;
     }
 
-    // Устанавливаем рекомендуемое значение для spinBox_2
+    // Устанавливаем рекомендуемое значение для spinBox_Vectors
     vect_value = (int)(std::sqrt((float)(IJK[0] * IJK[1] * IJK[2])) / 20.0f);
 
     // Как-то так

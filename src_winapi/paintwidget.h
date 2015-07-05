@@ -131,7 +131,7 @@ public:
     // Есть данные
     bool is_loaded;
 
-    // Рекомендуемое значение для spinBox_2
+    // Рекомендуемое значение для spinBox_Vectors
     int vect_value;
 
     // Уровень интерполяции
