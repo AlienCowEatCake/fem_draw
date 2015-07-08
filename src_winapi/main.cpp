@@ -8,8 +8,11 @@
 
 HWND hwnd;
 HWND hwnd_about;
+HBITMAP hbmp_logo = NULL;
+HBITMAP hbmp_mask = NULL;
 HACCEL haccel;
 paintwidget * pdraw;
+
 namespace menu
 {
     HMENU hMenu;
@@ -493,6 +496,34 @@ void on_actionAbout_FEM_Draw_triggered()
                              NULL, NULL, hInstance, NULL
                              );
     ReleaseDC(NULL, hDCScreen);
+
+    // Если еще не загрузили
+    if(!hbmp_logo)
+    {
+        // Загрузим картинку
+        hbmp_logo = LoadBitmap(hInstance, MAKEINTRESOURCE(IDI_LOGO64));
+        // Создадим маску для прозрачности
+        HDC hdcMem, hdcMem2;
+        BITMAP bm;
+        GetObject(hbmp_logo, sizeof(BITMAP), &bm);
+        hbmp_mask = CreateBitmap(bm.bmWidth, bm.bmHeight, 1, 1, NULL);
+        hdcMem = CreateCompatibleDC(0);
+        hdcMem2 = CreateCompatibleDC(0);
+        SelectBitmap(hdcMem, hbmp_logo);
+        SelectBitmap(hdcMem2, hbmp_mask);
+        SetBkColor(hdcMem, RGB(255, 0, 255));
+        BitBlt(hdcMem2, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
+        BitBlt(hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem2, 0, 0, SRCINVERT);
+        DeleteDC(hdcMem);
+        DeleteDC(hdcMem2);
+    }
+    // И создадим label, на котором будем рисовать лого
+    CreateWindow(
+                WC_STATIC, NULL,
+                WS_CHILD | WS_VISIBLE,
+                11, 11, 64, 64,
+                hwnd_about, (HMENU)ABOUT_LABEL_LOGO, hInstance, NULL
+                );
 
     // Надпись "FEM Draw <version_name> (WinAPI)"
     CreateWindow(
@@ -988,6 +1019,28 @@ LRESULT CALLBACK WndProcAbout(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         SetBkMode(hdc, TRANSPARENT);
         return (LRESULT)GetStockObject(NULL_BRUSH);
     }
+    case WM_PAINT:
+    case WM_PRINT:
+    case WM_PRINTCLIENT:
+    {
+        DefWindowProc(hWnd, Msg, wParam, lParam);
+        // Рисуем логотип
+        PAINTSTRUCT ps;
+        HWND hwnd_logo = GetDlgItem(hwnd_about, ABOUT_LABEL_LOGO);
+        HDC hdc1 = BeginPaint(hwnd_logo, &ps);
+        HDC hdc2 = CreateCompatibleDC(hdc1);
+        BITMAP bmp;
+        GetObject(hbmp_logo, sizeof(bmp), &bmp);
+        HGDIOBJ oldhbmp = SelectObject(hdc2, hbmp_mask);
+        BitBlt(hdc1, 0, 0, bmp.bmWidth, bmp.bmHeight, hdc2, 0, 0, SRCAND);
+        SelectObject(hdc2, hbmp_logo);
+        BitBlt(hdc1, 0, 0, bmp.bmWidth, bmp.bmHeight, hdc2, 0, 0, SRCPAINT);
+        SelectObject(hdc2, oldhbmp);
+        DeleteDC(hdc2);
+        EndPaint(hwnd_logo, &ps);
+        ReleaseDC(hwnd_logo, hdc1);
+        break;
+    }
     default:
         return DefWindowProc(hWnd, Msg, wParam, lParam);
     }
@@ -1277,5 +1330,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
     DeleteObject(fonts::font_bold);
     DeleteObject(fonts::font_link);
+    if(hbmp_logo) DeleteObject(hbmp_logo);
+    if(hbmp_mask) DeleteObject(hbmp_mask);
     return 0;
 }

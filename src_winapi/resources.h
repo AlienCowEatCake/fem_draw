@@ -1,7 +1,8 @@
 #ifndef RESOURCES_H
 #define RESOURCES_H
 
-#define IDI_ICON1 42
+#define IDI_ICON1   42
+#define IDI_LOGO64  43
 
 #define CONTROL_PAINT_WIDGET                10000
 #define CONTROL_CHECKBOX_COLOR              10001
@@ -36,6 +37,7 @@
 #define ABOUT_LABEL_AUTHOR_EMAIL            10106
 #define ABOUT_LABEL_AUTHOR_END              10107
 #define ABOUT_BUTTON_OK                     10108
+#define ABOUT_LABEL_LOGO                    10109
 
 #include <windows.h>
 #include <commctrl.h>
