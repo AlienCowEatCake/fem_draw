@@ -27,6 +27,15 @@
 #define CONTROL_MENU_USEPURPLE              10021
 #define CONTROL_MENU_USEMEMORYLIMIT         10022
 #define CONTROL_MENU_ABOUT                  10023
+#define ABOUT_LABEL_VERSION                 10100
+#define ABOUT_LABEL_SITE                    10101
+#define ABOUT_LABEL_LICENSE                 10102
+#define ABOUT_LABEL_GPL3                    10103
+#define ABOUT_LABEL_COPYRIGHT               10104
+#define ABOUT_LABEL_AUTHOR_BEGIN            10105
+#define ABOUT_LABEL_AUTHOR_EMAIL            10106
+#define ABOUT_LABEL_AUTHOR_END              10107
+#define ABOUT_BUTTON_OK                     10108
 
 #include <windows.h>
 #include <commctrl.h>

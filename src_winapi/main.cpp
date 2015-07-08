@@ -7,6 +7,7 @@
 #include "libs/jo_images.h"
 
 HWND hwnd;
+HWND hwnd_about;
 HACCEL haccel;
 paintwidget * pdraw;
 namespace menu
@@ -17,12 +18,20 @@ namespace menu
     HMENU hConfigMenu;
     HMENU hAboutMenu;
 }
+
 namespace config
 {
     int min_height, min_width;
     int isol_min = 0,   isol_max = 100,   isol_curr = 10;
     int smooth_min = 0, smooth_max = 7,   smooth_curr = 0;
     int vect_min = 1,   vect_max = 10000, vect_curr = 1;
+}
+
+namespace fonts
+{
+    HFONT font_std;
+    HFONT font_bold;
+    HFONT font_link;
 }
 
 void widget_redraw(bool is_valid)
@@ -470,13 +479,99 @@ void on_actionMemory_Limit_triggered()
 // Событие при нажатии кнопки About
 void on_actionAbout_FEM_Draw_triggered()
 {
-    u_stringstream sstr;
-    sstr << TEXT("FEM Draw v1.0 beta6 (WinAPI)\n\n")
-         << TEXT("http://fami-net.dlinkddns.com/gitlab/peter/fem_draw\n")
-         << TEXT("License: GNU GPL v3\n\n")
-         << TEXT("Copyright (c) 2014 - 2015\n")
-         << TEXT("Peter Zhigalov <peter.zhigalov@gmail.com>");
-    MessageBox(hwnd, sstr.str().c_str(), TEXT("About"), MB_OK | MB_ICONINFORMATION);
+    // Создадим окно
+    int about_width = 350 + 2 * GetSystemMetrics(SM_CXFRAME);
+    int about_height = 156 + 2 * GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION);
+    HDC hDCScreen = GetDC(NULL);
+    HINSTANCE hInstance = (HINSTANCE)GetModuleHandle(NULL);
+    hwnd_about = CreateWindow(
+                             TEXT("aboutwindow"), TEXT("About"),
+                             WS_DLGFRAME | WS_SYSMENU,
+                             (GetDeviceCaps(hDCScreen, HORZRES) - about_width) / 2,
+                             (GetDeviceCaps(hDCScreen, VERTRES) - about_height) / 2,
+                             about_width, about_height,
+                             NULL, NULL, hInstance, NULL
+                             );
+    ReleaseDC(NULL, hDCScreen);
+
+    // Надпись "FEM Draw <version_name> (WinAPI)"
+    CreateWindow(
+                WC_STATIC, TEXT("FEM Draw v1.0 beta6 (WinAPI)"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 10, 254, 15,
+                hwnd_about, (HMENU)ABOUT_LABEL_VERSION, hInstance, NULL
+                );
+    // Надпись с сайтом
+    CreateWindow(
+                WC_STATIC, TEXT("http://fami-net.dlinkddns.com/gitlab/peter/fem_draw"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 38, 254, 15,
+                hwnd_about, (HMENU)ABOUT_LABEL_SITE, hInstance, NULL
+                );
+    // Надпись "License: "
+    CreateWindow(
+                WC_STATIC, TEXT("License: "),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 52, 42, 15,
+                hwnd_about, (HMENU)ABOUT_LABEL_LICENSE, hInstance, NULL
+                );
+    // Надпись "GNU GPL v3"
+    CreateWindow(
+                WC_STATIC, TEXT("GNU GPL v3"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                135, 52, 70, 15,
+                hwnd_about, (HMENU)ABOUT_LABEL_GPL3, hInstance, NULL
+                );
+    // Надпись "Copyright (c) ..."
+    CreateWindow(
+                WC_STATIC, TEXT("Copyright (c) 2014 - 2015"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 80, 254, 15,
+                hwnd_about, (HMENU)ABOUT_LABEL_COPYRIGHT, hInstance, NULL
+                );
+    // Надпись с автором
+    CreateWindow(
+                WC_STATIC, TEXT("Peter Zhigalov <"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 94, 77, 15,
+                hwnd_about, (HMENU)ABOUT_LABEL_AUTHOR_BEGIN, hInstance, NULL
+                );
+    // Надпись с email'ом
+    CreateWindow(
+                WC_STATIC, TEXT("peter.zhigalov@gmail.com"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                170, 94, 124, 15,
+                hwnd_about, (HMENU)ABOUT_LABEL_AUTHOR_EMAIL, hInstance, NULL
+                );
+    // Баланс скобок
+    CreateWindow(
+                WC_STATIC, TEXT(">"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                294, 94, 50, 15,
+                hwnd_about, (HMENU)ABOUT_LABEL_AUTHOR_END, hInstance, NULL
+                );
+    // Кнопка OK
+    CreateWindow(
+                WC_BUTTON, TEXT("OK"),
+                WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
+                138, 121, 77, 26,
+                hwnd_about, (HMENU)ABOUT_BUTTON_OK, hInstance, NULL
+                );
+
+    // Шрифты
+    SendMessage(hwnd_about, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about, ABOUT_LABEL_VERSION, WM_SETFONT, (WPARAM)fonts::font_bold, TRUE);
+    SendDlgItemMessage(hwnd_about, ABOUT_LABEL_SITE, WM_SETFONT, (WPARAM)fonts::font_link, TRUE);
+    SendDlgItemMessage(hwnd_about, ABOUT_LABEL_LICENSE, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about, ABOUT_LABEL_GPL3, WM_SETFONT, (WPARAM)fonts::font_link, TRUE);
+    SendDlgItemMessage(hwnd_about, ABOUT_LABEL_COPYRIGHT, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about, ABOUT_LABEL_AUTHOR_BEGIN, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about, ABOUT_LABEL_AUTHOR_EMAIL, WM_SETFONT, (WPARAM)fonts::font_link, TRUE);
+    SendDlgItemMessage(hwnd_about, ABOUT_LABEL_AUTHOR_END, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about, ABOUT_BUTTON_OK, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+
+    ShowWindow(hwnd_about, SW_SHOWNORMAL);
+    UpdateWindow(hwnd_about);
 }
 
 // Событие при переключении закраски цветом
@@ -619,6 +714,7 @@ void on_comboBox_Vectors_V_currentIndexChanged()
     }
 }
 
+// Обработка сообщений основного окна
 LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     switch(Msg)
@@ -756,6 +852,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         widget_redraw(is_valid);
         break;
     }
+    case WM_SETCURSOR:  // Устанавливаем курсоры
+    {
+        SetCursor(LoadCursor(NULL, IDC_ARROW));
+        break;
+    }
     case WM_PAINT:
     case WM_PRINT:
     case WM_PRINTCLIENT:
@@ -769,6 +870,124 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:    // Закрытие окна
         PostQuitMessage(0);
         break;
+    default:
+        return DefWindowProc(hWnd, Msg, wParam, lParam);
+    }
+    return 0;
+}
+
+// Обработка сообщений окна About
+LRESULT CALLBACK WndProcAbout(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    switch(Msg)
+    {
+    case WM_COMMAND:    // Нажата кнопка
+    {
+        switch(LOWORD(wParam))
+        {
+        case ABOUT_BUTTON_OK:
+        {
+            SendMessage(hwnd_about, WM_CLOSE, 0, 0);
+            break;
+        }
+        }
+        break;
+    }
+    case WM_LBUTTONDOWN:    // Нажата кнопка мыши
+    {
+        int xPos = GET_X_LPARAM(lParam);
+        int yPos = GET_Y_LPARAM(lParam);
+        RECT r;
+        memset(&r, 0, sizeof(RECT));
+
+        // Вдруг это веб-сайт проекта?
+        GetWindowRect(GetDlgItem(hwnd_about, ABOUT_LABEL_SITE), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            const size_t bufsize = 1024;
+            TCHAR str[bufsize];
+            GetWindowText(GetDlgItem(hwnd_about, ABOUT_LABEL_SITE), str, bufsize);
+            str[bufsize - 1] = 0;
+            ShellExecute(NULL, TEXT("open"), str, NULL, NULL, SW_SHOWNORMAL);
+            break;
+        }
+
+        // Или сайт с лицензией?
+        GetWindowRect(GetDlgItem(hwnd_about, ABOUT_LABEL_GPL3), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            ShellExecute(NULL, TEXT("open"), TEXT("http://www.gnu.org/copyleft/gpl.html"), NULL, NULL, SW_SHOWNORMAL);
+            break;
+        }
+
+        // email
+        GetWindowRect(GetDlgItem(hwnd_about, ABOUT_LABEL_AUTHOR_EMAIL), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            const size_t bufsize = 1024;
+            TCHAR str[bufsize];
+            memcpy(str, TEXT("mailto:"), sizeof(TCHAR) * 8);
+            GetWindowText(GetDlgItem(hwnd_about, ABOUT_LABEL_AUTHOR_EMAIL), str + 7, bufsize - 7);
+            str[bufsize - 1] = 0;
+            ShellExecute(NULL, TEXT("open"), str, NULL, NULL, SW_SHOWNORMAL);
+            break;
+        }
+
+        break;
+    }
+    case WM_MOUSEMOVE:  // Отслеживаем перемещения мыши
+    {
+        int xPos = GET_X_LPARAM(lParam);
+        int yPos = GET_Y_LPARAM(lParam);
+
+        RECT r;
+        memset(&r, 0, sizeof(RECT));
+
+        // Вдруг это веб-сайт проекта?
+        GetWindowRect(GetDlgItem(hwnd_about, ABOUT_LABEL_SITE), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            SetCursor(LoadCursor(NULL, IDC_HAND));
+            break;
+        }
+
+        // Или сайт с лицензией?
+        GetWindowRect(GetDlgItem(hwnd_about, ABOUT_LABEL_GPL3), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            SetCursor(LoadCursor(NULL, IDC_HAND));
+            break;
+        }
+
+        // email
+        GetWindowRect(GetDlgItem(hwnd_about, ABOUT_LABEL_AUTHOR_EMAIL), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            SetCursor(LoadCursor(NULL, IDC_HAND));
+            break;
+        }
+
+        // Ну иначе дефолтный курсор пусть будет
+        SetCursor(LoadCursor(NULL, IDC_ARROW));
+        break;
+    }
+    case WM_CTLCOLORSTATIC: // Задаем цвета шрифтов для label'ов
+    {
+        HDC hdc = (HDC)wParam;
+        int CtrlID = GetDlgCtrlID((HWND)lParam);
+        if(CtrlID == ABOUT_LABEL_SITE || CtrlID == ABOUT_LABEL_GPL3 || CtrlID == ABOUT_LABEL_AUTHOR_EMAIL)
+            SetTextColor(hdc, RGB(0, 0, 255));
+        else
+            SetTextColor(hdc, RGB(0, 0, 0));
+        SetBkMode(hdc, TRANSPARENT);
+        return (LRESULT)GetStockObject(NULL_BRUSH);
+    }
     default:
         return DefWindowProc(hWnd, Msg, wParam, lParam);
     }
@@ -809,6 +1028,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
 
     // Разное
     bool use_arg = u_strlen(lpCmdLine) > 2 ? true : false;
+
+    // Зарегистрируем класс основного окна
     WNDCLASS wnd;
     memset(&wnd, 0, sizeof(WNDCLASS));
     wnd.style = CS_HREDRAW | CS_VREDRAW;
@@ -818,6 +1039,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     wnd.lpszClassName = TEXT("mainwindow");
     wnd.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
     RegisterClass(&wnd);
+
+    // А также зарегистрируем класс окна About
+    WNDCLASS wnd_about;
+    memset(&wnd_about, 0, sizeof(WNDCLASS));
+    wnd_about.style = CS_HREDRAW | CS_VREDRAW;
+    wnd_about.lpfnWndProc = WndProcAbout;
+    wnd_about.hInstance = hInstance;
+    wnd_about.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wnd_about.lpszClassName = TEXT("aboutwindow");
+    wnd_about.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
+    RegisterClass(&wnd_about);
 
     // Установка минимальных размеров окна
     config::min_height = 500 + 2 * GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION);
@@ -835,6 +1067,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                 window_width, window_height,
                 NULL, NULL, hInstance, NULL
                 );
+    ReleaseDC(NULL, hDCScreen);
 
     // Замутим меню
     menu::hMenu = CreateMenu();
@@ -978,21 +1211,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                 hwnd, (HMENU)CONTROL_PAINT_WIDGET, hInstance, NULL
                 );
 
-    // Шрифт
-    HFONT font_std = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-    SendDlgItemMessage(hwnd, CONTROL_PAINT_WIDGET, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_CHECKBOX_COLOR, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_COMBOBOX_COLOR, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_CHECKBOX_ISOLINES, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_SPINBOX_ISOLINES_TEXT, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_SPINBOX_ISOLINES_UPDOWN, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_CHECKBOX_VECTORS, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_SPINBOX_VECTORS_TEXT, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_SPINBOX_VECTORS_UPDOWN, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_LABEL_VECTORS_U, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_COMBOBOX_VECTORS_U, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_LABEL_VECTORS_V, WM_SETFONT, (WPARAM)font_std, TRUE);
-    SendDlgItemMessage(hwnd, CONTROL_COMBOBOX_VECTORS_V, WM_SETFONT, (WPARAM)font_std, TRUE);
+    // Обычный шрифт
+    fonts::font_std = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    // Жирный шрифт
+    LOGFONT lf;
+    memset(&lf, 0, sizeof(LOGFONT));
+    GetObject(fonts::font_std, sizeof(LOGFONT), &lf);
+    lf.lfWeight = FW_BOLD;
+    fonts::font_bold = CreateFontIndirect(&lf);
+    // Подчеркнутый шрифт
+    memset(&lf, 0, sizeof(LOGFONT));
+    GetObject(fonts::font_std, sizeof(LOGFONT), &lf);
+    lf.lfUnderline = TRUE;
+    fonts::font_link = CreateFontIndirect(&lf);
+
+    // Шрифты
+    SendDlgItemMessage(hwnd, CONTROL_PAINT_WIDGET, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_CHECKBOX_COLOR, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_COMBOBOX_COLOR, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_CHECKBOX_ISOLINES, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_SPINBOX_ISOLINES_TEXT, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_SPINBOX_ISOLINES_UPDOWN, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_CHECKBOX_VECTORS, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_SPINBOX_VECTORS_TEXT, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_SPINBOX_VECTORS_UPDOWN, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_LABEL_VECTORS_U, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_COMBOBOX_VECTORS_U, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_LABEL_VECTORS_V, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd, CONTROL_COMBOBOX_VECTORS_V, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
 
     // Зададим умолчательные параметры
     SendMessage(GetDlgItem(hwnd, CONTROL_CHECKBOX_COLOR), BM_SETCHECK, BST_CHECKED, 0);
@@ -1029,5 +1275,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         }
     }
 
+    DeleteObject(fonts::font_bold);
+    DeleteObject(fonts::font_link);
     return 0;
 }
