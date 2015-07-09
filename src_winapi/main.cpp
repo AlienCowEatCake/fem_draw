@@ -6,6 +6,10 @@
 // http://www.jonolick.com/code.html
 #include "libs/jo_images.h"
 
+#if !defined IDC_HAND
+#define IDC_HAND MAKEINTRESOURCE(32649)
+#endif
+
 HWND hwnd;
 HWND hwnd_about;
 HBITMAP hbmp_logo = NULL;
@@ -505,18 +509,20 @@ void on_actionAbout_FEM_Draw_triggered()
         // Загрузим картинку
         hbmp_logo = LoadBitmap(hInstance, MAKEINTRESOURCE(IDI_LOGO64));
         // Создадим маску для прозрачности
-        HDC hdcMem, hdcMem2;
+        HDC hdcMem1, hdcMem2;
         BITMAP bm;
         GetObject(hbmp_logo, sizeof(BITMAP), &bm);
         hbmp_mask = CreateBitmap(bm.bmWidth, bm.bmHeight, 1, 1, NULL);
-        hdcMem = CreateCompatibleDC(0);
+        hdcMem1 = CreateCompatibleDC(0);
         hdcMem2 = CreateCompatibleDC(0);
-        SelectBitmap(hdcMem, hbmp_logo);
-        SelectBitmap(hdcMem2, hbmp_mask);
-        SetBkColor(hdcMem, RGB(255, 0, 255));
-        BitBlt(hdcMem2, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
-        BitBlt(hdcMem, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem2, 0, 0, SRCINVERT);
-        DeleteDC(hdcMem);
+        HGDIOBJ obj1 = SelectObject(hdcMem1, hbmp_logo);
+        HGDIOBJ obj2 = SelectObject(hdcMem2, hbmp_mask);
+        SetBkColor(hdcMem1, RGB(255, 0, 255));
+        BitBlt(hdcMem2, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem1, 0, 0, SRCCOPY);
+        BitBlt(hdcMem1, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem2, 0, 0, SRCINVERT);
+        SelectObject(hdcMem1, obj1);
+        SelectObject(hdcMem2, obj2);
+        DeleteDC(hdcMem1);
         DeleteDC(hdcMem2);
     }
     // И создадим label, на котором будем рисовать лого
