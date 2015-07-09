@@ -8,6 +8,7 @@ TARGET = fem_draw_winapi
 TEMPLATE = app
 CONFIG -= app_bundle
 CONFIG -= qt
+CONFIG -= embed_manifest_exe
 CONFIG += warn_on
 
 INCLUDEPATH += src_winapi
@@ -31,9 +32,9 @@ HEADERS += \
 RC_FILE += src_winapi/resources.rc
 
 win32-g++* {
-    QMAKE_LIBS += -lgdi32 -lcomctl32 -luser32 -lcomdlg32
+    QMAKE_LIBS += -lgdi32 -lcomctl32 -luser32 -lcomdlg32 -lshell32
 } else {
-    QMAKE_LIBS += gdi32.lib comctl32.lib user32.lib comdlg32.lib
+    QMAKE_LIBS += gdi32.lib comctl32.lib user32.lib comdlg32.lib shell32.lib
 }
 
 *g++*|*clang* {

@@ -483,8 +483,10 @@ void on_actionMemory_Limit_triggered()
 void on_actionAbout_FEM_Draw_triggered()
 {
     // Создадим окно
-    int about_width = 350 + 2 * GetSystemMetrics(SM_CXFRAME);
-    int about_height = 156 + 2 * GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION);
+    RECT rw = { 0, 0, 360, 166 };
+    AdjustWindowRect(&rw, WS_DLGFRAME, FALSE);
+    int about_width = rw.right - rw.left;
+    int about_height = rw.bottom - rw.top + GetSystemMetrics(SM_CYCAPTION);
     HDC hDCScreen = GetDC(NULL);
     HINSTANCE hInstance = (HINSTANCE)GetModuleHandle(NULL);
     hwnd_about = CreateWindow(
@@ -1105,12 +1107,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     RegisterClass(&wnd_about);
 
     // Установка минимальных размеров окна
-    config::min_height = 500 + 2 * GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION);
-    config::min_width = 640 + 2 * GetSystemMetrics(SM_CXFRAME);
+    RECT rw = { 0, 0, 640, 500 };
+    AdjustWindowRect(&rw, WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX, FALSE);
+    config::min_width = rw.right - rw.left;
+    config::min_height = rw.bottom - rw.top;
 
     // Начинаем создавать главное окно
-    int window_width = 640 + 2 * GetSystemMetrics(SM_CXFRAME);
-    int window_height = 570 + 2 * GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION);
+    int window_width = config::min_width;
+    int window_height = config::min_height + 70;
     HDC hDCScreen = GetDC(NULL);
     hwnd = CreateWindow(
                 TEXT("mainwindow"), TEXT("FEM Draw"),
