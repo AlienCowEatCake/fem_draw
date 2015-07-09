@@ -24,7 +24,7 @@ cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG 
 @if not exist "paintwidget.cpp.obj" goto err
 rc /nologo /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /fo resources.res ../src_winapi/resources.rc
 @if not exist "resources.res" goto err
-link /NOLOGO /SUBSYSTEM:WINDOWS,5.01 main.cpp.obj paintwidget.cpp.obj resources.res lodepng.cpp.obj jo_jpeg.cpp.obj jo_gif.cpp.obj jo_tga.cpp.obj gdi32.lib comctl32.lib user32.lib comdlg32.lib /OUT:%V_PROJECT%.exe
+link /NOLOGO /SUBSYSTEM:WINDOWS,5.01 main.cpp.obj paintwidget.cpp.obj resources.res lodepng.cpp.obj jo_jpeg.cpp.obj jo_gif.cpp.obj jo_tga.cpp.obj gdi32.lib comctl32.lib user32.lib comdlg32.lib shell32.lib /OUT:%V_PROJECT%.exe
 @if not exist "%V_PROJECT%.exe" goto err
 copy %V_PROJECT%.exe ..\%V_PROJECT%.exe
 @goto end

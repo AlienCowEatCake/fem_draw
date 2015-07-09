@@ -1,8 +1,8 @@
 @echo off
 set V_PROJECT=fem_draw_winapi
-set V_BUILDDIR=build_winapi_msvc2013_x64
+set V_BUILDDIR=build_winapi_msvc2012_x64
 @echo on
-call "%PROGRAMFILES(x86)%\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" amd64
+call "%PROGRAMFILES(x86)%\Microsoft Visual Studio 11.0\VC\vcvarsall.bat" amd64
 @echo on
 
 cd "%~dp0"
@@ -10,17 +10,17 @@ cd ..
 rmdir /S /Q %V_BUILDDIR% 2>nul >nul
 mkdir %V_BUILDDIR%
 cd %V_BUILDDIR%
-cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\libs\lodepng.cpp /Fo:lodepng.cpp.obj
+cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\libs\lodepng.cpp /Folodepng.cpp.obj
 @if not exist "lodepng.cpp.obj" goto err
-cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\libs\jo_jpeg.cpp /Fo:jo_jpeg.cpp.obj
+cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\libs\jo_jpeg.cpp /Fojo_jpeg.cpp.obj
 @if not exist "jo_jpeg.cpp.obj" goto err
-cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\libs\jo_gif.cpp /Fo:jo_gif.cpp.obj
+cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\libs\jo_gif.cpp /Fojo_gif.cpp.obj
 @if not exist "jo_gif.cpp.obj" goto err
-cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\libs\jo_tga.cpp /Fo:jo_tga.cpp.obj
+cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\libs\jo_tga.cpp /Fojo_tga.cpp.obj
 @if not exist "jo_tga.cpp.obj" goto err
-cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\main.cpp /Fo:main.cpp.obj
+cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\main.cpp /Fomain.cpp.obj
 @if not exist "main.cpp.obj" goto err
-cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\paintwidget.cpp /Fo:paintwidget.cpp.obj
+cl /c /nologo /Ox /EHsc /W3 /MT /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /DNDEBUG ..\src_winapi\paintwidget.cpp /Fopaintwidget.cpp.obj
 @if not exist "paintwidget.cpp.obj" goto err
 rc /nologo /DUNICODE /D_UNICODE /DPSAPI_VERSION=1 /fo resources.res ../src_winapi/resources.rc
 @if not exist "resources.res" goto err
