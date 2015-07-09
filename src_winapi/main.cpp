@@ -592,7 +592,7 @@ void on_actionAbout_FEM_Draw_triggered()
     // Кнопка OK
     CreateWindow(
                 WC_BUTTON, TEXT("OK"),
-                WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
+                WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP,
                 138, 121, 77, 26,
                 hwnd_about, (HMENU)ABOUT_BUTTON_OK, hInstance, NULL
                 );
@@ -611,6 +611,7 @@ void on_actionAbout_FEM_Draw_triggered()
 
     ShowWindow(hwnd_about, SW_SHOWNORMAL);
     UpdateWindow(hwnd_about);
+    SetFocus(GetDlgItem(hwnd_about, ABOUT_BUTTON_OK));
 }
 
 // Событие при переключении закраски цветом
@@ -1333,8 +1334,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     {
         if(!haccel || !TranslateAccelerator(hwnd, haccel, &msg))
         {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            if(!IsDialogMessage(hwnd, &msg) && !IsDialogMessage(hwnd_about, &msg))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
         }
     }
 
