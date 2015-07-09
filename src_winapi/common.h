@@ -15,7 +15,6 @@
 #include <cwchar>
 
 typedef std::wstring        u_string;
-typedef std::wstringstream  u_stringstream;
 typedef std::wifstream      u_ifstream;
 
 inline size_t u_strlen(const wchar_t * str) { return wcslen(str); }
@@ -23,7 +22,6 @@ inline size_t u_strlen(const wchar_t * str) { return wcslen(str); }
 #else
 
 typedef std::string        u_string;
-typedef std::stringstream  u_stringstream;
 typedef std::ifstream      u_ifstream;
 
 inline size_t u_strlen(const char * str) { return strlen(str); }
