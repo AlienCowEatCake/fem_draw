@@ -483,15 +483,15 @@ void on_actionMemory_Limit_triggered()
 void on_actionAbout_FEM_Draw_triggered()
 {
     // Создадим окно
-    RECT rw = { 0, 0, 360, 166 };
-    AdjustWindowRect(&rw, WS_DLGFRAME, FALSE);
+    RECT rw = { 0, 0, 352, 158 };
+    AdjustWindowRect(&rw, WS_CAPTION | WS_SYSMENU, FALSE);
     int about_width = rw.right - rw.left;
-    int about_height = rw.bottom - rw.top + GetSystemMetrics(SM_CYCAPTION);
+    int about_height = rw.bottom - rw.top;
     HDC hDCScreen = GetDC(NULL);
     HINSTANCE hInstance = (HINSTANCE)GetModuleHandle(NULL);
     hwnd_about = CreateWindow(
                              TEXT("aboutwindow"), TEXT("About"),
-                             WS_DLGFRAME | WS_SYSMENU,
+                             WS_CAPTION | WS_SYSMENU,
                              (GetDeviceCaps(hDCScreen, HORZRES) - about_width) / 2,
                              (GetDeviceCaps(hDCScreen, VERTRES) - about_height) / 2,
                              about_width, about_height,
