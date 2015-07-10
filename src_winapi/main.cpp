@@ -11,7 +11,7 @@
 #endif
 
 HWND hwnd;
-HWND hwnd_about;
+HWND hwnd_about = NULL;
 HBITMAP hbmp_logo = NULL;
 HBITMAP hbmp_mask = NULL;
 HACCEL haccel;
@@ -609,6 +609,7 @@ void on_actionAbout_FEM_Draw_triggered()
     SendDlgItemMessage(hwnd_about, ABOUT_LABEL_AUTHOR_END, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
     SendDlgItemMessage(hwnd_about, ABOUT_BUTTON_OK, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
 
+    EnableWindow(hwnd, FALSE);
     ShowWindow(hwnd_about, SW_SHOWNORMAL);
     UpdateWindow(hwnd_about);
     SetFocus(GetDlgItem(hwnd_about, ABOUT_BUTTON_OK));
@@ -1050,6 +1051,14 @@ LRESULT CALLBACK WndProcAbout(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         ReleaseDC(hwnd_logo, hdc1);
         break;
     }
+    case WM_CLOSE:
+    {
+        EnableWindow(hwnd, TRUE);
+        SetFocus(hwnd);
+        DestroyWindow(hwnd_about);
+        hwnd_about = NULL;
+        break;
+    }
     default:
         return DefWindowProc(hWnd, Msg, wParam, lParam);
     }
@@ -1334,7 +1343,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     {
         if(!haccel || !TranslateAccelerator(hwnd, haccel, &msg))
         {
-            if(!IsDialogMessage(hwnd, &msg) && !IsDialogMessage(hwnd_about, &msg))
+            if(!IsDialogMessage(hwnd, &msg) && !(hwnd_about && IsDialogMessage(hwnd_about, &msg)))
             {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);

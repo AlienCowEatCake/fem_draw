@@ -809,15 +809,25 @@ void paintwidget::draw(HDC hdc_local)
     DeletePen(hAxisPen);
 
     // Подписи осей
-    HFONT hAxisFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    HFONT hAxisFont = CreateFont(
+                -MulDiv(10, GetDeviceCaps(hdc_local, LOGPIXELSY), 72), 0, 0, 0,
+                FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                VARIABLE_PITCH | FF_ROMAN, NULL);
     hOldFont = (HFONT)SelectObject(hdc_local, hAxisFont);
     to_window(0.99f, -0.04f + font_correct, x, y);
     TextOutA(hdc_local, x, y, label_x.c_str(), (int)label_x.length());
     to_window(-0.05f, 0.99f + font_correct, x, y);
     TextOutA(hdc_local, x, y, label_y.c_str(), (int)label_y.length());
     SelectObject(hdc_local, hOldFont);
+    DeleteObject(hAxisFont);
 
     // Отрисовка шкалы
+//    HFONT hGridFont = CreateFont(
+//                -MulDiv(8, GetDeviceCaps(hdc_local, LOGPIXELSY), 72), 6, 0, 0,
+//                FW_REGULAR, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+//                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+//                FIXED_PITCH | FF_MODERN, NULL);
     HFONT hGridFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
     hOldFont = (HFONT)SelectObject(hdc_local, hGridFont);
     for(size_t i = 0; i < num_ticks_x; i++)
