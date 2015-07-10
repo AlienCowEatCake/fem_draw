@@ -574,7 +574,7 @@ QPoint paintwidget::to_window(float x, float y) const
     // В OpenGL это был бы glOrtho
     const float gl_x0 = -0.06f;
     const float gl_y0 = -0.06f;
-    const float gl_x1 = use_legend ? 1.125f : 1.015f;
+    const float gl_x1 = use_legend ? 1.132f : 1.015f;
     const float gl_y1 = 1.02f;
     const float gl_hx = gl_x1 - gl_x0;
     const float gl_hy = gl_y1 - gl_y0;
@@ -905,7 +905,7 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
             static const float y0 = 0.0f;
             static const float dx = 0.0f;
             static const float dy = 0.07f;
-            static const float hx = 0.10f;
+            static const float hx = 0.107f;
             static const float hy = 0.073f;
             painter.setBrush(QBrush(legend_colors[i]));
             painter.setPen(QPen(legend_colors[i], 1));
