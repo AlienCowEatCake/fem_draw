@@ -91,7 +91,7 @@ void MainWindow::open_file(QString filename)
     if(!ui->widget->is_loaded)
     {
         this->setWindowTitle(trUtf8("FEM Draw"));
-        ui->widget->repaint();
+        ui->widget->invalidate();
         return;
     }
     // Ненене, еще не все готово!
@@ -145,7 +145,7 @@ void MainWindow::open_file(QString filename)
 
     // А вот теперь готово
     ui->widget->is_loaded = true;
-    ui->widget->repaint();
+    ui->widget->invalidate();
 }
 
 // Событие при открытии файла
@@ -239,7 +239,7 @@ void MainWindow::on_actionIncrease_Interpolation_triggered()
         size_t old_value = ui->widget->div_num;
         ui->widget->set_div_num(ui->widget->div_num + 1);
         if(ui->widget->div_num == old_value + 1)
-            ui->widget->repaint();
+            ui->widget->invalidate();
     }
 }
 
@@ -248,7 +248,7 @@ void MainWindow::on_actionDecrease_Interpolation_triggered()
     if(ui->widget->div_num > 0)
     {
         ui->widget->set_div_num(ui->widget->div_num - 1);
-        ui->widget->repaint();
+        ui->widget->invalidate();
     }
 }
 
@@ -256,7 +256,7 @@ void MainWindow::on_actionDecrease_Interpolation_triggered()
 void MainWindow::on_actionShow_Legend_triggered()
 {
     ui->widget->use_legend = ui->actionShow_Legend->isChecked();
-    ui->widget->repaint();
+    ui->widget->invalidate();
 }
 
 // Событие при переключении использования светлых цветов
@@ -264,7 +264,7 @@ void MainWindow::on_actionUse_Light_Colors_triggered()
 {
     ui->widget->use_light_colors = ui->actionUse_Light_Colors->isChecked();
     ui->widget->set_div_num(ui->widget->div_num);
-    ui->widget->repaint();
+    ui->widget->invalidate();
 }
 
 // Событие при переключении использования фиолетовых цветов
@@ -272,7 +272,7 @@ void MainWindow::on_actionUse_Purple_Colors_triggered()
 {
     ui->widget->use_purple = ui->actionUse_Purple_Colors->isChecked();
     ui->widget->set_div_num(ui->widget->div_num);
-    ui->widget->repaint();
+    ui->widget->invalidate();
 }
 
 // Событие при переключении использования ограничения памяти
@@ -303,7 +303,7 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
 void MainWindow::on_checkBox_Color_clicked()
 {
     ui->widget->draw_color = ui->checkBox_Color->isChecked();
-    ui->widget->repaint();
+    ui->widget->invalidate();
 }
 
 // Изменение переменной, которую выводим
@@ -313,7 +313,7 @@ void MainWindow::on_comboBox_Color_currentIndexChanged(int index)
     {
         ui->widget->draw_index = (size_t)index;
         if(ui->widget->draw_color || ui->widget->draw_isolines)
-            ui->widget->repaint();
+            ui->widget->invalidate();
     }
 }
 
@@ -321,7 +321,7 @@ void MainWindow::on_comboBox_Color_currentIndexChanged(int index)
 void MainWindow::on_checkBox_Isolines_clicked()
 {
     ui->widget->draw_isolines = ui->checkBox_Isolines->isChecked();
-    ui->widget->repaint();
+    ui->widget->invalidate();
 }
 
 // Событие при изменении числа изолиний
@@ -333,7 +333,7 @@ void MainWindow::on_spinBox_Isolines_valueChanged(int arg1)
         {
             ui->widget->set_isolines_num(arg1);
             if(ui->widget->draw_isolines)
-                ui->widget->repaint();
+                ui->widget->invalidate();
         }
     }
 }
@@ -342,7 +342,7 @@ void MainWindow::on_spinBox_Isolines_valueChanged(int arg1)
 void MainWindow::on_checkBox_Vectors_clicked()
 {
     ui->widget->draw_vectors = ui->checkBox_Vectors->isChecked();
-    ui->widget->repaint();
+    ui->widget->invalidate();
 }
 
 // Число рисуемых векторов
@@ -354,7 +354,7 @@ void MainWindow::on_spinBox_Vectors_valueChanged(int arg1)
         {
             ui->widget->skip_vec = (size_t)arg1;
             if(ui->widget->draw_vectors)
-                ui->widget->repaint();
+                ui->widget->invalidate();
         }
     }
 }
@@ -366,7 +366,7 @@ void MainWindow::on_comboBox_Vectors_U_currentIndexChanged(int index)
     {
         ui->widget->ind_vec_1 = (size_t)index;
         if(ui->widget->draw_vectors)
-            ui->widget->repaint();
+            ui->widget->invalidate();
     }
 }
 
@@ -377,7 +377,7 @@ void MainWindow::on_comboBox_Vectors_V_currentIndexChanged(int index)
     {
         ui->widget->ind_vec_2 = (size_t)index;
         if(ui->widget->draw_vectors)
-            ui->widget->repaint();
+            ui->widget->invalidate();
     }
 }
 

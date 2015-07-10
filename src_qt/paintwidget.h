@@ -5,6 +5,7 @@
 #include <QString>
 #include <QPoint>
 #include <QPaintDevice>
+#include <QImage>
 #include <set>
 #include <vector>
 #include <algorithm>
@@ -135,6 +136,9 @@ public:
     // Отрисовка сцены на QPaintDevice
     void draw(QPaintDevice * device, bool transparency);
 
+    // Перерисовать, сбросив валидность буфера
+    void invalidate();
+
     // Использовать ли фиолетовые оттенки цвета
     // Дает большую комбинацию оттенков, но приводит к
     // некоторому дисбалансу между красным и синим
@@ -187,6 +191,12 @@ private:
 
     // Вывести msgbox с ошибкой
     void print_io_error();
+
+    // Буфер изображения
+    QImage buffer;
+
+    // Валиден ли буфер изображения
+    bool buffer_valid;
 };
 
 #endif // PAINTWIDGET_H

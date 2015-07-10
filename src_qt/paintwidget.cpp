@@ -513,6 +513,8 @@ paintwidget::paintwidget(QWidget * parent) : QWidget(parent)
     use_legend = true;
     use_light_colors = true;
     use_memory_limit = true;
+
+    buffer_valid = false;
 }
 
 // Деструктор
@@ -582,10 +584,27 @@ QPoint paintwidget::to_window(float x, float y) const
     return QPoint(xl, yl);
 }
 
+// Перерисовать, сбросив валидность буфера
+void paintwidget::invalidate()
+{
+    buffer_valid = false;
+    repaint();
+}
+
 // Отрисовка сцены
 void paintwidget::paintEvent(QPaintEvent *)
 {
-    draw(this, false);
+    if(!buffer_valid || buffer.width() != width() || buffer.height() != height())
+    {
+        buffer = QImage(width(), height(), QImage::Format_RGB888);
+        draw(& buffer, false);
+        buffer_valid = true;
+    }
+    QPainter painter;
+    painter.begin(this);
+    painter.setViewport(0, 0, width(), height());
+    painter.drawImage(0, 0, buffer);
+    painter.end();
 }
 
 // Матрицы цветов для рисования легенды

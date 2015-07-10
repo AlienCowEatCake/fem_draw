@@ -112,7 +112,7 @@
      </rect>
     </property>
     <property name="toolTip">
-     <string>Number of skipped values</string>
+     <string>Draw vectors for every i value</string>
     </property>
    </widget>
    <widget class="QComboBox" name="comboBox_Vectors_U">

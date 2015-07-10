@@ -1230,8 +1230,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
                 hwnd, CONTROL_SPINBOX_VECTORS_UPDOWN, hInstance, GetDlgItem(hwnd, CONTROL_SPINBOX_VECTORS_TEXT),
                 config::vect_max, config::vect_min, config::vect_curr
                 );
-    set_tooltip(hInstance, hwnd, CONTROL_SPINBOX_VECTORS_TEXT, TEXT("Number of skipped values"));
-    set_tooltip(hInstance, hwnd, CONTROL_SPINBOX_VECTORS_UPDOWN, TEXT("Number of skipped values"));
+    set_tooltip(hInstance, hwnd, CONTROL_SPINBOX_VECTORS_TEXT, TEXT("Draw vectors for every i value"));
+    set_tooltip(hInstance, hwnd, CONTROL_SPINBOX_VECTORS_UPDOWN, TEXT("Draw vectors for every i value"));
 
     // Надпись "U:"
     CreateWindow(
