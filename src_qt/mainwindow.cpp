@@ -56,6 +56,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionUse_Light_Colors->setChecked(ui->widget->use_light_colors);
     ui->actionUse_Purple_Colors->setChecked(ui->widget->use_purple);
     ui->actionMemory_Limit->setChecked(ui->widget->use_memory_limit);
+
+    // Разрешим обработку drag-and-drop
+    setAcceptDrops(true);
 }
 
 // Деструктор
@@ -378,6 +381,45 @@ void MainWindow::on_comboBox_Vectors_V_currentIndexChanged(int index)
         ui->widget->ind_vec_2 = (size_t)index;
         if(ui->widget->draw_vectors)
             ui->widget->invalidate();
+    }
+}
+
+// Пришло drag-and-drop сообщение
+void MainWindow::dragEnterEvent(QDragEnterEvent* event)
+{
+    event->acceptProposedAction();
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent* event)
+{
+    event->acceptProposedAction();
+}
+
+void MainWindow::dragLeaveEvent(QDragLeaveEvent* event)
+{
+    event->accept();
+}
+
+void MainWindow::dropEvent(QDropEvent * event)
+{
+    const QMimeData* mime_data = event->mimeData();
+    if(mime_data->hasUrls())
+    {
+        QList<QUrl> url_list = mime_data->urls();
+        if(url_list.size() > 1)
+        {
+            QMessageBox msgBox;
+            msgBox.setAttribute(Qt::WA_QuitOnClose);
+            msgBox.setStandardButtons(QMessageBox::Ok);
+            msgBox.setDefaultButton(QMessageBox::Ok);
+            msgBox.setWindowTitle(trUtf8("Error"));
+            msgBox.setText(trUtf8("Error: You can open only one file simultaneously!"));
+            msgBox.setIcon(QMessageBox::Critical);
+            msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+            msgBox.exec();
+        }
+        else
+            open_file(url_list.at(0).toLocalFile());
     }
 }
 

@@ -1,6 +1,7 @@
 #include "paintwidget.h"
 #include "resources.h"
 #include <commctrl.h>
+#include <shellapi.h>
 // https://github.com/lvandeve/lodepng
 #include "libs/lodepng.h"
 // http://www.jonolick.com/code.html
@@ -755,6 +756,21 @@ void on_comboBox_Vectors_V_currentIndexChanged()
     }
 }
 
+// Пришло drag-and-drop сообщение
+void on_drop_event(HDROP hdrop)
+{
+    TCHAR filename[MAX_PATH];
+    DWORD count = DragQueryFile(hdrop, 0xFFFFFFFF, filename, MAX_PATH);
+    if(count != 1)
+        MessageBox(hwnd, TEXT("Error: You can open only one file simultaneously!"), TEXT("Error"), MB_OK | MB_ICONERROR);
+    else
+    {
+        DragQueryFile(hdrop, 0, filename, MAX_PATH);
+        open_file(filename);
+    }
+    DragFinish(hdrop);
+}
+
 // Обработка сообщений основного окна
 LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
@@ -765,100 +781,62 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         switch(LOWORD(wParam))
         {
         case CONTROL_MENU_OPEN: // Событие при открытии файла
-        {
             on_actionOpen_Tecplot_File_triggered();
             break;
-        }
         case CONTROL_MENU_TRANSPARENT: // Событие при переключении прозрачности
-        {
             on_actionTransparent_Image_triggered();
             break;
-        }
         case CONTROL_MENU_SAVE: // Событие при сохранении
-        {
             on_actionSave_Image_File_triggered();
             break;
-        }
         case CONTROL_MENU_EXIT: // Событие при нажатии кнопки Exit
-        {
             on_actionExit_triggered();
             break;
-        }
         case CONTROL_MENU_INCREASE_INTERPOLATION: // Событие при увеличении уровня интерполяции
-        {
             on_actionIncrease_Interpolation_triggered();
             break;
-        }
         case CONTROL_MENU_DECREASE_INTERPOLATION: // Событие при уменьшении уровня интерполяции
-        {
             on_actionDecrease_Interpolation_triggered();
             break;
-        }
         case CONTROL_MENU_USELEGEND: // Событие при переключении рисования легенды
-        {
             on_actionShow_Legend_triggered();
             break;
-        }
         case CONTROL_MENU_USELIGHTCOLORS: // Событие при переключении использования светлых цветов
-        {
             on_actionUse_Light_Colors_triggered();
             break;
-        }
         case CONTROL_MENU_USEPURPLE: // Событие при переключении использования фиолетовых цветов
-        {
             on_actionUse_Purple_Colors_triggered();
             break;
-        }
         case CONTROL_MENU_USEMEMORYLIMIT: // Событие при переключении использования ограничения памяти
-        {
             on_actionMemory_Limit_triggered();
             break;
-        }
         case CONTROL_MENU_ABOUT: // Событие при нажатии кнопки About
-        {
             on_actionAbout_FEM_Draw_triggered();
             break;
-        }
         case CONTROL_CHECKBOX_COLOR: // Событие при переключении закраски цветом
-        {
             on_checkBox_Color_clicked();
             break;
-        }
         case CONTROL_COMBOBOX_COLOR: // Изменение переменной, которую выводим
-        {
             on_comboBox_Color_currentIndexChanged();
             break;
-        }
         case CONTROL_CHECKBOX_ISOLINES: // Событие при переключении рисования изолиний
-        {
             on_checkBox_Isolines_clicked();
             break;
-        }
         case CONTROL_SPINBOX_ISOLINES_TEXT: // Событие при изменении числа изолиний
-        {
             on_spinBox_Isolines_valueChanged();
             break;
-        }
         case CONTROL_CHECKBOX_VECTORS: // Переключение рисовки векторов
-        {
             on_checkBox_Vectors_clicked();
             break;
-        }
         case CONTROL_SPINBOX_VECTORS_TEXT: // Число рисуемых векторов
-        {
             on_spinBox_Vectors_valueChanged();
             break;
-        }
         case CONTROL_COMBOBOX_VECTORS_U: // Первая переменная вектора
-        {
             on_comboBox_Vectors_U_currentIndexChanged();
             break;
-        }
         case CONTROL_COMBOBOX_VECTORS_V: // Вторая переменная вектора
-        {
             on_comboBox_Vectors_V_currentIndexChanged();
             break;
-        }
         }
         break;
     }
@@ -894,10 +872,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         break;
     }
     case WM_SETCURSOR:  // Устанавливаем курсоры
-    {
         SetCursor(LoadCursor(NULL, IDC_ARROW));
         break;
-    }
     case WM_PAINT:
     case WM_PRINT:
     case WM_PRINTCLIENT:
@@ -910,6 +886,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         break;
     case WM_DESTROY:    // Закрытие окна
         PostQuitMessage(0);
+        break;
+    case WM_DROPFILES:  // Пришло drag-and-drop сообщение
+        on_drop_event((HDROP)wParam);
         break;
     default:
         return DefWindowProc(hWnd, Msg, wParam, lParam);
@@ -1334,6 +1313,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         }
         open_file(cmd_real);
     }
+
+    // Разрешим обработку drag-and-drop
+    DragAcceptFiles(hwnd, TRUE);
 
     // Покажем окно и запустим обработчик сообщений
     ShowWindow(hwnd, nCmdShow);

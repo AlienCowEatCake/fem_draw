@@ -7,6 +7,13 @@
 #include <QImage>
 #include <QMessageBox>
 #include <QImageWriter>
+#include <QDragEnterEvent>
+#include <QDragLeaveEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QMimeData>
+#include <QUrl>
+
 #include "paintwidget.h"
 
 namespace Ui {
@@ -25,6 +32,11 @@ public:
     void resizeEvent(QResizeEvent *event);
     // Открытие файла по имени
     void open_file(QString filename);
+    // Пришло drag-and-drop сообщение
+    void dragEnterEvent(QDragEnterEvent * event);
+    void dragMoveEvent(QDragMoveEvent * event);
+    void dragLeaveEvent(QDragLeaveEvent * event);
+    void dropEvent(QDropEvent * event);
 private slots:
     // Событие при открытии файла
     void on_actionOpen_Tecplot_File_triggered();
