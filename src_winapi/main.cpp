@@ -871,9 +871,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         widget_redraw(is_valid);
         break;
     }
-    case WM_SETCURSOR:  // Устанавливаем курсоры
-        SetCursor(LoadCursor(NULL, IDC_ARROW));
+    case WM_MOUSEMOVE:  // Отслеживаем перемещения мыши, чтобы установить курсор
+    {
+        int xPos = GET_X_LPARAM(lParam);
+        int yPos = GET_Y_LPARAM(lParam);
+        RECT r;
+        memset(&r, 0, sizeof(RECT));
+        GetWindowRect(GetDlgItem(hwnd, CONTROL_PAINT_WIDGET), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+            SetCursor(LoadCursor(NULL, IDC_ARROW));
         break;
+    }
     case WM_PAINT:
     case WM_PRINT:
     case WM_PRINTCLIENT:
