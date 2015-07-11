@@ -761,13 +761,15 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
     painter.drawLine(to_window(-0.005f, 0.0f), to_window(1.005f, 0.0f));
 
     // Шрифты
-#if defined _WIN32
-    QFont fnt_mono("Courier", 8);
-#else
-    QFont fnt_mono("Courier", 9);
-#endif
-    QFont fnt_serif("Times", 10);
+    QFont fnt_mono("Courier");
     fnt_mono.setLetterSpacing(QFont::PercentageSpacing, 82);
+    int fnt_mono_h = height() / 45;
+    int fnt_mono_w = width() / 55;
+    fnt_mono.setPixelSize(fnt_mono_h < fnt_mono_w ? fnt_mono_h : fnt_mono_w);
+    QFont fnt_serif("Times");
+    int fnt_serif_h = height() / 40;
+    int fnt_serif_w = width() / 45;
+    fnt_serif.setPixelSize(fnt_serif_h < fnt_serif_w ? fnt_serif_h : fnt_serif_w);
     fnt_serif.setBold(true);
 
     // Подписи осей

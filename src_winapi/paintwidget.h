@@ -201,6 +201,9 @@ private:
 
     // Отрисовка сцены на HDC
     void draw(HDC hdc_local);
+
+    // Печать текста с заданным интервалом между символами
+    void TextOutSpacingA(HDC hdc, int x, int y, const char * str, size_t len, int spacing);
 };
 
 #endif // PAINTWIDGET_H

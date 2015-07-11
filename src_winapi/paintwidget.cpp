@@ -735,6 +735,16 @@ const COLORREF default_normal_legend_colors[14] =
     RGB( 255,   0,   0 )
 };
 
+// Печать текста с заданным интервалом между символами
+void paintwidget::TextOutSpacingA(HDC hdc, int x, int y, const char * str, size_t len, int spacing)
+{
+    for(size_t i = 0; i < len; i++)
+    {
+        TextOutA(hdc, x, y, str + i, 1);
+        x += spacing;
+    }
+}
+
 // Отрисовка сцены на HDC
 void paintwidget::draw(HDC hdc_local)
 {
@@ -752,14 +762,6 @@ void paintwidget::draw(HDC hdc_local)
     HFONT hOldFont;
     POINT tr[3];
 
-    // Узнаем размеры шрифта
-    HFONT hTestFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
-    hOldFont = (HFONT)SelectObject(hdc_local, hTestFont);
-    TEXTMETRIC tm;
-    GetTextMetrics(hdc_local, &tm);
-    SelectObject(hdc_local, hOldFont);
-    float font_correct = (float)tm.tmHeight / (float)height * 0.9f;
-
     // Заливка области белым цветом
     HPEN hAreaPen = (HPEN)GetStockObject(WHITE_PEN);
     hOldPen = (HPEN)SelectObject(hdc_local, hAreaPen);
@@ -771,6 +773,32 @@ void paintwidget::draw(HDC hdc_local)
     SetBkMode(hdc_local, TRANSPARENT);
 
     if(!is_loaded) return;
+
+    // Шрифты
+    float mono_stretch = 0.77f, serif_stretch = 0.9f;
+    int mono_shift = 6, serif_shift = 4;
+    int fnt_mono_h = (int)((float)height / 45.0f * mono_stretch) + mono_shift;
+    int fnt_mono_w = (int)((float)width / 55.0f * mono_stretch) + mono_shift;
+    HFONT fnt_mono = CreateFont(
+                (fnt_mono_h < fnt_mono_w ? fnt_mono_h : fnt_mono_w), 0, 0, 0,
+                FW_REGULAR, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                FIXED_PITCH | FF_MODERN, NULL);
+    int fnt_serif_h = (int)((float)height / 40.0f * serif_stretch) + serif_shift;
+    int fnt_serif_w = (int)((float)width / 45.0f * serif_stretch) + serif_shift;
+    HFONT fnt_serif = CreateFont(
+                (fnt_serif_h < fnt_serif_w ? fnt_serif_h : fnt_serif_w), 0, 0, 0,
+                FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                VARIABLE_PITCH | FF_ROMAN, NULL);
+
+    // Узнаем размеры шрифта
+    hOldFont = (HFONT)SelectObject(hdc_local, fnt_mono);
+    TEXTMETRIC tm;
+    GetTextMetrics(hdc_local, &tm);
+    SelectObject(hdc_local, hOldFont);
+    float font_correct = (float)tm.tmHeight / (float)height * 0.9f;
+    int mono_spacing = (int)((float)tm.tmAveCharWidth * 0.91f);
 
     // Координатная сетка
     HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(192, 192, 192));
@@ -809,27 +837,15 @@ void paintwidget::draw(HDC hdc_local)
     DeletePen(hAxisPen);
 
     // Подписи осей
-    HFONT hAxisFont = CreateFont(
-                -MulDiv(10, GetDeviceCaps(hdc_local, LOGPIXELSY), 72), 0, 0, 0,
-                FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                VARIABLE_PITCH | FF_ROMAN, NULL);
-    hOldFont = (HFONT)SelectObject(hdc_local, hAxisFont);
+    hOldFont = (HFONT)SelectObject(hdc_local, fnt_serif);
     to_window(0.99f, -0.04f + font_correct, x, y);
     TextOutA(hdc_local, x, y, label_x.c_str(), (int)label_x.length());
     to_window(-0.05f, 0.99f + font_correct, x, y);
     TextOutA(hdc_local, x, y, label_y.c_str(), (int)label_y.length());
     SelectObject(hdc_local, hOldFont);
-    DeleteObject(hAxisFont);
 
     // Отрисовка шкалы
-//    HFONT hGridFont = CreateFont(
-//                -MulDiv(8, GetDeviceCaps(hdc_local, LOGPIXELSY), 72), 6, 0, 0,
-//                FW_REGULAR, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-//                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-//                FIXED_PITCH | FF_MODERN, NULL);
-    HFONT hGridFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
-    hOldFont = (HFONT)SelectObject(hdc_local, hGridFont);
+    hOldFont = (HFONT)SelectObject(hdc_local, fnt_mono);
     for(size_t i = 0; i < num_ticks_x; i++)
     {
         float xd = (float)i / (float)num_ticks_x;
@@ -841,7 +857,7 @@ void paintwidget::draw(HDC hdc_local)
         sprintf(st, "%.6g", x_real);
 #endif
         to_window(xd - 0.01f, -0.04f + font_correct, x, y);
-        TextOutA(hdc_local, x, y, st, (int)strlen(st));
+        TextOutSpacingA(hdc_local, x, y, st, strlen(st), mono_spacing);
     }
     for(size_t i = 0; i < num_ticks_y; i++)
     {
@@ -854,7 +870,7 @@ void paintwidget::draw(HDC hdc_local)
         sprintf(st, "%.6g", y_real);
 #endif
         to_window(-0.052f, yd - 0.01f + font_correct, x, y);
-        TextOutA(hdc_local, x, y, st, (int)strlen(st));
+        TextOutSpacingA(hdc_local, x, y, st, strlen(st), mono_spacing);
     }
     SelectObject(hdc_local, hOldFont);
 
@@ -1006,8 +1022,7 @@ void paintwidget::draw(HDC hdc_local)
             DeleteBrush(hLegBrush);
 
             SetBkColor(hdc_local, legend_colors[i]);
-            HFONT hLegFont = (HFONT)GetStockObject(ANSI_VAR_FONT);
-            hOldFont = (HFONT)SelectObject(hdc_local, hLegFont);
+            hOldFont = (HFONT)SelectObject(hdc_local, fnt_mono);
             char st[17];
             int exponent  = (int)std::floor(std::log10(std::fabs(legend_values[i])));
             if(abs(exponent) < 0) exponent = 0;
@@ -1018,7 +1033,7 @@ void paintwidget::draw(HDC hdc_local)
             sprintf(st, "%.2fE%+03d", base, exponent);
 #endif
             to_window(x0 + dx * i + 0.004f, y0 + dy * i + hy / 2.0f - 0.01f + font_correct, x, y);
-            TextOutA(hdc_local, x, y, st, (int)strlen(st));
+            TextOutSpacingA(hdc_local, x, y, st, strlen(st), mono_spacing);
             SelectObject(hdc_local, hOldFont);
         }
         SetBkColor(hdc_local, RGB(255, 255, 255));
@@ -1056,4 +1071,7 @@ void paintwidget::draw(HDC hdc_local)
         SelectObject(hdc_local, hOldPen);
         SelectObject(hdc_local, hOldBrush);
     }
+
+    DeleteObject(fnt_serif);
+    DeleteObject(fnt_mono);
 }
