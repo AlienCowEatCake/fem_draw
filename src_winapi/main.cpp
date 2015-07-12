@@ -536,7 +536,7 @@ void on_actionAbout_FEM_Draw_triggered()
 
     // Надпись "FEM Draw <version_name> (WinAPI)"
     CreateWindow(
-                WC_STATIC, TEXT("FEM Draw v1.0 beta7 (WinAPI)"),
+                WC_STATIC, TEXT("FEM Draw v1.0 (WinAPI)"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
                 92, 10, 254, 15,
                 hwnd_about, (HMENU)ABOUT_LABEL_VERSION, hInstance, NULL
