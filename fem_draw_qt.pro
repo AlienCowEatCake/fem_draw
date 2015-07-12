@@ -28,10 +28,10 @@ HEADERS += \
 FORMS += \
     src_qt/mainwindow.ui
 
-RESOURCES += resources/icon.qrc
+RESOURCES += src_qt/icon.qrc
 
 win32 {
-    RC_FILE += resources/icon.rc
+    RC_FILE += src_qt/resources.rc
 }
 
 *g++*|*clang* {

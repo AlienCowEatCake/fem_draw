@@ -1007,8 +1007,8 @@ void paintwidget::draw(HDC hdc_local)
             static const float dx = 0.0f;
             static const float dy = 0.0702f;
             static const float hx = 0.109f;
-            static const float hy = 0.072f;
-            HPEN hLegPen = CreatePen(PS_SOLID, 1, legend_colors[i]);
+            static const float hy = 0.073f;
+            HPEN hLegPen = (HPEN)GetStockObject(NULL_PEN);
             hOldPen = (HPEN)SelectObject(hdc_local, hLegPen);
             HBRUSH hLegBrush;
             hLegBrush = CreateSolidBrush(legend_colors[i]);
@@ -1019,7 +1019,6 @@ void paintwidget::draw(HDC hdc_local)
             Rectangle(hdc_local, coords[0], coords[1], coords[2], coords[3]);
             SelectObject(hdc_local, hOldPen);
             SelectObject(hdc_local, hOldBrush);
-            DeleteObject(hLegPen);
             DeleteObject(hLegBrush);
 
             SetBkColor(hdc_local, legend_colors[i]);
@@ -1033,7 +1032,7 @@ void paintwidget::draw(HDC hdc_local)
 #else
             sprintf(st, "%.2fE%+03d", base, exponent);
 #endif
-            to_window(x0 + dx * i + 0.004f, y0 + dy * i + hy / 2.0f - 0.007f + font_correct, x, y);
+            to_window(x0 + dx * i + 0.005f, y0 + dy * i + hy / 2.0f - 0.007f + font_correct, x, y);
             TextOutSpacingA(hdc_local, x, y, st, strlen(st), mono_spacing);
             SelectObject(hdc_local, hOldFont);
         }

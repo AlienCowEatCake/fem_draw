@@ -564,7 +564,7 @@ void on_actionAbout_FEM_Draw_triggered()
                 );
     // Надпись "Copyright (c) ..."
     CreateWindow(
-                WC_STATIC, TEXT("Copyright (c) 2014 - 2015"),
+                WC_STATIC, TEXT("Copyright (c) 2014-2015"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
                 92, 80, 254, 15,
                 hwnd_about, (HMENU)ABOUT_LABEL_COPYRIGHT, hInstance, NULL

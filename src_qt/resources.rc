@@ -1,31 +1,16 @@
-#include "resources.h"
-
 IDI_ICON1 ICON DISCARDABLE "../resources/icon.ico"
-IDI_LOGO64 BITMAP DISCARDABLE "../resources/icon_64.bmp"
 
-APP_ACCELERATORS ACCELERATORS 
-BEGIN
-    0x4F, CONTROL_MENU_OPEN, VIRTKEY, CONTROL
-    0x53, CONTROL_MENU_SAVE, VIRTKEY, CONTROL
-    0x51, CONTROL_MENU_EXIT, VIRTKEY, CONTROL
-    VK_OEM_PLUS,  CONTROL_MENU_INCREASE_INTERPOLATION, VIRTKEY
-    VK_ADD,       CONTROL_MENU_INCREASE_INTERPOLATION, VIRTKEY
-    VK_OEM_MINUS, CONTROL_MENU_DECREASE_INTERPOLATION, VIRTKEY
-    VK_SUBTRACT,  CONTROL_MENU_DECREASE_INTERPOLATION, VIRTKEY
-END
-
-#define RT_MANIFEST 24
-1 RT_MANIFEST manifest.manifest
+#include <windows.h>
 
 #define VER_FILEVERSION             1,0,0,0
 #define VER_FILEVERSION_STR         "1.0.0.0\0"
 #define VER_PRODUCTVERSION          1,0,0,0
 #define VER_PRODUCTVERSION_STR      "1.0\0"
 #define VER_FILEDESCRIPTION_STR     "Tool for plot scalar and vector fields"
-#define VER_INTERNALNAME_STR        "fem_draw_winapi"
+#define VER_INTERNALNAME_STR        "fem_draw_qt"
 #define VER_LEGALCOPYRIGHT_STR      "Copyright (c) 2014-2015, Peter Zhigalov"
-#define VER_ORIGINALFILENAME_STR    "fem_draw_winapi.exe"
-#define VER_PRODUCTNAME_STR         "FEM Draw (WinAPI)"
+#define VER_ORIGINALFILENAME_STR    "fem_draw_qt.exe"
+#define VER_PRODUCTNAME_STR         "FEM Draw (Qt)"
 #define VER_COMPANYNAME_STR         "Peter Zhigalov <peter.zhigalov@gmail.com>"
 
 VS_VERSION_INFO VERSIONINFO
