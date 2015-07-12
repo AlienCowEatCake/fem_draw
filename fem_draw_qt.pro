@@ -28,7 +28,7 @@ HEADERS += \
 FORMS += \
     src_qt/mainwindow.ui
 
-RESOURCES += src_qt/icon.qrc
+RESOURCES += resources/icon.qrc
 
 win32 {
     RC_FILE += src_qt/resources.rc
