@@ -263,7 +263,7 @@ void paintwidget::set_div_num(size_t num)
         planned_size *= triangle_size;
 
         // Лимит по памяти - 1 GiB
-        if(planned_size >= 1024*1024*1024 && num != 0)
+        if(planned_size >= 1024*1024*1024 && num != 0 && num > this->div_num)
             return;
         else
             this->div_num = num;
