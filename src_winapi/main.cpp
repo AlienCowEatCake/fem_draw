@@ -543,7 +543,7 @@ void on_actionAbout_FEM_Draw_triggered()
                 );
     // Надпись с сайтом
     CreateWindow(
-                WC_STATIC, TEXT("http://fami-net.dlinkddns.com/gitlab/peter/fem_draw"),
+                WC_STATIC, TEXT("https://fami.codefreak.ru/gitlab/peter/fem_draw"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
                 92, 38, 254, 15,
                 hwnd_about, (HMENU)ABOUT_LABEL_SITE, hInstance, NULL

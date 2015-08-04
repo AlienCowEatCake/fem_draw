@@ -29,6 +29,7 @@ FORMS += \
     src_qt/mainwindow.ui
 
 RESOURCES += resources/icon.qrc
+QMAKE_RESOURCE_FLAGS += -threshold 0 -compress 9
 
 win32 {
     RC_FILE += src_qt/resources.rc

@@ -293,7 +293,7 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
     msgBox.setDefaultButton(QMessageBox::Ok);
     msgBox.setWindowTitle("About");
     msgBox.setText(trUtf8("<b>FEM Draw v1.0 (Qt)</b><br><br>"
-                          "<a href=\"http://fami-net.dlinkddns.com/gitlab/peter/fem_draw\">http://fami-net.dlinkddns.com/gitlab/peter/fem_draw</a><br>"
+                          "<a href=\"https://fami.codefreak.ru/gitlab/peter/fem_draw\">https://fami.codefreak.ru/gitlab/peter/fem_draw</a><br>"
                           "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
                           "Copyright &copy; 2014-2015<br>"
                           "Peter Zhigalov &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;"));
