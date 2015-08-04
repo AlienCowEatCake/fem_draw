@@ -6,15 +6,12 @@ set MINGW-CXX=g++
 set MINGW-WINDRES=windres
 set MINGW-STRIP=strip
 
-set PATH=%MINGWDIR%\bin;%WINDIR%;%WINDIR%\System32
-set INCLUDE=%MINGWDIR%\include
-set LIB=%MINGWDIR%\lib
-
-set CPLUS_INCLUDE_PATH=%INCLUDE%
-set C_INCLUDE_PATH=%INCLUDE%
-set LIBRARY_PATH=%LIB%
-set LD_LIBRARY_PATH=%LIB%
-set MINGW=%MINGWDIR%
+set PATH=%MINGWDIR%\bin;%MINGWDIR%\libexec\gcc\mingw32\3.4.2;%WINDIR%;%WINDIR%\System32
+set CPLUS_INCLUDE_PATH=%MINGWDIR%\include\c++
+set C_INCLUDE_PATH=%MINGWDIR%\include;%MINGWDIR%\lib\gcc\mingw32\3.4.2\include
+set INCLUDE=%CPLUS_INCLUDE_PATH%;%C_INCLUDE_PATH%
+set LIBRARY_PATH=%MINGWDIR%\lib;%MINGWDIR%\lib\gcc\mingw32\3.4.2
+set LIB=%LIBRARY_PATH%
 @echo on
 
 cd "%~dp0"

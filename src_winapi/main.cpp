@@ -488,7 +488,7 @@ void on_actionMemory_Limit_triggered()
 void on_actionAbout_FEM_Draw_triggered()
 {
     // Создадим окно
-    RECT rw = { 0, 0, 352, 158 };
+    RECT rw = { 0, 0, 331, 158 };
     AdjustWindowRect(&rw, WS_CAPTION | WS_SYSMENU, FALSE);
     int about_width = rw.right - rw.left;
     int about_height = rw.bottom - rw.top;

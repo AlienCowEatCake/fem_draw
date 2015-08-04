@@ -7,14 +7,6 @@ set MINGW-WINDRES=windres
 set MINGW-STRIP=strip
 
 set PATH=%MINGWDIR%\bin;%WINDIR%;%WINDIR%\System32
-set INCLUDE=%MINGWDIR%\include
-set LIB=%MINGWDIR%\lib
-
-set CPLUS_INCLUDE_PATH=%INCLUDE%
-set C_INCLUDE_PATH=%INCLUDE%
-set LIBRARY_PATH=%LIB%
-set LD_LIBRARY_PATH=%LIB%
-set MINGW=%MINGWDIR%
 @echo on
 
 cd "%~dp0"
