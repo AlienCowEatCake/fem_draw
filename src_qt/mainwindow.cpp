@@ -243,6 +243,30 @@ void MainWindow::on_actionIncrease_Interpolation_triggered()
         ui->widget->set_div_num(ui->widget->div_num + 1);
         if(ui->widget->div_num == old_value + 1)
             ui->widget->invalidate();
+        else
+        {
+            QMessageBox msgBox;
+            msgBox.setAttribute(Qt::WA_QuitOnClose);
+            msgBox.setStandardButtons(QMessageBox::Ok);
+            msgBox.setDefaultButton(QMessageBox::Ok);
+            msgBox.setWindowTitle(trUtf8("Error"));
+            msgBox.setText(trUtf8("Error: Memory limit exceeded"));
+            msgBox.setIcon(QMessageBox::Critical);
+            msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+            msgBox.exec();
+        }
+    }
+    else
+    {
+        QMessageBox msgBox;
+        msgBox.setAttribute(Qt::WA_QuitOnClose);
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.setDefaultButton(QMessageBox::Ok);
+        msgBox.setWindowTitle(trUtf8("Error"));
+        msgBox.setText(trUtf8("Error: More than 7x interpolation is not supported"));
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+        msgBox.exec();
     }
 }
 

@@ -402,7 +402,11 @@ void on_actionIncrease_Interpolation_triggered()
         pdraw->set_div_num(pdraw->div_num + 1);
         if(pdraw->div_num == old_value + 1)
             widget_redraw(false);
+        else
+            MessageBox(hwnd, TEXT("Error: Memory limit exceeded"), TEXT("Error"), MB_OK | MB_ICONERROR);
     }
+    else
+        MessageBox(hwnd, TEXT("Error: More than 7x interpolation is not supported"), TEXT("Error"), MB_OK | MB_ICONERROR);
 }
 
 // Событие при уменьшении уровня интерполяции
