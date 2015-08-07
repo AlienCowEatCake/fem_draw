@@ -2,7 +2,7 @@
 set V_PROJECT=fem_draw_qt
 set QTDIR=C:\Qt\qt4.4.3-mingw342-static
 set MINGWDIR=C:\Qt\MinGW-3.4.2
-set V_BUILDDIR=build_win_qt4.4.3_legacy
+set V_BUILDDIR=build_win_qt4.4.3_mingw342
 
 set PATH=%QTDIR%\bin;%MINGWDIR%\bin;%MINGWDIR%\libexec\gcc\mingw32\3.4.2;%WINDIR%;%WINDIR%\System32
 set CPLUS_INCLUDE_PATH=%MINGWDIR%\include\c++
