@@ -1,8 +1,8 @@
 @echo off
 set V_PROJECT=fem_draw_winapi
-set V_BUILDDIR=build_winapi_msvc2003_ansi
+set V_BUILDDIR=build_winapi_msvc2005_ansi
 @echo on
-call "%VS71COMNTOOLS%\vsvars32.bat"
+call "%VS80COMNTOOLS%\vsvars32.bat"
 @echo on
 
 cd "%~dp0"

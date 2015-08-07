@@ -26,7 +26,7 @@ END
 #define VER_LEGALCOPYRIGHT_STR      "Copyright (c) 2014-2015, Peter Zhigalov"
 #define VER_ORIGINALFILENAME_STR    "fem_draw_winapi.exe"
 #define VER_PRODUCTNAME_STR         "FEM Draw (WinAPI)"
-#define VER_COMPANYNAME_STR         "Peter Zhigalov <peter.zhigalov@gmail.com>"
+#define VER_COMPANYNAME_STR         "Peter Zhigalov"
 
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION     VER_FILEVERSION

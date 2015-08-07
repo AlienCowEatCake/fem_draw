@@ -36,7 +36,7 @@ cd %V_BUILDDIR%
 %MINGW-CXX% -O3 -Wall -Wextra main.cpp.o paintwidget.cpp.o resources.rc.o lodepng.cpp.o jo_jpeg.cpp.o jo_gif.cpp.o jo_tga.cpp.o -lgdi32 -lcomctl32 -luser32 -lcomdlg32 -lshell32 -mwindows -o %V_PROJECT%.exe
 @if not exist "%V_PROJECT%.exe" goto err
 strip --strip-all %V_PROJECT%.exe
-copy %V_PROJECT%.exe ..\%V_PROJECT%.exe
+copy %V_PROJECT%.exe ..\%V_PROJECT%_unicode.exe
 @goto end
 
 :err
