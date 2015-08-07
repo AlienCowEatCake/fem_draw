@@ -13,6 +13,7 @@
 
 HWND hwnd;
 HWND hwnd_about = NULL;
+HWND hwnd_about_libs = NULL;
 HBITMAP hbmp_logo = NULL;
 HBITMAP hbmp_mask = NULL;
 HACCEL haccel;
@@ -488,6 +489,33 @@ void on_actionMemory_Limit_triggered()
     }
 }
 
+// Загрузка логотипа для окон About и About Libraries
+void load_hbmp_logo()
+{
+    // Если еще не загрузили
+    if(!hbmp_logo)
+    {
+        // Загрузим картинку
+        hbmp_logo = LoadBitmap((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_LOGO64));
+        // Создадим маску для прозрачности
+        HDC hdcMem1, hdcMem2;
+        BITMAP bm;
+        GetObject(hbmp_logo, sizeof(BITMAP), &bm);
+        hbmp_mask = CreateBitmap(bm.bmWidth, bm.bmHeight, 1, 1, NULL);
+        hdcMem1 = CreateCompatibleDC(0);
+        hdcMem2 = CreateCompatibleDC(0);
+        HGDIOBJ obj1 = SelectObject(hdcMem1, hbmp_logo);
+        HGDIOBJ obj2 = SelectObject(hdcMem2, hbmp_mask);
+        SetBkColor(hdcMem1, RGB(255, 0, 255));
+        BitBlt(hdcMem2, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem1, 0, 0, SRCCOPY);
+        BitBlt(hdcMem1, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem2, 0, 0, SRCINVERT);
+        SelectObject(hdcMem1, obj1);
+        SelectObject(hdcMem2, obj2);
+        DeleteDC(hdcMem1);
+        DeleteDC(hdcMem2);
+    }
+}
+
 // Событие при нажатии кнопки About
 void on_actionAbout_FEM_Draw_triggered()
 {
@@ -508,28 +536,8 @@ void on_actionAbout_FEM_Draw_triggered()
                              );
     ReleaseDC(NULL, hDCScreen);
 
-    // Если еще не загрузили
-    if(!hbmp_logo)
-    {
-        // Загрузим картинку
-        hbmp_logo = LoadBitmap(hInstance, MAKEINTRESOURCE(IDI_LOGO64));
-        // Создадим маску для прозрачности
-        HDC hdcMem1, hdcMem2;
-        BITMAP bm;
-        GetObject(hbmp_logo, sizeof(BITMAP), &bm);
-        hbmp_mask = CreateBitmap(bm.bmWidth, bm.bmHeight, 1, 1, NULL);
-        hdcMem1 = CreateCompatibleDC(0);
-        hdcMem2 = CreateCompatibleDC(0);
-        HGDIOBJ obj1 = SelectObject(hdcMem1, hbmp_logo);
-        HGDIOBJ obj2 = SelectObject(hdcMem2, hbmp_mask);
-        SetBkColor(hdcMem1, RGB(255, 0, 255));
-        BitBlt(hdcMem2, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem1, 0, 0, SRCCOPY);
-        BitBlt(hdcMem1, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem2, 0, 0, SRCINVERT);
-        SelectObject(hdcMem1, obj1);
-        SelectObject(hdcMem2, obj2);
-        DeleteDC(hdcMem1);
-        DeleteDC(hdcMem2);
-    }
+    // Загрузим лого
+    load_hbmp_logo();
     // И создадим label, на котором будем рисовать лого
     CreateWindow(
                 WC_STATIC, NULL,
@@ -618,6 +626,254 @@ void on_actionAbout_FEM_Draw_triggered()
     ShowWindow(hwnd_about, SW_SHOWNORMAL);
     UpdateWindow(hwnd_about);
     SetFocus(GetDlgItem(hwnd_about, ABOUT_BUTTON_OK));
+}
+
+// Событие при нажатии кнопки About Libraries
+void on_actionAbout_Third_Party_Libraries_triggered()
+{
+    // Создадим окно
+    RECT rw = { 0, 0, 340, 302 };
+    AdjustWindowRect(&rw, WS_CAPTION | WS_SYSMENU, FALSE);
+    int about_width = rw.right - rw.left;
+    int about_height = rw.bottom - rw.top;
+    HDC hDCScreen = GetDC(NULL);
+    HINSTANCE hInstance = (HINSTANCE)GetModuleHandle(NULL);
+    hwnd_about_libs = CreateWindow(
+                                  TEXT("aboutlibswindow"), TEXT("About Third Party Libraries"),
+                                  WS_CAPTION | WS_SYSMENU,
+                                  (GetDeviceCaps(hDCScreen, HORZRES) - about_width) / 2,
+                                  (GetDeviceCaps(hDCScreen, VERTRES) - about_height) / 2,
+                                  about_width, about_height,
+                                  NULL, NULL, hInstance, NULL
+                                  );
+    ReleaseDC(NULL, hDCScreen);
+
+    // Загрузим лого
+    load_hbmp_logo();
+    // И создадим label, на котором будем рисовать лого
+    CreateWindow(
+                WC_STATIC, NULL,
+                WS_CHILD | WS_VISIBLE,
+                11, 11, 64, 64,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LOGO, hInstance, NULL
+                );
+
+    // Надпись "Third Party Libraries:"
+    CreateWindow(
+                WC_STATIC, TEXT("Third Party Libraries:"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 10, 254, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LIBS, hInstance, NULL
+                );
+    // Надпись "Library:"
+    CreateWindow(
+                WC_STATIC, TEXT("Library:"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 38, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LIB1, hInstance, NULL
+                );
+    // Надпись "LodePNG"
+    CreateWindow(
+                WC_STATIC, TEXT("LodePNG"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 38, 80, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LODEPNG, hInstance, NULL
+                );
+    // Надпись "License: "
+    CreateWindow(
+                WC_STATIC, TEXT("License: "),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 52, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LICENSE1, hInstance, NULL
+                );
+    // Надпись "zlib license"
+    CreateWindow(
+                WC_STATIC, TEXT("zlib license"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 52, 70, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_ZLIB, hInstance, NULL
+                );
+    // Надпись "Website: "
+    CreateWindow(
+                WC_STATIC, TEXT("Website: "),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 66, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_WEBSITE1, hInstance, NULL
+                );
+    // Надпись с сайтом LodePNG
+    CreateWindow(
+                WC_STATIC, TEXT("https://github.com/lvandeve/lodepng"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 66, 190, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_URL_PNG, hInstance, NULL
+                );
+    // Надпись "Library:"
+    CreateWindow(
+                WC_STATIC, TEXT("Library:"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 94, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LIB2, hInstance, NULL
+                );
+    // Надпись "Jon Olick JPEG Writer"
+    CreateWindow(
+                WC_STATIC, TEXT("Jon Olick JPEG Writer"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 94, 150, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_JPG, hInstance, NULL
+                );
+    // Надпись "License: "
+    CreateWindow(
+                WC_STATIC, TEXT("License: "),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 108, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LICENSE2, hInstance, NULL
+                );
+    // Надпись "public domain"
+    CreateWindow(
+                WC_STATIC, TEXT("public domain"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 108, 70, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LIC_JPG, hInstance, NULL
+                );
+    // Надпись "Website: "
+    CreateWindow(
+                WC_STATIC, TEXT("Website: "),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 122, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_WEBSITE2, hInstance, NULL
+                );
+    // Надпись с сайтом JO JPEG Writer
+    CreateWindow(
+                WC_STATIC, TEXT("http://www.jonolick.com/code.html"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 122, 190, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_URL_JPG, hInstance, NULL
+                );
+    // Надпись "Library:"
+    CreateWindow(
+                WC_STATIC, TEXT("Library:"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 150, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LIB3, hInstance, NULL
+                );
+    // Надпись "Jon Olick GIF Writer"
+    CreateWindow(
+                WC_STATIC, TEXT("Jon Olick GIF Writer"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 150, 150, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_GIF, hInstance, NULL
+                );
+    // Надпись "License: "
+    CreateWindow(
+                WC_STATIC, TEXT("License: "),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 164, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LICENSE3, hInstance, NULL
+                );
+    // Надпись "public domain"
+    CreateWindow(
+                WC_STATIC, TEXT("public domain"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 164, 70, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LIC_GIF, hInstance, NULL
+                );
+    // Надпись "Website: "
+    CreateWindow(
+                WC_STATIC, TEXT("Website: "),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 178, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_WEBSITE3, hInstance, NULL
+                );
+    // Надпись с сайтом JO GIF Writer
+    CreateWindow(
+                WC_STATIC, TEXT("http://www.jonolick.com/code.html"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 178, 190, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_URL_GIF, hInstance, NULL
+                );
+    // Надпись "Library:"
+    CreateWindow(
+                WC_STATIC, TEXT("Library:"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 206, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LIB4, hInstance, NULL
+                );
+    // Надпись "Jon Olick TGA Writer"
+    CreateWindow(
+                WC_STATIC, TEXT("Jon Olick TGA Writer"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 206, 150, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_TGA, hInstance, NULL
+                );
+    // Надпись "License: "
+    CreateWindow(
+                WC_STATIC, TEXT("License: "),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 220, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LICENSE4, hInstance, NULL
+                );
+    // Надпись "public domain"
+    CreateWindow(
+                WC_STATIC, TEXT("public domain"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 220, 70, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_LIC_TGA, hInstance, NULL
+                );
+    // Надпись "Website: "
+    CreateWindow(
+                WC_STATIC, TEXT("Website: "),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                92, 234, 52, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_WEBSITE4, hInstance, NULL
+                );
+    // Надпись с сайтом JO TGA Writer
+    CreateWindow(
+                WC_STATIC, TEXT("http://www.jonolick.com/code.html"),
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                145, 234, 190, 15,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_LABEL_URL_TGA, hInstance, NULL
+                );
+    // Кнопка OK
+    CreateWindow(
+                WC_BUTTON, TEXT("OK"),
+                WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP,
+                138, 265, 77, 26,
+                hwnd_about_libs, (HMENU)ABOUT_LIBS_BUTTON_OK, hInstance, NULL
+                );
+
+    // Шрифты
+    SendMessage(hwnd_about_libs, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LIBS, WM_SETFONT, (WPARAM)fonts::font_bold, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LIB1, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LODEPNG, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LICENSE1, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_ZLIB, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_WEBSITE1, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_PNG, WM_SETFONT, (WPARAM)fonts::font_link, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LIB2, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_JPG, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LICENSE2, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LIC_JPG, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_WEBSITE2, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_JPG, WM_SETFONT, (WPARAM)fonts::font_link, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LIB3, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_GIF, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LICENSE3, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LIC_GIF, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_WEBSITE3, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_GIF, WM_SETFONT, (WPARAM)fonts::font_link, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LIB4, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_TGA, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LICENSE4, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_LIC_TGA, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_WEBSITE4, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_TGA, WM_SETFONT, (WPARAM)fonts::font_link, TRUE);
+    SendDlgItemMessage(hwnd_about_libs, ABOUT_LIBS_BUTTON_OK, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+
+    EnableWindow(hwnd, FALSE);
+    ShowWindow(hwnd_about_libs, SW_SHOWNORMAL);
+    UpdateWindow(hwnd_about_libs);
+    SetFocus(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_BUTTON_OK));
 }
 
 // Событие при переключении закраски цветом
@@ -816,6 +1072,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             break;
         case CONTROL_MENU_ABOUT: // Событие при нажатии кнопки About
             on_actionAbout_FEM_Draw_triggered();
+            break;
+        case CONTROL_MENU_ABOUT_LIBS: // Событие при нажатии кнопки About Libraries
+            on_actionAbout_Third_Party_Libraries_triggered();
             break;
         case CONTROL_CHECKBOX_COLOR: // Событие при переключении закраски цветом
             on_checkBox_Color_clicked();
@@ -1057,6 +1316,169 @@ LRESULT CALLBACK WndProcAbout(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+// Обработка сообщений окна About Libraries
+LRESULT CALLBACK WndProcAboutLibs(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    switch(Msg)
+    {
+    case WM_COMMAND:    // Нажата кнопка
+    {
+        switch(LOWORD(wParam))
+        {
+        case ABOUT_LIBS_BUTTON_OK:
+        {
+            SendMessage(hwnd_about_libs, WM_CLOSE, 0, 0);
+            break;
+        }
+        }
+        break;
+    }
+    case WM_LBUTTONDOWN:    // Нажата кнопка мыши
+    {
+        int xPos = GET_X_LPARAM(lParam);
+        int yPos = GET_Y_LPARAM(lParam);
+        RECT r;
+        memset(&r, 0, sizeof(RECT));
+        // PNG
+        GetWindowRect(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_PNG), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            const size_t bufsize = 1024;
+            TCHAR str[bufsize];
+            GetWindowText(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_PNG), str, bufsize);
+            str[bufsize - 1] = 0;
+            ShellExecute(NULL, TEXT("open"), str, NULL, NULL, SW_SHOWNORMAL);
+            break;
+        }
+        // JPG
+        GetWindowRect(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_JPG), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            const size_t bufsize = 1024;
+            TCHAR str[bufsize];
+            GetWindowText(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_JPG), str, bufsize);
+            str[bufsize - 1] = 0;
+            ShellExecute(NULL, TEXT("open"), str, NULL, NULL, SW_SHOWNORMAL);
+            break;
+        }
+        // GIF
+        GetWindowRect(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_GIF), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            const size_t bufsize = 1024;
+            TCHAR str[bufsize];
+            GetWindowText(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_GIF), str, bufsize);
+            str[bufsize - 1] = 0;
+            ShellExecute(NULL, TEXT("open"), str, NULL, NULL, SW_SHOWNORMAL);
+            break;
+        }
+        // TGA
+        GetWindowRect(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_TGA), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            const size_t bufsize = 1024;
+            TCHAR str[bufsize];
+            GetWindowText(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_TGA), str, bufsize);
+            str[bufsize - 1] = 0;
+            ShellExecute(NULL, TEXT("open"), str, NULL, NULL, SW_SHOWNORMAL);
+            break;
+        }
+        break;
+    }
+    case WM_MOUSEMOVE:  // Отслеживаем перемещения мыши
+    {
+        int xPos = GET_X_LPARAM(lParam);
+        int yPos = GET_Y_LPARAM(lParam);
+        RECT r;
+        memset(&r, 0, sizeof(RECT));
+        // PNG
+        GetWindowRect(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_PNG), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            SetCursor(LoadCursor(NULL, IDC_HAND));
+            break;
+        }
+        // JPG
+        GetWindowRect(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_JPG), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            SetCursor(LoadCursor(NULL, IDC_HAND));
+            break;
+        }
+        // GIF
+        GetWindowRect(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_GIF), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            SetCursor(LoadCursor(NULL, IDC_HAND));
+            break;
+        }
+        // TGA
+        GetWindowRect(GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_URL_TGA), &r);
+        MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
+        if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
+        {
+            SetCursor(LoadCursor(NULL, IDC_HAND));
+            break;
+        }
+        // Ну иначе дефолтный курсор пусть будет
+        SetCursor(LoadCursor(NULL, IDC_ARROW));
+        break;
+    }
+    case WM_CTLCOLORSTATIC: // Задаем цвета шрифтов для label'ов
+    {
+        HDC hdc = (HDC)wParam;
+        int CtrlID = GetDlgCtrlID((HWND)lParam);
+        if(CtrlID == ABOUT_LIBS_LABEL_URL_PNG || CtrlID == ABOUT_LIBS_LABEL_URL_JPG ||
+           CtrlID == ABOUT_LIBS_LABEL_URL_GIF || CtrlID == ABOUT_LIBS_LABEL_URL_TGA)
+            SetTextColor(hdc, RGB(0, 0, 255));
+        else
+            SetTextColor(hdc, RGB(0, 0, 0));
+        SetBkMode(hdc, TRANSPARENT);
+        return (LRESULT)GetStockObject(NULL_BRUSH);
+    }
+    case WM_PAINT:
+    case WM_PRINT:
+    case WM_PRINTCLIENT:
+    {
+        DefWindowProc(hWnd, Msg, wParam, lParam);
+        // Рисуем логотип
+        PAINTSTRUCT ps;
+        HWND hwnd_logo = GetDlgItem(hwnd_about_libs, ABOUT_LIBS_LABEL_LOGO);
+        HDC hdc1 = BeginPaint(hwnd_logo, &ps);
+        HDC hdc2 = CreateCompatibleDC(hdc1);
+        BITMAP bmp;
+        GetObject(hbmp_logo, sizeof(bmp), &bmp);
+        HGDIOBJ oldhbmp = SelectObject(hdc2, hbmp_mask);
+        BitBlt(hdc1, 0, 0, bmp.bmWidth, bmp.bmHeight, hdc2, 0, 0, SRCAND);
+        SelectObject(hdc2, hbmp_logo);
+        BitBlt(hdc1, 0, 0, bmp.bmWidth, bmp.bmHeight, hdc2, 0, 0, SRCPAINT);
+        SelectObject(hdc2, oldhbmp);
+        DeleteDC(hdc2);
+        EndPaint(hwnd_logo, &ps);
+        ReleaseDC(hwnd_logo, hdc1);
+        break;
+    }
+    case WM_CLOSE:
+    {
+        EnableWindow(hwnd, TRUE);
+        SetFocus(hwnd);
+        DestroyWindow(hwnd_about_libs);
+        hwnd_about_libs = NULL;
+        break;
+    }
+    default:
+        return DefWindowProc(hWnd, Msg, wParam, lParam);
+    }
+    return 0;
+}
+
 // Функция, устанавливающая подсказки
 void set_tooltip(HINSTANCE hInstance, HWND hwnd, int item, LPTSTR text)
 {
@@ -1114,6 +1536,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     wnd_about.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
     RegisterClass(&wnd_about);
 
+    // А также зарегистрируем класс окна About Libraries
+    WNDCLASS wnd_about_libs;
+    memset(&wnd_about_libs, 0, sizeof(WNDCLASS));
+    wnd_about_libs.style = CS_HREDRAW | CS_VREDRAW;
+    wnd_about_libs.lpfnWndProc = WndProcAboutLibs;
+    wnd_about_libs.hInstance = hInstance;
+    wnd_about_libs.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wnd_about_libs.lpszClassName = TEXT("aboutlibswindow");
+    wnd_about_libs.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
+    RegisterClass(&wnd_about_libs);
+
     // Установка минимальных размеров окна
     RECT rw = { 0, 0, 640, 500 };
     AdjustWindowRect(&rw, WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX, FALSE);
@@ -1157,6 +1590,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     menu::hAboutMenu = CreatePopupMenu();
     AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT_PTR)menu::hAboutMenu, TEXT("About"));
     AppendMenu(menu::hAboutMenu, MF_STRING, CONTROL_MENU_ABOUT, TEXT("About FEM Draw"));
+    AppendMenu(menu::hAboutMenu, MF_STRING, CONTROL_MENU_ABOUT_LIBS, TEXT("About Third Party Libraries"));
     SetMenu(hwnd, menu::hMenu);
     haccel = LoadAccelerators(hInstance, TEXT("APP_ACCELERATORS"));
 
@@ -1338,7 +1772,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     {
         if(!haccel || !TranslateAccelerator(hwnd, haccel, &msg))
         {
-            if(!IsDialogMessage(hwnd, &msg) && !(hwnd_about && IsDialogMessage(hwnd_about, &msg)))
+            if(!IsDialogMessage(hwnd, &msg) &&
+               !(hwnd_about && IsDialogMessage(hwnd_about, &msg)) &&
+               !(hwnd_about_libs && IsDialogMessage(hwnd_about_libs, &msg)))
             {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);

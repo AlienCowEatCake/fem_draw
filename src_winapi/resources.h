@@ -28,6 +28,7 @@
 #define CONTROL_MENU_USEPURPLE              10021
 #define CONTROL_MENU_USEMEMORYLIMIT         10022
 #define CONTROL_MENU_ABOUT                  10023
+#define CONTROL_MENU_ABOUT_LIBS             10024
 #define ABOUT_LABEL_VERSION                 10100
 #define ABOUT_LABEL_SITE                    10101
 #define ABOUT_LABEL_LICENSE                 10102
@@ -38,6 +39,33 @@
 #define ABOUT_LABEL_AUTHOR_END              10107
 #define ABOUT_BUTTON_OK                     10108
 #define ABOUT_LABEL_LOGO                    10109
+#define ABOUT_LIBS_LABEL_LIBS               10200
+#define ABOUT_LIBS_LABEL_LIB1               10201
+#define ABOUT_LIBS_LABEL_LODEPNG            10202
+#define ABOUT_LIBS_LABEL_LICENSE1           10203
+#define ABOUT_LIBS_LABEL_ZLIB               10204
+#define ABOUT_LIBS_LABEL_WEBSITE1           10205
+#define ABOUT_LIBS_LABEL_URL_PNG            10206
+#define ABOUT_LIBS_LABEL_LIB2               10207
+#define ABOUT_LIBS_LABEL_JPG                10208
+#define ABOUT_LIBS_LABEL_LICENSE2           10209
+#define ABOUT_LIBS_LABEL_LIC_JPG            10210
+#define ABOUT_LIBS_LABEL_WEBSITE2           10211
+#define ABOUT_LIBS_LABEL_URL_JPG            10212
+#define ABOUT_LIBS_LABEL_LIB3               10213
+#define ABOUT_LIBS_LABEL_GIF                10214
+#define ABOUT_LIBS_LABEL_LICENSE3           10215
+#define ABOUT_LIBS_LABEL_LIC_GIF            10216
+#define ABOUT_LIBS_LABEL_WEBSITE3           10217
+#define ABOUT_LIBS_LABEL_URL_GIF            10218
+#define ABOUT_LIBS_LABEL_LIB4               10219
+#define ABOUT_LIBS_LABEL_TGA                10220
+#define ABOUT_LIBS_LABEL_LICENSE4           10221
+#define ABOUT_LIBS_LABEL_LIC_TGA            10222
+#define ABOUT_LIBS_LABEL_WEBSITE4           10223
+#define ABOUT_LIBS_LABEL_URL_TGA            10224
+#define ABOUT_LIBS_BUTTON_OK                10225
+#define ABOUT_LIBS_LABEL_LOGO               10226
 
 #include <windows.h>
 #include <commctrl.h>
