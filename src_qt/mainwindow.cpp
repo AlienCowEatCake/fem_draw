@@ -141,8 +141,10 @@ void MainWindow::open_file(QString filename)
         ui->spinBox_Vectors->setValue(ui->widget->vect_value);
 
     // Установим заголовок окна
-    QStringList path = filename.split('/');
-    QString label = path.last();
+    QString label = filename.split('/').last();
+#if defined _WIN32
+    label = label.split('\\').last();
+#endif
     label.append(trUtf8(" - FEM Draw"));
     this->setWindowTitle(label);
 
