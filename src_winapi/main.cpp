@@ -399,7 +399,7 @@ void on_actionExit_triggered()
 // Событие при увеличении уровня интерполяции
 void on_actionIncrease_Interpolation_triggered()
 {
-    if(pdraw->div_num < 7)
+    if(pdraw->div_num < 10)
     {
         size_t old_value = pdraw->div_num;
         pdraw->set_div_num(pdraw->div_num + 1);
@@ -409,7 +409,7 @@ void on_actionIncrease_Interpolation_triggered()
             MessageBox(hwnd, TEXT("Error: Memory limit exceeded"), TEXT("Error"), MB_OK | MB_ICONERROR);
     }
     else
-        MessageBox(hwnd, TEXT("Error: More than 7x interpolation is not supported"), TEXT("Error"), MB_OK | MB_ICONERROR);
+        MessageBox(hwnd, TEXT("Error: More than 10x interpolation is not supported"), TEXT("Error"), MB_OK | MB_ICONERROR);
 }
 
 // Событие при уменьшении уровня интерполяции

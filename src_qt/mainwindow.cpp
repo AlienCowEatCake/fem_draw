@@ -241,7 +241,7 @@ void MainWindow::on_actionExit_triggered()
 // Событие при изменении уровня интерполяции
 void MainWindow::on_actionIncrease_Interpolation_triggered()
 {
-    if(ui->widget->div_num < 7)
+    if(ui->widget->div_num < 10)
     {
         size_t old_value = ui->widget->div_num;
         ui->widget->set_div_num(ui->widget->div_num + 1);
@@ -267,7 +267,7 @@ void MainWindow::on_actionIncrease_Interpolation_triggered()
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.setDefaultButton(QMessageBox::Ok);
         msgBox.setWindowTitle(trUtf8("Error"));
-        msgBox.setText(trUtf8("Error: More than 7x interpolation is not supported"));
+        msgBox.setText(trUtf8("Error: More than 10x interpolation is not supported"));
         msgBox.setIcon(QMessageBox::Critical);
         msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
         msgBox.exec();
