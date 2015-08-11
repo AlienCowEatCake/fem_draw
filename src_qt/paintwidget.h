@@ -6,6 +6,7 @@
 #include <QPoint>
 #include <QPaintDevice>
 #include <QImage>
+#include <QTextStream>
 #include <set>
 #include <vector>
 #include <algorithm>
@@ -191,6 +192,9 @@ private:
 
     // Вывести msgbox с ошибкой
     void print_io_error();
+
+    // Считать из QTextStream число с разделителями ' ', '\t', ',', '\r' или '\n'
+    float read_number(QTextStream & ifs);
 
     // Буфер изображения
     QImage buffer;

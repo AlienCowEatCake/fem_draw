@@ -9,7 +9,6 @@
 #include <QString>
 #include <QMessageBox>
 #include <QFile>
-#include <QTextStream>
 #include <fstream>
 #include <limits>
 #include <cstring>
@@ -33,6 +32,28 @@ void paintwidget::print_io_error()
     msgBox.setIcon(QMessageBox::Critical);
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
     msgBox.exec();
+}
+
+// Считать из QTextStream число с разделителями ' ', '\t', ',', '\r' или '\n'
+float paintwidget::read_number(QTextStream & ifs)
+{
+    char str[32]; // Должно хватить
+    size_t len = 0;
+    // Читаем мусор перед числом
+    do
+        ifs >> str[0];
+    while((str[0] == ' ' || str[0] == '\t' || str[0] == ',' || str[0] == '\r' || str[0] == '\n') && ifs.status() == QTextStream::Ok);
+    if(ifs.status() != QTextStream::Ok) return 0.0f;
+    // Читаем число
+    do
+        ifs >> str[++len];
+    while(str[len] != ' ' && str[len] != '\t' && str[len] != ',' && str[len] != '\r' && str[len] != '\n' && ifs.status() == QTextStream::Ok);
+    if(ifs.status() != QTextStream::Ok) return 0.0f;
+    str[len] = '\0';
+    // Преобразуем во float
+    float num = 0.0f;
+    sscanf(str, "%f", &num);
+    return num;
 }
 
 // Чтение текплотовских значений из файла
@@ -128,8 +149,8 @@ void paintwidget::tec_read(const QString & filename)
                         variables.push_back(tmpstr);
                     if(var_num < 3)
                         strncpy(var_c[var_num++], tmpstr, VAR_MAX_LEN);
-                    printf("[VAR]\t%s\n", tmpstr);
-                    fflush(stdout);
+                    //printf("[VAR]\t%s\n", tmpstr);
+                    //fflush(stdout);
                 }
                 else
                 {
@@ -221,8 +242,8 @@ void paintwidget::tec_read(const QString & filename)
                     strncpy(param_value, curr_c, len);
                     param_value[len] = '\0';
                 }
-                printf("[PARAM]\t%s = %s\n", param_name, param_value);
-                fflush(stdout);
+                //printf("[PARAM]\t%s = %s\n", param_name, param_value);
+                //fflush(stdout);
 
                 // Для простоты приведем параметр и значение к верхнему регистру
                 // Интересующие нас строки заданы всегда латиницей, поэтому сделаем просто
@@ -235,8 +256,8 @@ void paintwidget::tec_read(const QString & filename)
                     if(param_value[i] >= 'a' && param_value[i] <= 'z')
                         param_value[i] += 'A' - 'a';
 
-                printf("[P-C]\t%s = %s\n", param_name, param_value);
-                fflush(stdout);
+                //printf("[P-C]\t%s = %s\n", param_name, param_value);
+                //fflush(stdout);
 
                 // Теперь разберемся, что за параметр мы считали
                 // Это "I"
@@ -349,12 +370,14 @@ void paintwidget::tec_read(const QString & filename)
     {
         float coords[3];
         for(size_t j = 0; j < points_coord; j++)
-            ifs >> coords[j];
+            //ifs >> coords[j];
+            coords[j] = read_number(ifs);
         tec_data[i].coord.x = coords[ind[0]];
         tec_data[i].coord.y = coords[ind[1]];
         tec_data[i].value = new float [variables.size()];
         for(size_t k = 0; k < variables.size(); k++)
-            ifs >> tec_data[i].value[k];
+            //ifs >> tec_data[i].value[k];
+            tec_data[i].value[k] = read_number(ifs);
 
         if(tec_data[i].coord.x > max_x) max_x = tec_data[i].coord.x;
         if(tec_data[i].coord.y > max_y) max_y = tec_data[i].coord.y;
@@ -576,32 +599,33 @@ void paintwidget::set_div_num(size_t num)
 
                 for(size_t v = 0; v < variables.size(); v++)
                 {
+                    typedef int color_type;
                     // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
-                    unsigned short r_color = 0, g_color = 0, b_color = 0;
+                    color_type r_color = 0, g_color = 0, b_color = 0;
                     if(use_purple)
                     {
                         if(center[v] > min_u[v] + step_u_big[v] * 3.0f)
                         {
                             r_color = 255;
-                            g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 3.0f)) / step_u_small[v]);
+                            g_color = 255 - (color_type)((center[v] - (min_u[v] + step_u_big[v] * 3.0f)) / step_u_small[v]);
                             b_color = 0;
                         }
                         else if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
                         {
-                            r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
+                            r_color = (color_type)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
                             g_color = 255;
                             b_color = 0;
                         }
                         else if(center[v] > min_u[v] + step_u_big[v])
                         {
-                            unsigned short tmp = (unsigned short)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
+                            color_type tmp = (color_type)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
                             r_color = 0;
                             g_color = tmp;
                             b_color = 255 - tmp;
                         }
                         else
                         {
-                            unsigned short tmp = 76 - (unsigned short)((center[v] - min_u[v]) / (step_u_small[v] * (255.0f / 76.0f)));
+                            color_type tmp = 76 - (color_type)((center[v] - min_u[v]) / (step_u_small[v] * (255.0f / 76.0f)));
                             r_color = tmp;
                             g_color = 0;
                             b_color = 255 - tmp;
@@ -612,18 +636,18 @@ void paintwidget::set_div_num(size_t num)
                         if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
                         {
                             r_color = 255;
-                            g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
+                            g_color = 255 - (color_type)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
                             b_color = 0;
                         }
                         else if(center[v] > min_u[v] + step_u_big[v])
                         {
-                            r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
+                            r_color = (color_type)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
                             g_color = 255;
                             b_color = 0;
                         }
                         else
                         {
-                            unsigned short tmp = (unsigned short)((center[v] - min_u[v]) / step_u_small[v]);
+                            color_type tmp = (color_type)((center[v] - min_u[v]) / step_u_small[v]);
                             r_color = 0;
                             g_color = tmp;
                             b_color = 255 - tmp;
@@ -637,6 +661,14 @@ void paintwidget::set_div_num(size_t num)
                         g_color = g_color * 3 / 4 + 64;
                         b_color = b_color * 3 / 4 + 64;
                     }
+
+                    // Из-за ошибок округления иногда вылетает за границы
+                    if(r_color > 255) r_color = 255;
+                    if(g_color > 255) g_color = 255;
+                    if(b_color > 255) b_color = 255;
+                    if(r_color < 0) r_color = 0;
+                    if(g_color < 0) g_color = 0;
+                    if(b_color < 0) b_color = 0;
 
                     // Задаем посчитанный цвет
                     tmp_tr.color[v] = QColor(r_color, g_color, b_color);

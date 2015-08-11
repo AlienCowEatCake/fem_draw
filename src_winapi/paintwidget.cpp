@@ -27,6 +27,40 @@ void paintwidget::print_io_error()
     MessageBox(hwnd, TEXT("Error: Corrupted file"), TEXT("Error"), MB_OK | MB_ICONERROR);
 }
 
+// Считать из u_ifstream число с разделителями ' ', '\t', ',', '\r' или '\n'
+float paintwidget::read_number(u_ifstream & ifs)
+{
+    TCHAR str[32]; // Должно хватить
+    size_t len = 0;
+    // Читаем мусор перед числом
+    do
+        ifs.get(str[0]);
+    while((str[0] == TEXT(' ') || str[0] == TEXT('\t') || str[0] == TEXT(',') || str[0] == TEXT('\r') || str[0] == TEXT('\n')) && ifs.good());
+    if(!ifs.good()) return 0.0f;
+    // Читаем число
+    do
+        ifs.get(str[++len]);
+    while(str[len] != TEXT(' ') && str[len] != TEXT('\t') && str[len] != TEXT(',') && str[len] != TEXT('\r') && str[len] != TEXT('\n') && ifs.good());
+    if(!ifs.good()) return 0.0f;
+    str[len] = TEXT('\0');
+    // Преобразуем во float
+    float num = 0.0f;
+#if defined _MSC_VER && _MSC_VER >= 1400
+#if defined UNICODE || defined _UNICODE
+    swscanf_s(str, TEXT("%f"), &num);
+#else
+    sscanf_s(str, TEXT("%f"), &num);
+#endif
+#else
+#if defined UNICODE || defined _UNICODE
+    swscanf(str, TEXT("%f"), &num);
+#else
+    sscanf(str, TEXT("%f"), &num);
+#endif
+#endif
+    return num;
+}
+
 // Чтение текплотовских значений из файла
 void paintwidget::tec_read(LPCTSTR filename)
 {
@@ -49,120 +83,296 @@ void paintwidget::tec_read(LPCTSTR filename)
     // Пошли читать файл
     u_ifstream ifs(filename);
     string tmp;
+
     // TITLE = "Slice Z = -10"
+    // TITLE="Electric Field"
     getline(ifs, tmp);
+
     // VARIABLES = "x", "y", "z", "ExR", "EyR", "EzR", "ExI", "EyI", "EzI", "abs(E)"
+    // VARIABLES=X,Y,Z
+    // VARIABLES = "X" "Y" "ReEx" "ImEx" "ReEy" "ImEy" "ReEz" "ImEz"
     getline(ifs, tmp);
     // Разберем переменные
-    bool parse_flag = true;
     const char * curr_c = tmp.c_str(), * end_c = curr_c;
-    const size_t VAR_MAX_LEN = 10;
+    const size_t VAR_MAX_LEN = 32;
     char var_c[3][VAR_MAX_LEN];
-    // Первые три могут быть координаты. Также могут быть и первые две, но это мы потом поправим
-    for(size_t i = 0; i < 3 && parse_flag; i++)
+    // Ну мало ли, вдруг кто-нибудь пробелов понаставит в начале строки
+    while(* curr_c == ' ' || * curr_c == '\t')
+        curr_c++;
+    // Строка должна начинаться со слова VARIABLES
+    if(strncmp(curr_c, "VARIABLES", 9) == 0)
     {
-        if((curr_c = strchr(end_c + 1, '\"')) != NULL)
+        // Дальше всегда идет равно, а после него - перечисления переменных
+        if((curr_c = strchr(curr_c + 9, '=')) != NULL)
         {
-            if((end_c = strchr(++curr_c, '\"')) != NULL)
+            bool eos_flag = false;
+            size_t var_num = 0;
+            char tmpstr[VAR_MAX_LEN];
+            // Пока есть данные в строке пригодные для разбора, будем разбирать
+            while(!eos_flag)
             {
-                size_t len = end_c - curr_c;
-#if defined _MSC_VER && _MSC_VER >= 1400
-                strncpy_s(var_c[i], VAR_MAX_LEN, curr_c, len);
-#else
-                strncpy(var_c[i], curr_c, len);
-#endif
-                var_c[i][len] = '\0';
-            }
-            else
-                parse_flag = false;
-        }
-        else
-            parse_flag = false;
-    }
-    if(!parse_flag)
-    {
-        print_io_error();
-        return;
-    }
-    // Читаем остальные переменные со значениями
-    while(parse_flag)
-    {
-        if((curr_c = strchr(end_c + 1, '\"')) != NULL)
-        {
-            if((end_c = strchr(++curr_c, '\"')) != NULL)
-            {
-                char var[VAR_MAX_LEN];
-                size_t len = end_c - curr_c;
-#if defined _MSC_VER && _MSC_VER >= 1400
-                strncpy_s(var, VAR_MAX_LEN, curr_c, len);
-#else
-                strncpy(var, curr_c, len);
-#endif
-                var[len] = '\0';
-                variables.push_back(var);
-            }
-            else
-                parse_flag = false;
-        }
-        else
-            parse_flag = false;
-    }
-    // ZONE I= 101, J= 101, K= 1, F=POINT
-    getline(ifs, tmp);
-    size_t points_coord = 3; // Число координат у точки
-    size_t IJK[3];
-    parse_flag = true;
-    curr_c = tmp.c_str();
-    for(size_t i = 0; i < 3 && parse_flag; i++)
-    {
-        if((curr_c = strchr(curr_c, '=')) != NULL)
-        {
-            int bla;
-#if defined _MSC_VER && _MSC_VER >= 1400
-            if(sscanf_s(++curr_c, "%d", &bla) != 1)
-#else
-            if(sscanf(++curr_c, "%d", &bla) != 1)
-#endif
-            {
-                // Если точка из двух координат, учтем это
-                if(i == 2)
+                curr_c++;
+                // Пробелы и табы нас не интересуют
+                while(* curr_c == ' ' || * curr_c == '\t')
+                    curr_c++;
+                // Кавычки тоже
+                if(* curr_c == '\"')
+                    curr_c++;
+                // Переменные разделяются пробелом, табом или запятой
+                // Если разделителя нового не было, значит это последняя переменная
+                if((end_c = strchr(curr_c, ',')) == NULL &&
+                   (end_c = strchr(curr_c, ' ')) == NULL &&
+                   (end_c = strchr(curr_c, '\t')) == NULL)
                 {
-                    IJK[2] = 1;
-                    points_coord = 2;
-                    variables.insert(variables.begin(), var_c[2]);
-                    break;
+                    eos_flag = true;
+                    end_c = curr_c + strlen(curr_c);
+                }
+                const char * end_c_old = end_c;
+                // Лишнего нам не надо, только само название переменной
+                while(* (end_c - 1) == ' ' || * (end_c - 1) == '\t' || * (end_c - 1) == '\"')
+                    end_c--;
+                size_t len = end_c - curr_c;
+                // В нормальном случае длина больше нуля, однако если разделитель - пробел
+                // (или таб), а в конце строки есть еще пробел, то мы попадем сюда, когда
+                // на самом деле переменных больше нет
+                if(len > 0)
+                {
+#if defined _MSC_VER && _MSC_VER >= 1400
+                    strncpy_s(tmpstr, VAR_MAX_LEN, curr_c, len);
+#else
+                    strncpy(tmpstr, curr_c, len);
+#endif
+                    tmpstr[len] = '\0';
+                    // Первые два или три значения будут названиями геометрических переменных
+                    // по которым строится график, а остальные - переменные со значениями
+                    // Поэтому занесем все, что больше двух в вектор с переменными (потом удалим,
+                    // если это нужно), а первые три - в массив геометрических переменных
+                    // (потом просто не будем использовать ненужное)
+                    if(var_num >= 2)
+                        variables.push_back(tmpstr);
+                    if(var_num < 3)
+#if defined _MSC_VER && _MSC_VER >= 1400
+                        strncpy_s(var_c[var_num++], VAR_MAX_LEN, tmpstr, VAR_MAX_LEN);
+#else
+                        strncpy(var_c[var_num++], tmpstr, VAR_MAX_LEN);
+#endif
+                    //printf("[VAR]\t%s\n", tmpstr);
+                    //fflush(stdout);
                 }
                 else
-                    parse_flag = false;
+                {
+                    eos_flag = true;
+                }
+                curr_c = end_c_old;
             }
-            else
-                IJK[i] = (size_t)bla;
         }
         else
-            parse_flag = false;
+        {
+            print_io_error();
+            return;
+        }
     }
-    if(!parse_flag)
+    else
     {
         print_io_error();
         return;
     }
 
-    // Понимаем в какой плоскости лежит сечение
+    // ZONE I= 101, J= 101, K= 1, F=POINT
+    // ZONE T="BIG ZONE", I=3, J=3, F=POINT
+    // ZONE I=100, J=100, DATAPACKING=POINT
+    // ZONE I=2, J=2, F=POINT
+    getline(ifs, tmp);
+    size_t IJK[3];
+    IJK[0] = IJK[1] = IJK[2] = numeric_limits<size_t>::max();
+    bool point_accepted = false; // Должен быть указан параметр POINT
+    curr_c = tmp.c_str();
+    // Ну мало ли, вдруг кто-нибудь пробелов понаставит в начале строки
+    while(* curr_c == ' ' || * curr_c == '\t')
+        curr_c++;
+    // Строка должна начинаться со слова ZONE
+    if(strncmp(curr_c, "ZONE", 4) == 0)
+    {
+        curr_c += 4;
+        // Пробелы и табы нас не интересуют
+        while(* curr_c == ' ' || * curr_c == '\t')
+            curr_c++;
+        char param_name[VAR_MAX_LEN], param_value[255];
+        bool flag_eol = false;
+        // Пока есть данные в строке пригодные для разбора, будем разбирать
+        while(!flag_eol)
+        {
+            // Пара параметр-значение всегда разделяется знаком равно
+            if((end_c = strchr(curr_c, '=')) != NULL)
+            {
+                // Все, что до равно за вычетов табов-пробелов - название параметра
+                const char * end_c_old = end_c;
+                while(* (end_c - 1) == ' ' || * (end_c - 1) == '\t')
+                    end_c--;
+                size_t len = end_c - curr_c;
+#if defined _MSC_VER && _MSC_VER >= 1400
+                strncpy_s(param_name, VAR_MAX_LEN, curr_c, len);
+#else
+                strncpy(param_name, curr_c, len);
+#endif
+                param_name[len] = '\0';
+                curr_c = end_c_old + 1;
+                // А после равно - значение
+                while(* curr_c == ' ' || * curr_c == '\t')
+                    curr_c++;
+                bool use_quote = (* curr_c == '\"') ? true : false;
+                if(use_quote) curr_c++;
+
+                // Если значение начинается с кавычки, то и искать следует только кавычку
+                // Иначе могут быть пробел, таб или запятая
+                // TODO: Тут может быть заэкранированная кавычка в параметре, пока это не работает
+                if((use_quote && (end_c = strchr(curr_c, '\"')) != NULL) ||
+                   (end_c = strchr(curr_c, ',')) != NULL ||
+                   (!use_quote && (end_c = strchr(curr_c, ' ')) != NULL) ||
+                   (!use_quote && (end_c = strchr(curr_c, '\t')) != NULL))
+                {
+                    // Если попало сюда, то все идет по плану
+                    const char * end_c_old = end_c;
+                    while(* (end_c - 1) == ' ' || * (end_c - 1) == '\t')
+                        end_c--;
+                    size_t len = end_c - curr_c;
+#if defined _MSC_VER && _MSC_VER >= 1400
+                    strncpy_s(param_value, sizeof(param_value) / sizeof(char), curr_c, len);
+#else
+                    strncpy(param_value, curr_c, len);
+#endif
+                    param_value[len] = '\0';
+                    curr_c = end_c_old;
+                    // Передвинемся на место после разделителя
+                    while(* curr_c == ' ' || * curr_c == '\t' || * curr_c == ',' || * curr_c == '\"')
+                        curr_c++;
+                }
+                else
+                {
+                    // Если попало сюда, то в значении параметра кавычек нет и пробелов тоже
+                    // То есть все до конца строки есть искомое значение
+                    flag_eol = true;
+                    end_c = curr_c + strlen(curr_c);
+                    size_t len = end_c - curr_c;
+#if defined _MSC_VER && _MSC_VER >= 1400
+                    strncpy_s(param_value, sizeof(param_value) / sizeof(char), curr_c, len);
+#else
+                    strncpy(param_value, curr_c, len);
+#endif
+                    param_value[len] = '\0';
+                }
+                //printf("[PARAM]\t%s = %s\n", param_name, param_value);
+                //fflush(stdout);
+
+                // Для простоты приведем параметр и значение к верхнему регистру
+                // Интересующие нас строки заданы всегда латиницей, поэтому сделаем просто
+                size_t sle = strlen(param_name);
+                for(size_t i = 0; i < sle; i++)
+                    if(param_name[i] >= 'a' && param_name[i] <= 'z')
+                        param_name[i] += 'A' - 'a';
+                sle = strlen(param_value);
+                for(size_t i = 0; i < sle; i++)
+                    if(param_value[i] >= 'a' && param_value[i] <= 'z')
+                        param_value[i] += 'A' - 'a';
+
+                //printf("[P-C]\t%s = %s\n", param_name, param_value);
+                //fflush(stdout);
+
+                // Теперь разберемся, что за параметр мы считали
+                // Это "I"
+                if(strcmp(param_name, "I") == 0)
+                {
+                    unsigned int v = 0;
+#if defined _MSC_VER && _MSC_VER >= 1400
+                    sscanf_s(param_value, "%u", & v);
+#else
+                    sscanf(param_value, "%u", & v);
+#endif
+                    IJK[0] = static_cast<size_t>(v);
+                }
+                // Это "J"
+                else if(strcmp(param_name, "J") == 0)
+                {
+                    unsigned int v = 0;
+#if defined _MSC_VER && _MSC_VER >= 1400
+                    sscanf_s(param_value, "%u", & v);
+#else
+                    sscanf(param_value, "%u", & v);
+#endif
+                    IJK[1] = static_cast<size_t>(v);
+                }
+                // Это "K"
+                else if(strcmp(param_name, "K") == 0)
+                {
+                    unsigned int v = 0;
+#if defined _MSC_VER && _MSC_VER >= 1400
+                    sscanf_s(param_value, "%u", & v);
+#else
+                    sscanf(param_value, "%u", & v);
+#endif
+                    IJK[2] = static_cast<size_t>(v);
+                }
+                // Это что-то с параметром "POINT"
+                else if(strcmp(param_value, "POINT") == 0)
+                {
+                    point_accepted = true;
+                }
+            }
+            else
+            {
+                flag_eol = true;
+            }
+        }
+    }
+    else
+    {
+        print_io_error();
+        return;
+    }
+    // Мы умеем работать только с точками
+    if(!point_accepted)
+    {
+        print_io_error();
+        return;
+    }
+
+    // Разберемся, сколько же у нас геометрических переменных
+    // За одно понимаем, в какой плоскости лежит сечение
+    size_t points_coord;
     size_t ind[2];
-    if(IJK[0] == 1) // y-z
+    if(IJK[0] == numeric_limits<size_t>::max() ||
+       IJK[1] == numeric_limits<size_t>::max() ||
+       IJK[2] == numeric_limits<size_t>::max())
     {
-        ind[0] = 1;
-        ind[1] = 2;
-    }
-    if(IJK[1] == 1) // x-z
-    {
-        ind[0] = 0;
-        ind[1] = 2;
-    }
-    if(IJK[2] == 1) // x-y
-    {
+        // Таки две
+        points_coord = 2;
+        for(size_t i = 0; i < 3; i++)
+            if(IJK[i] == numeric_limits<size_t>::max()) IJK[i] = 1;
+        // Сечение x-y
         ind[0] = 0;
         ind[1] = 1;
+    }
+    else
+    {
+        // Таки три
+        points_coord = 3;
+        variables.erase(variables.begin());
+        // Выберем подходящее сечение (по константной переменной всегда будет 1)
+        if(IJK[0] == 1) // y-z
+        {
+            ind[0] = 1;
+            ind[1] = 2;
+        }
+        if(IJK[1] == 1) // x-z
+        {
+            ind[0] = 0;
+            ind[1] = 2;
+        }
+        if(IJK[2] == 1) // x-y
+        {
+            ind[0] = 0;
+            ind[1] = 1;
+        }
     }
     nx = IJK[ind[0]];
     ny = IJK[ind[1]];
@@ -191,12 +401,14 @@ void paintwidget::tec_read(LPCTSTR filename)
     {
         float coords[3];
         for(size_t j = 0; j < points_coord; j++)
-            ifs >> coords[j];
+            //ifs >> coords[j];
+            coords[j] = read_number(ifs);
         tec_data[i].coord.x = coords[ind[0]];
         tec_data[i].coord.y = coords[ind[1]];
         tec_data[i].value = (float *)malloc(sizeof(float) * variables.size());
         for(size_t k = 0; k < variables.size(); k++)
-            ifs >> tec_data[i].value[k];
+            //ifs >> tec_data[i].value[k];
+            tec_data[i].value[k] = read_number(ifs);
 
         if(tec_data[i].coord.x > max_x) max_x = tec_data[i].coord.x;
         if(tec_data[i].coord.y > max_y) max_y = tec_data[i].coord.y;
@@ -418,32 +630,33 @@ void paintwidget::set_div_num(size_t num)
 
                 for(size_t v = 0; v < variables.size(); v++)
                 {
+                    typedef int color_type;
                     // Ищем цвет решения по алгоритму заливки радугой (Rainbow colormap)
-                    unsigned short r_color = 0, g_color = 0, b_color = 0;
+                    color_type r_color = 0, g_color = 0, b_color = 0;
                     if(use_purple)
                     {
                         if(center[v] > min_u[v] + step_u_big[v] * 3.0f)
                         {
                             r_color = 255;
-                            g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 3.0f)) / step_u_small[v]);
+                            g_color = 255 - (color_type)((center[v] - (min_u[v] + step_u_big[v] * 3.0f)) / step_u_small[v]);
                             b_color = 0;
                         }
                         else if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
                         {
-                            r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
+                            r_color = (color_type)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
                             g_color = 255;
                             b_color = 0;
                         }
                         else if(center[v] > min_u[v] + step_u_big[v])
                         {
-                            unsigned short tmp = (unsigned short)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
+                            color_type tmp = (color_type)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
                             r_color = 0;
                             g_color = tmp;
                             b_color = 255 - tmp;
                         }
                         else
                         {
-                            unsigned short tmp = 76 - (unsigned short)((center[v] - min_u[v]) / (step_u_small[v] * (255.0f / 76.0f)));
+                            color_type tmp = 76 - (color_type)((center[v] - min_u[v]) / (step_u_small[v] * (255.0f / 76.0f)));
                             r_color = tmp;
                             g_color = 0;
                             b_color = 255 - tmp;
@@ -454,18 +667,18 @@ void paintwidget::set_div_num(size_t num)
                         if(center[v] > min_u[v] + step_u_big[v] * 2.0f)
                         {
                             r_color = 255;
-                            g_color = 255 - (unsigned short)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
+                            g_color = 255 - (color_type)((center[v] - (min_u[v] + step_u_big[v] * 2.0f)) / step_u_small[v]);
                             b_color = 0;
                         }
                         else if(center[v] > min_u[v] + step_u_big[v])
                         {
-                            r_color = (unsigned short)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
+                            r_color = (color_type)((center[v] - (min_u[v] + step_u_big[v])) / step_u_small[v]);
                             g_color = 255;
                             b_color = 0;
                         }
                         else
                         {
-                            unsigned short tmp = (unsigned short)((center[v] - min_u[v]) / step_u_small[v]);
+                            color_type tmp = (color_type)((center[v] - min_u[v]) / step_u_small[v]);
                             r_color = 0;
                             g_color = tmp;
                             b_color = 255 - tmp;
@@ -479,6 +692,14 @@ void paintwidget::set_div_num(size_t num)
                         g_color = g_color * 3 / 4 + 64;
                         b_color = b_color * 3 / 4 + 64;
                     }
+
+                    // Из-за ошибок округления иногда вылетает за границы
+                    if(r_color > 255) r_color = 255;
+                    if(g_color > 255) g_color = 255;
+                    if(b_color > 255) b_color = 255;
+                    if(r_color < 0) r_color = 0;
+                    if(g_color < 0) g_color = 0;
+                    if(b_color < 0) b_color = 0;
 
                     // Задаем посчитанный цвет
                     tmp_tr.color[v] = RGB(r_color, g_color, b_color);

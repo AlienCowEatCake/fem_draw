@@ -199,6 +199,9 @@ private:
     // Вывести msgbox с ошибкой
     void print_io_error();
 
+    // Считать из u_ifstream число с разделителями ' ', '\t', ',', '\r' или '\n'
+    float read_number(u_ifstream & ifs);
+
     // Отрисовка сцены на HDC
     void draw(HDC hdc_local);
 
