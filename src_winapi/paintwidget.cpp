@@ -19,6 +19,18 @@ wifstream & getline(wifstream & ifs, string & str)
     }
     return ifs;
 }
+
+#if !(defined _MSC_VER && _MSC_VER >= 1400)
+wifstream & getline(wifstream & ifs, wstring & str)
+{
+    str.clear();
+    wchar_t c_w = 0;
+    while(ifs.good() && ifs.get(c_w) && c_w != L'\n')
+        str.push_back(c_w);
+    return ifs;
+}
+#endif
+
 #endif
 
 // Вывести msgbox с ошибкой
