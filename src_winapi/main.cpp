@@ -136,6 +136,8 @@ void open_file(LPTSTR filename)
     size_t begin = label.find_last_of(TEXT("\\"));
     if(begin != u_string::npos)
         label = label.substr(begin + 1);
+    if(label.length() > 0)
+        label = pdraw->title + TEXT(" - ") + label;
     label.append(TEXT(" - FEM Draw"));
     SetWindowText(hwnd, label.c_str());
 

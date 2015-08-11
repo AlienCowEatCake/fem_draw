@@ -145,6 +145,8 @@ void MainWindow::open_file(QString filename)
 #if defined _WIN32
     label = label.split('\\').last();
 #endif
+    if(ui->widget->title.length() > 0)
+        label.prepend(ui->widget->title + trUtf8(" - "));
     label.append(trUtf8(" - FEM Draw"));
     this->setWindowTitle(label);
 

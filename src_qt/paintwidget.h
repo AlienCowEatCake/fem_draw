@@ -152,6 +152,9 @@ public:
     // Лимит по памяти
     bool use_memory_limit;
 
+    // Заголовок
+    QString title;
+
 protected:
     // Отрисовка сцены
     void paintEvent(QPaintEvent *);

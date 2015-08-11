@@ -86,7 +86,10 @@ void paintwidget::tec_read(LPCTSTR filename)
 
     // TITLE = "Slice Z = -10"
     // TITLE="Electric Field"
-    getline(ifs, tmp);
+    getline(ifs, title);
+    title.erase(0, title.find_first_of(TEXT('=')) + 1);
+    title.erase(title.find_last_not_of(TEXT(" \n\r\t\"")) + 1);
+    title.erase(0, title.find_first_not_of(TEXT(" \n\r\t\"")));
 
     // VARIABLES = "x", "y", "z", "ExR", "EyR", "EzR", "ExI", "EyI", "EzI", "abs(E)"
     // VARIABLES=X,Y,Z

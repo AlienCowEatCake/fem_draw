@@ -87,7 +87,12 @@ void paintwidget::tec_read(const QString & filename)
 
     // TITLE = "Slice Z = -10"
     // TITLE="Electric Field"
-    getline(ifs, tmp);
+    title = ifs.readLine();
+    title = title.remove(0, title.indexOf('=') + 1).trimmed();
+    if(title[0] == '\"')
+        title = title.remove(0, 1);
+    if(title[title.length() - 1] == '\"')
+        title.truncate(title.length() - 1);
 
     // VARIABLES = "x", "y", "z", "ExR", "EyR", "EzR", "ExI", "EyI", "EzI", "abs(E)"
     // VARIABLES=X,Y,Z

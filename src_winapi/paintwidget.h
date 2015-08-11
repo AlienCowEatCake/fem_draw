@@ -161,6 +161,9 @@ public:
     // Лимит по памяти
     bool use_memory_limit;
 
+    // Заголовок
+    u_string title;
+
 private:
     // Текплотовские значения
     dynarray_t<tecplot_node> tec_data;
