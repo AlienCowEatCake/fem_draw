@@ -2,10 +2,10 @@ IDI_ICON1 ICON DISCARDABLE "../resources/icon.ico"
 
 #include <windows.h>
 
-#define VER_FILEVERSION             1,1,0,0
-#define VER_FILEVERSION_STR         "1.1.0.0\0"
-#define VER_PRODUCTVERSION          1,1,0,0
-#define VER_PRODUCTVERSION_STR      "1.1\0"
+#define VER_FILEVERSION             1,1,99,1
+#define VER_FILEVERSION_STR         "1.1.99.1\0"
+#define VER_PRODUCTVERSION          1,1,99,1
+#define VER_PRODUCTVERSION_STR      "1.2 beta1\0"
 #define VER_FILEDESCRIPTION_STR     "Tool for plot scalar and vector fields"
 #define VER_INTERNALNAME_STR        "fem_draw_qt"
 #define VER_LEGALCOPYRIGHT_STR      "Copyright (c) 2014-2015, Peter Zhigalov"
