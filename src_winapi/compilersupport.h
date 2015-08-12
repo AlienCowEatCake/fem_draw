@@ -180,12 +180,16 @@ namespace std
     inline float _hack_ceil(float arg) {return (float)ceil((double)arg);}
     inline float _hack_log10(float arg) {return (float)log10((double)arg);}
     inline float _hack_pow(float arg1, float arg2) {return (float)pow((double)arg1, (double)arg2);}
+    inline float _hack_sin(float arg) {return (float)sin((double)arg);}
+    inline float _hack_cos(float arg) {return (float)cos((double)arg);}
     inline float sqrt(float arg) {return _hack_sqrt(arg);}
     inline float fabs(float arg) {return _hack_fabs(arg);}
     inline float floor(float arg) {return _hack_floor(arg);}
     inline float ceil(float arg) {return _hack_ceil(arg);}
     inline float log10(float arg) {return _hack_log10(arg);}
     inline float pow(float arg1, float arg2) {return _hack_pow(arg1, arg2);}
+    inline float sin(float arg) {return _hack_sin(arg);}
+    inline float cos(float arg) {return _hack_cos(arg);}
 }
 
 #endif

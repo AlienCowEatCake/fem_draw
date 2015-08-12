@@ -1313,6 +1313,8 @@ void paintwidget::draw(HDC hdc_local)
                     norm = std::sqrt(x1 * x1 + y1 * y1);
                     x1 *= arrow_len / norm;
                     y1 *= arrow_len / norm;
+                    x1 = std::fabs(std::floor(x1)) > std::fabs(std::ceil(x1)) ? std::floor(x1) : std::ceil(x1);
+                    y1 = std::fabs(std::floor(y1)) > std::fabs(std::ceil(y1)) ? std::floor(y1) : std::ceil(y1);
                     MoveToEx(hdc_local, end_x, end_y, &pt);
                     LineTo(hdc_local, (int)x1 + end_x, -(int)y1 + end_y);
 
@@ -1322,6 +1324,8 @@ void paintwidget::draw(HDC hdc_local)
                     norm = std::sqrt(x2 * x2 + y2 * y2);
                     x2 *= arrow_len / norm;
                     y2 *= arrow_len / norm;
+                    x2 = std::fabs(std::floor(x2)) > std::fabs(std::ceil(x2)) ? std::floor(x2) : std::ceil(x2);
+                    y2 = std::fabs(std::floor(y2)) > std::fabs(std::ceil(y2)) ? std::floor(y2) : std::ceil(y2);
                     MoveToEx(hdc_local, end_x, end_y, &pt);
                     LineTo(hdc_local, (int)x2 + end_x, -(int)y2 + end_y);
                 }
