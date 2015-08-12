@@ -82,11 +82,8 @@ void MainWindow::open_file(QString filename)
 {
     // Запомним старые значения индексов, чтоб потом восстановить
     size_t old_draw_index = ui->widget->draw_index;
-    ui->widget->draw_index = 0;
     size_t old_ind_vec_1 = ui->widget->ind_vec_1;
-    ui->widget->ind_vec_1 = 0;
     size_t old_ind_vec_2 = ui->widget->ind_vec_2;
-    ui->widget->ind_vec_2 = 0;
 
     // Откроем файл
     ui->widget->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
@@ -122,15 +119,19 @@ void MainWindow::open_file(QString filename)
     else
         ui->comboBox_Color->setCurrentIndex(0);
 
-    if(old_ind_vec_1 < ui->widget->variables.size())
+    if(old_ind_vec_1 < ui->widget->variables.size() && old_ind_vec_2 < ui->widget->variables.size())
+    {
         ui->comboBox_Vectors_U->setCurrentIndex((int)old_ind_vec_1);
-    else
-        ui->comboBox_Vectors_U->setCurrentIndex(0);
-
-    if(old_ind_vec_2 < ui->widget->variables.size())
         ui->comboBox_Vectors_V->setCurrentIndex((int)old_ind_vec_2);
+    }
     else
-        ui->comboBox_Vectors_V->setCurrentIndex(0);
+    {
+        ui->comboBox_Vectors_U->setCurrentIndex(0);
+        if(ui->widget->variables.size() >= 2)
+            ui->comboBox_Vectors_V->setCurrentIndex(1);
+        else
+            ui->comboBox_Vectors_V->setCurrentIndex(0);
+    }
 
     // Устанавливаем оптимальное значение для векторов
     if(ui->widget->vect_value < ui->spinBox_Vectors->minimum())

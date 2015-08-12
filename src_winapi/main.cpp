@@ -58,11 +58,8 @@ void open_file(LPTSTR filename)
 {
     // Запомним старые значения индексов, чтоб потом восстановить
     size_t old_draw_index = pdraw->draw_index;
-    pdraw->draw_index = 0;
     size_t old_ind_vec_1 = pdraw->ind_vec_1;
-    pdraw->ind_vec_1 = 0;
     size_t old_ind_vec_2 = pdraw->ind_vec_2;
-    pdraw->ind_vec_2 = 0;
 
     // Откроем файл
     pdraw->div_num = 0; // Сбросим значение интерполяции, чтобы не повисло на больших файлах
@@ -99,16 +96,20 @@ void open_file(LPTSTR filename)
         ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_COLOR), 0);
     pdraw->draw_index = (size_t)ComboBox_GetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_COLOR));
 
-    if(old_ind_vec_1 < pdraw->variables.size())
+    if(old_ind_vec_1 < pdraw->variables.size() && old_ind_vec_2 < pdraw->variables.size())
+    {
         ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_U), (int)old_ind_vec_1);
-    else
-        ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_U), 0);
-    pdraw->ind_vec_1 = (size_t)ComboBox_GetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_U));
-
-    if(old_ind_vec_2 < pdraw->variables.size())
         ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_V), (int)old_ind_vec_2);
+    }
     else
-        ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_V), 0);
+    {
+        ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_U), 0);
+        if(pdraw->variables.size() >= 2)
+            ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_V), 1);
+        else
+            ComboBox_SetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_V), 0);
+    }
+    pdraw->ind_vec_1 = (size_t)ComboBox_GetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_U));
     pdraw->ind_vec_2 = (size_t)ComboBox_GetCurSel(GetDlgItem(hwnd, CONTROL_COMBOBOX_VECTORS_V));
 
     // Устанавливаем оптимальное значение для векторов

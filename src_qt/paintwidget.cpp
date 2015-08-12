@@ -93,6 +93,9 @@ void paintwidget::tec_read(const QString & filename)
         title = title.remove(0, 1);
     if(title[title.length() - 1] == '\"')
         title.truncate(title.length() - 1);
+    // У нас могут попасться заэкранированные символы в тексте, исправим это
+    for(int i = title.indexOf('\\', 0); i >= 0 && i < title.length(); i = title.indexOf('\\', i + 1))
+        title.remove(i, 1);
 
     // VARIABLES = "x", "y", "z", "ExR", "EyR", "EzR", "ExI", "EyI", "EzI", "abs(E)"
     // VARIABLES=X,Y,Z
@@ -121,30 +124,74 @@ void paintwidget::tec_read(const QString & filename)
                 // Пробелы и табы нас не интересуют
                 while(* curr_c == ' ' || * curr_c == '\t')
                     curr_c++;
-                // Кавычки тоже
-                if(* curr_c == '\"')
-                    curr_c++;
-                // Переменные разделяются пробелом, табом или запятой
-                // Если разделителя нового не было, значит это последняя переменная
-                if((end_c = strchr(curr_c, ',')) == NULL &&
-                   (end_c = strchr(curr_c, ' ')) == NULL &&
-                   (end_c = strchr(curr_c, '\t')) == NULL)
+                // Кавычки тоже, но если начали с кавычки, то ей же и закончим
+                bool use_quote = (* curr_c == '\"') ? true : false;
+                if(use_quote) curr_c++;
+
+                // Если переменная начинается с кавычки, то и искать следует только кавычку
+                // Иначе могут быть пробел, таб или запятая
+                if((use_quote && (end_c = strchr(curr_c, '\"')) != NULL) || (!use_quote &&
+                   ((end_c = strchr(curr_c, ',')) != NULL ||
+                    (end_c = strchr(curr_c, ' ')) != NULL ||
+                    (end_c = strchr(curr_c, '\t')) != NULL)))
                 {
+                    // Никакая это не кавычка, это заэкранированная кавычка в тексте
+                    bool maybe_escaped_quote = use_quote;
+                    while(maybe_escaped_quote)
+                    {
+                        size_t counter = 0;
+                        for(size_t i = 1; i <= (size_t)(end_c - curr_c); i++)
+                            if(* (end_c - i) == '\\')
+                                counter++;
+                            else
+                                break;
+                        if(counter % 2 == 1)
+                            end_c = strchr(end_c + 1, '\"');
+                        else
+                            maybe_escaped_quote = false;
+                        if(end_c == NULL)
+                        {
+                            print_io_error();
+                            return;
+                        }
+                    }
+                }
+                // Если разделителя нового не было, значит это последняя переменная
+                // Однако это не так, если начали с кавычки
+                else
+                {
+                    if(use_quote)
+                    {
+                        print_io_error();
+                        return;
+                    }
                     eos_flag = true;
                     end_c = curr_c + strlen(curr_c);
                 }
                 const char * end_c_old = end_c;
-                // Лишнего нам не надо, только само название переменной
-                while(* (end_c - 1) == ' ' || * (end_c - 1) == '\t' || * (end_c - 1) == '\"')
-                    end_c--;
+                if(use_quote)
+                {
+                    // После кавычки надо найти разделитель и переместиться на него
+                    while(strlen(end_c_old) > 1 && (* (end_c_old + 1) == ' ' || * (end_c_old + 1) == '\t' || * (end_c_old + 1) == ','))
+                        end_c_old++;
+                }
+                else
+                {
+                    // Лишнего нам не надо, только само название переменной
+                    while(strlen(end_c) > 0 && (* (end_c - 1) == ' ' || * (end_c - 1) == '\t'))
+                        end_c--;
+                }
                 size_t len = end_c - curr_c;
                 // В нормальном случае длина больше нуля, однако если разделитель - пробел
                 // (или таб), а в конце строки есть еще пробел, то мы попадем сюда, когда
                 // на самом деле переменных больше нет
-                if(len > 0)
+                if(end_c > curr_c)
                 {
                     strncpy(tmpstr, curr_c, len);
                     tmpstr[len] = '\0';
+                    // У нас могут попасться заэкранированные символы в тексте, исправим это
+                    for(char * ch = strchr(tmpstr, '\\'); ch != NULL; ch = strchr(ch + 1, '\\'))
+                        memmove(ch, ch + 1, strlen(ch));
                     // Первые два или три значения будут названиями геометрических переменных
                     // по которым строится график, а остальные - переменные со значениями
                     // Поэтому занесем все, что больше двух в вектор с переменными (потом удалим,
@@ -219,16 +266,39 @@ void paintwidget::tec_read(const QString & filename)
 
                 // Если значение начинается с кавычки, то и искать следует только кавычку
                 // Иначе могут быть пробел, таб или запятая
-                // TODO: Тут может быть заэкранированная кавычка в параметре, пока это не работает
-                if((use_quote && (end_c = strchr(curr_c, '\"')) != NULL) ||
-                   (end_c = strchr(curr_c, ',')) != NULL ||
-                   (!use_quote && (end_c = strchr(curr_c, ' ')) != NULL) ||
-                   (!use_quote && (end_c = strchr(curr_c, '\t')) != NULL))
+                if((use_quote && (end_c = strchr(curr_c, '\"')) != NULL) || (!use_quote &&
+                   ((end_c = strchr(curr_c, ',')) != NULL ||
+                    (end_c = strchr(curr_c, ' ')) != NULL ||
+                    (end_c = strchr(curr_c, '\t')) != NULL)))
                 {
+                    // Если тормознулись на кавычке, а это просто заэкранированная кавычка в тексте
+                    bool maybe_escaped_quote = use_quote;
+                    while(maybe_escaped_quote)
+                    {
+                        size_t counter = 0;
+                        for(size_t i = 1; i <= (size_t)(end_c - curr_c); i++)
+                            if(* (end_c - i) == '\\')
+                                counter++;
+                            else
+                                break;
+                        if(counter % 2 == 1)
+                            end_c = strchr(end_c + 1, '\"');
+                        else
+                            maybe_escaped_quote = false;
+                        if(end_c == NULL)
+                        {
+                            print_io_error();
+                            return;
+                        }
+                    }
                     // Если попало сюда, то все идет по плану
                     const char * end_c_old = end_c;
-                    while(* (end_c - 1) == ' ' || * (end_c - 1) == '\t')
-                        end_c--;
+                    if(!use_quote)
+                    {
+                        // Лишнего нам не надо, только само значение праметра
+                        while(* (end_c - 1) == ' ' || * (end_c - 1) == '\t')
+                            end_c--;
+                    }
                     size_t len = end_c - curr_c;
                     strncpy(param_value, curr_c, len);
                     param_value[len] = '\0';
@@ -240,6 +310,12 @@ void paintwidget::tec_read(const QString & filename)
                 else
                 {
                     // Если попало сюда, то в значении параметра кавычек нет и пробелов тоже
+                    // Однако это не так, если начали с кавычки
+                    if(use_quote)
+                    {
+                        print_io_error();
+                        return;
+                    }
                     // То есть все до конца строки есть искомое значение
                     flag_eol = true;
                     end_c = curr_c + strlen(curr_c);
@@ -247,6 +323,9 @@ void paintwidget::tec_read(const QString & filename)
                     strncpy(param_value, curr_c, len);
                     param_value[len] = '\0';
                 }
+                // У нас могут попасться заэкранированные символы в тексте, исправим это
+                for(char * ch = strchr(param_value, '\\'); ch != NULL; ch = strchr(ch + 1, '\\'))
+                    memmove(ch, ch + 1, strlen(ch));
                 //printf("[PARAM]\t%s = %s\n", param_name, param_value);
                 //fflush(stdout);
 
