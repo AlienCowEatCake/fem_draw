@@ -1281,8 +1281,11 @@ void paintwidget::draw(HDC hdc_local)
         hOldPen = (HPEN)SelectObject(hdc_local, hVecPen);
         HBRUSH hVecBrush = GetStockBrush(BLACK_BRUSH);
         hOldBrush = (HBRUSH)SelectObject(hdc_local, hVecBrush);
-        float vec_len = 10.0f;
-        int arrow_len = 2;
+
+        float vec_len = 10.0f, arrow_len = 5.0f;
+        float angle = 38.0f * 3.14159265358979323846f / 180.0f;
+        float sin_angle = std::sin(angle), cos_angle = std::cos(angle);
+
         for(size_t j = 0; j < ny; j += skip_vec)
         {
             for(size_t i = 0; i < nx; i += skip_vec)
@@ -1300,7 +1303,27 @@ void paintwidget::draw(HDC hdc_local)
                     int end_x = (int)(len_x * vec_len) + begin_x, end_y = -(int)(len_y * vec_len) + begin_y;
                     MoveToEx(hdc_local, begin_x, begin_y, &pt);
                     LineTo(hdc_local, end_x, end_y);
-                    Ellipse(hdc_local, end_x - arrow_len, end_y - arrow_len, end_x + arrow_len, end_y + arrow_len);
+
+                    // x1=x*cos(angle)-y*sin(angle);
+                    // y1=y*cos(angle)+x*sin(angle);
+
+                    // Угол Pi + angle
+                    float x1 = - len_x * cos_angle + len_y * sin_angle;
+                    float y1 = - len_y * cos_angle - len_x * sin_angle;
+                    norm = std::sqrt(x1 * x1 + y1 * y1);
+                    x1 *= arrow_len / norm;
+                    y1 *= arrow_len / norm;
+                    MoveToEx(hdc_local, end_x, end_y, &pt);
+                    LineTo(hdc_local, (int)x1 + end_x, -(int)y1 + end_y);
+
+                    // Угол Pi - angle
+                    float x2 = - len_x * cos_angle - len_y * sin_angle;
+                    float y2 = - len_y * cos_angle + len_x * sin_angle;
+                    norm = std::sqrt(x2 * x2 + y2 * y2);
+                    x2 *= arrow_len / norm;
+                    y2 *= arrow_len / norm;
+                    MoveToEx(hdc_local, end_x, end_y, &pt);
+                    LineTo(hdc_local, (int)x2 + end_x, -(int)y2 + end_y);
                 }
             }
         }

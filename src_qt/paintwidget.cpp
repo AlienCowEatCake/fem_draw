@@ -1114,10 +1114,12 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
 
     if(draw_vectors)
     {
-        painter.setPen(QPen(Qt::black, 1.2f));
+        painter.setPen(QPen(Qt::black, 1.0f));
         painter.setBrush(QBrush(Qt::black));
 
-        float vec_len = 10.0f, arrow_len = 1.5f;
+        float vec_len = 10.0f, arrow_len = 5.0f;
+        float angle = 38.0f * 3.14159265358979323846f / 180.0f;
+        float sin_angle = std::sin(angle), cos_angle = std::cos(angle);
 
         for(size_t j = 0; j < ny; j += skip_vec)
         {
@@ -1135,9 +1137,26 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
                     QPoint end((int)(len_x * vec_len), -(int)(len_y * vec_len));
                     end.setX(end.x() + begin.x());
                     end.setY(end.y() + begin.y());
-
                     painter.drawLine(begin, end);
-                    painter.drawEllipse(QPointF(end), (qreal)arrow_len, (qreal)arrow_len);
+
+                    // x1=x*cos(angle)-y*sin(angle);
+                    // y1=y*cos(angle)+x*sin(angle);
+
+                    // Угол Pi + angle
+                    float x1 = - len_x * cos_angle + len_y * sin_angle;
+                    float y1 = - len_y * cos_angle - len_x * sin_angle;
+                    norm = std::sqrt(x1 * x1 + y1 * y1);
+                    x1 *= arrow_len / norm;
+                    y1 *= arrow_len / norm;
+                    painter.drawLine(end, QPoint((int)x1 + end.x(), -(int)y1 + end.y()));
+
+                    // Угол Pi - angle
+                    float x2 = - len_x * cos_angle - len_y * sin_angle;
+                    float y2 = - len_y * cos_angle + len_x * sin_angle;
+                    norm = std::sqrt(x2 * x2 + y2 * y2);
+                    x2 *= arrow_len / norm;
+                    y2 *= arrow_len / norm;
+                    painter.drawLine(end, QPoint((int)x2 + end.x(), -(int)y2 + end.y()));
                 }
             }
         }
