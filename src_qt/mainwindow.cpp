@@ -321,7 +321,7 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setDefaultButton(QMessageBox::Ok);
     msgBox.setWindowTitle("About");
-    msgBox.setText(trUtf8("<b>FEM Draw v1.2 beta2 (Qt)</b><br><br>"
+    msgBox.setText(trUtf8("<b>FEM Draw v1.2 (Qt)</b><br><br>"
                           "<a href=\"https://fami.codefreak.ru/gitlab/peter/fem_draw\">https://fami.codefreak.ru/gitlab/peter/fem_draw</a><br>"
                           "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
                           "Copyright &copy; 2014-2015<br>"
@@ -443,6 +443,7 @@ void MainWindow::dropEvent(QDropEvent * event)
             msgBox.setDefaultButton(QMessageBox::Ok);
             msgBox.setWindowTitle(trUtf8("Error"));
             msgBox.setText(trUtf8("Error: You can open only one file simultaneously!"));
+
             msgBox.setIcon(QMessageBox::Critical);
             msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
             msgBox.exec();
