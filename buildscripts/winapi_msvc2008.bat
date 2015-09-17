@@ -1,14 +1,15 @@
 @echo off
 set V_PROJECT=fem_draw_winapi
 set V_BUILDDIR=build_winapi_msvc2008
-set MS_SDK_v60A=%PROGRAMFILES%\Microsoft SDKs\Windows\v6.0A
+@rem set MS_SDK_v60A=%PROGRAMFILES%\Microsoft SDKs\Windows\v6.0A
 @echo on
 call "%VS90COMNTOOLS%\vsvars32.bat"
-@rem MSVC 2008 bug: calling vsvars32 not set MS SDK pathes
-set INCLUDE=%MS_SDK_v60A%\Include;%INCLUDE%
-set LIBPATH=%MS_SDK_v60A%\Lib;%LIBPATH%
-set LIB=%MS_SDK_v60A%\Lib;%LIB%
-set PATH=%MS_SDK_v60A%\Bin;%PATH%
+@rem Баг MSVC 2008 (без SP1): вызов vsvars32 не приводит к добавлению путей к MS SDK.
+@rem Решение: поставить SP1 или раскомментировать добавление путей вручную.
+@rem set INCLUDE=%MS_SDK_v60A%\Include;%INCLUDE%
+@rem set LIBPATH=%MS_SDK_v60A%\Lib;%LIBPATH%
+@rem set LIB=%MS_SDK_v60A%\Lib;%LIB%
+@rem set PATH=%MS_SDK_v60A%\Bin;%PATH%
 @echo on
 
 cd "%~dp0"
