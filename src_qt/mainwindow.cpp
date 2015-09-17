@@ -42,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinBox_Vectors->setValue(1);
 
     // Немного эстетства
-    this->setWindowTitle(trUtf8("FEM Draw"));
+    this->setWindowTitle("FEM Draw");
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
     // Передача начальных значений виджету
@@ -59,6 +59,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Разрешим обработку drag-and-drop
     setAcceptDrops(true);
+
+    // Зададим умолчательные имена файлов
+    last_saved = "draw.png";
+    last_opened = "";
 }
 
 // Деструктор
@@ -90,7 +94,7 @@ void MainWindow::open_file(QString filename)
     ui->widget->tec_read(filename);
     if(!ui->widget->is_loaded)
     {
-        this->setWindowTitle(trUtf8("FEM Draw"));
+        this->setWindowTitle("FEM Draw");
         ui->widget->invalidate();
         return;
     }
@@ -147,9 +151,20 @@ void MainWindow::open_file(QString filename)
     label = label.split('\\').last();
 #endif
     if(ui->widget->title.length() > 0)
-        label.prepend(ui->widget->title + trUtf8(" - "));
-    label.append(trUtf8(" - FEM Draw"));
+        label.prepend(ui->widget->title + " - ");
+    label.append(" - FEM Draw");
     this->setWindowTitle(label);
+
+    // Сохраним директорию, в которой находится файл
+    last_opened = "";
+    int stop_index = filename.lastIndexOf("/");
+#if defined _WIN32
+    int stop_index_win = filename.lastIndexOf("\\");
+    if(stop_index_win > stop_index)
+        stop_index = stop_index_win;
+#endif
+    for(int i = 0; i < stop_index; i++)
+        last_opened.append(filename[i]);
 
     // А вот теперь готово
     ui->widget->is_loaded = true;
@@ -159,7 +174,7 @@ void MainWindow::open_file(QString filename)
 // Событие при открытии файла
 void MainWindow::on_actionOpen_Tecplot_File_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Tecplot File"), "", tr("Tecplot Data Files (*.dat *.plt);;All Files (*.*)"));
+    QString fileName = QFileDialog::getOpenFileName(this, trUtf8("Open Tecplot File"), last_opened, "Tecplot Data Files (*.dat *.plt);;All Files (*.*)");
     if(fileName.length() == 0) return;
     open_file(fileName);
 }
@@ -189,7 +204,7 @@ void MainWindow::on_actionSave_Image_File_triggered()
     formats_all.append(");;");
     formats.prepend(formats_all);
 
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Image File"), "draw.png", formats);
+    QString fileName = QFileDialog::getSaveFileName(this, trUtf8("Save Image File"), last_saved, formats);
     if(fileName.length() == 0) return;
     string fn = fileName.toStdString();
     size_t found = fn.find_last_of(".");
@@ -209,6 +224,7 @@ void MainWindow::on_actionSave_Image_File_triggered()
         if(!finded)
             fileName.append(".png");
     }
+    last_saved = fileName;
 
     QImage image(ui->widget->width(), ui->widget->height(), QImage::Format_ARGB32_Premultiplied);
     bool transparent = ui->actionTransparent_Image->isChecked();
@@ -321,11 +337,11 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setDefaultButton(QMessageBox::Ok);
     msgBox.setWindowTitle("About");
-    msgBox.setText(trUtf8("<b>FEM Draw v1.2 (Qt)</b><br><br>"
-                          "<a href=\"https://fami.codefreak.ru/gitlab/peter/fem_draw\">https://fami.codefreak.ru/gitlab/peter/fem_draw</a><br>"
-                          "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
-                          "Copyright &copy; 2014-2015<br>"
-                          "Peter Zhigalov &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;"));
+    msgBox.setText("<b>FEM Draw v1.2 (Qt)</b><br><br>"
+                   "<a href=\"https://fami.codefreak.ru/gitlab/peter/fem_draw\">https://fami.codefreak.ru/gitlab/peter/fem_draw</a><br>"
+                   "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
+                   "Copyright &copy; 2014-2015<br>"
+                   "Peter Zhigalov &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;");
     msgBox.setIconPixmap(QPixmap::fromImage(QImage(":/resources/icon_64.png")));
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
     msgBox.exec();

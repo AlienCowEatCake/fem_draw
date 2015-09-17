@@ -34,6 +34,8 @@ namespace config
     int isol_min = 0,   isol_max = 100,   isol_curr = 10;
     int smooth_min = 0, smooth_max = 7,   smooth_curr = 0;
     int vect_min = 1,   vect_max = 10000, vect_curr = 1;
+    TCHAR last_saved[260]  = TEXT("draw.png");
+    TCHAR last_opened[260] = TEXT("");
 }
 
 namespace fonts
@@ -142,6 +144,12 @@ void open_file(LPTSTR filename)
     label.append(TEXT(" - FEM Draw"));
     SetWindowText(hwnd, label.c_str());
 
+    // Сохраним директорию, в которой находится файл
+    if(begin != u_string::npos)
+        u_strlcpy(config::last_opened, filename, begin + 2);
+    else
+        config::last_opened[0] = 0;
+
     // А вот теперь готово
     pdraw->is_loaded = true;
     widget_redraw(false);
@@ -161,7 +169,7 @@ void on_actionOpen_Tecplot_File_triggered()
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = TEXT("Open Tecplot File");
     ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = NULL;
+    ofn.lpstrInitialDir = config::last_opened;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_READONLY | OFN_HIDEREADONLY;
     if(GetOpenFileName(& ofn) != TRUE) return;
     open_file(ofn.lpstrFile);
@@ -218,7 +226,8 @@ void on_actionSave_Image_File_triggered()
 
     // Откроем файл
     OPENFILENAME ofn;
-    TCHAR szFile[260] = TEXT("draw.png");
+    TCHAR szFile[260];
+    u_strlcpy(szFile, config::last_saved, sizeof(szFile) / sizeof(TCHAR));
     ZeroMemory(& ofn, sizeof(OPENFILENAME));
     ofn.lStructSize = sizeof(OPENFILENAME);
     ofn.hwndOwner = hwnd;
@@ -250,6 +259,9 @@ void on_actionSave_Image_File_triggered()
         else if(ext == TEXT("tga")) filetype = TYPE_TGA;
         else if(ext != TEXT("png")) fileName.append(TEXT(".png"));
     }
+
+    // Запомним имя файла для следующего раза
+    u_strlcpy(config::last_saved, fileName.c_str(), sizeof(config::last_saved) / sizeof(TCHAR));
 
     // Создадим все что нужно и запустим отрисовку
     RECT r;

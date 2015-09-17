@@ -73,6 +73,11 @@ private slots:
     void on_comboBox_Vectors_U_currentIndexChanged(int index);
     // Вторая переменная вектора
     void on_comboBox_Vectors_V_currentIndexChanged(int index);
+protected:
+    // Последняя директория с файлом для открытия
+    QString last_opened;
+    // Последнее имя файла для сохранения
+    QString last_saved;
 
 private:
     Ui::MainWindow *ui;

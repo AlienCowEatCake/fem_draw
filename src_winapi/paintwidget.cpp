@@ -198,12 +198,7 @@ void paintwidget::tec_read(LPCTSTR filename)
                 // на самом деле переменных больше нет
                 if(end_c > curr_c)
                 {
-#if defined _MSC_VER && _MSC_VER >= 1400
-                    strncpy_s(tmpstr, VAR_MAX_LEN, curr_c, len);
-#else
-                    strncpy(tmpstr, curr_c, len);
-#endif
-                    tmpstr[len] = '\0';
+                    u_strlcpy(tmpstr, curr_c, len + 1);
                     // У нас могут попасться заэкранированные символы в тексте, исправим это
                     for(char * ch = strchr(tmpstr, '\\'); ch != NULL; ch = strchr(ch + 1, '\\'))
                         memmove(ch, ch + 1, strlen(ch));
@@ -215,11 +210,7 @@ void paintwidget::tec_read(LPCTSTR filename)
                     if(var_num >= 2)
                         variables.push_back(tmpstr);
                     if(var_num < 3)
-#if defined _MSC_VER && _MSC_VER >= 1400
-                        strncpy_s(var_c[var_num++], VAR_MAX_LEN, tmpstr, VAR_MAX_LEN);
-#else
-                        strncpy(var_c[var_num++], tmpstr, VAR_MAX_LEN);
-#endif
+                        u_strlcpy(var_c[var_num++], tmpstr, VAR_MAX_LEN);
                     //printf("[VAR]\t%s\n", tmpstr);
                     //fflush(stdout);
                 }
@@ -274,12 +265,7 @@ void paintwidget::tec_read(LPCTSTR filename)
                 while(* (end_c - 1) == ' ' || * (end_c - 1) == '\t')
                     end_c--;
                 size_t len = end_c - curr_c;
-#if defined _MSC_VER && _MSC_VER >= 1400
-                strncpy_s(param_name, VAR_MAX_LEN, curr_c, len);
-#else
-                strncpy(param_name, curr_c, len);
-#endif
-                param_name[len] = '\0';
+                u_strlcpy(param_name, curr_c, len + 1);
                 curr_c = end_c_old + 1;
                 // А после равно - значение
                 while(* curr_c == ' ' || * curr_c == '\t')
@@ -323,12 +309,7 @@ void paintwidget::tec_read(LPCTSTR filename)
                             end_c--;
                     }
                     size_t len = end_c - curr_c;
-#if defined _MSC_VER && _MSC_VER >= 1400
-                    strncpy_s(param_value, sizeof(param_value) / sizeof(char), curr_c, len);
-#else
-                    strncpy(param_value, curr_c, len);
-#endif
-                    param_value[len] = '\0';
+                    u_strlcpy(param_value, curr_c, len + 1);
                     curr_c = end_c_old;
                     // Передвинемся на место после разделителя
                     while(* curr_c == ' ' || * curr_c == '\t' || * curr_c == ',' || * curr_c == '\"')
@@ -347,12 +328,7 @@ void paintwidget::tec_read(LPCTSTR filename)
                     flag_eol = true;
                     end_c = curr_c + strlen(curr_c);
                     size_t len = end_c - curr_c;
-#if defined _MSC_VER && _MSC_VER >= 1400
-                    strncpy_s(param_value, sizeof(param_value) / sizeof(char), curr_c, len);
-#else
-                    strncpy(param_value, curr_c, len);
-#endif
-                    param_value[len] = '\0';
+                    u_strlcpy(param_value, curr_c, len + 1);
                 }
                 // У нас могут попасться заэкранированные символы в тексте, исправим это
                 for(char * ch = strchr(param_value, '\\'); ch != NULL; ch = strchr(ch + 1, '\\'))
