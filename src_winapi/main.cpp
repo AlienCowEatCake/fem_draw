@@ -511,7 +511,7 @@ void load_hbmp_logo()
     if(!hbmp_logo)
     {
         // Загрузим картинку
-        hbmp_logo = LoadBitmap((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_LOGO64));
+        hbmp_logo = LoadBitmap((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_LOGO64));
         // Создадим маску для прозрачности
         HDC hdcMem1, hdcMem2;
         BITMAP bm;
@@ -1259,7 +1259,9 @@ LRESULT CALLBACK WndProcAbout(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         MapWindowPoints(HWND_DESKTOP, hwnd_about, (LPPOINT) &r, 2);
         if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
         {
-            SetCursor(LoadCursor(NULL, IDC_HAND));
+            HCURSOR hcurs = LoadCursor(NULL, IDC_HAND);
+            if(hcurs == NULL) hcurs = LoadCursor((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_HAND_FB));
+            SetCursor(hcurs);
             break;
         }
 
@@ -1268,7 +1270,9 @@ LRESULT CALLBACK WndProcAbout(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         MapWindowPoints(HWND_DESKTOP, hwnd_about, (LPPOINT) &r, 2);
         if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
         {
-            SetCursor(LoadCursor(NULL, IDC_HAND));
+            HCURSOR hcurs = LoadCursor(NULL, IDC_HAND);
+            if(hcurs == NULL) hcurs = LoadCursor((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_HAND_FB));
+            SetCursor(hcurs);
             break;
         }
 
@@ -1277,7 +1281,9 @@ LRESULT CALLBACK WndProcAbout(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         MapWindowPoints(HWND_DESKTOP, hwnd_about, (LPPOINT) &r, 2);
         if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
         {
-            SetCursor(LoadCursor(NULL, IDC_HAND));
+            HCURSOR hcurs = LoadCursor(NULL, IDC_HAND);
+            if(hcurs == NULL) hcurs = LoadCursor((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_HAND_FB));
+            SetCursor(hcurs);
             break;
         }
 
@@ -1416,7 +1422,9 @@ LRESULT CALLBACK WndProcAboutLibs(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPa
         MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
         if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
         {
-            SetCursor(LoadCursor(NULL, IDC_HAND));
+            HCURSOR hcurs = LoadCursor(NULL, IDC_HAND);
+            if(hcurs == NULL) hcurs = LoadCursor((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_HAND_FB));
+            SetCursor(hcurs);
             break;
         }
         // JPG
@@ -1424,7 +1432,9 @@ LRESULT CALLBACK WndProcAboutLibs(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPa
         MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
         if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
         {
-            SetCursor(LoadCursor(NULL, IDC_HAND));
+            HCURSOR hcurs = LoadCursor(NULL, IDC_HAND);
+            if(hcurs == NULL) hcurs = LoadCursor((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_HAND_FB));
+            SetCursor(hcurs);
             break;
         }
         // GIF
@@ -1432,7 +1442,9 @@ LRESULT CALLBACK WndProcAboutLibs(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPa
         MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
         if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
         {
-            SetCursor(LoadCursor(NULL, IDC_HAND));
+            HCURSOR hcurs = LoadCursor(NULL, IDC_HAND);
+            if(hcurs == NULL) hcurs = LoadCursor((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_HAND_FB));
+            SetCursor(hcurs);
             break;
         }
         // TGA
@@ -1440,7 +1452,9 @@ LRESULT CALLBACK WndProcAboutLibs(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPa
         MapWindowPoints(HWND_DESKTOP, hwnd_about_libs, (LPPOINT) &r, 2);
         if(r.left <= xPos && r.right >= xPos && r.top <= yPos && r.bottom >= yPos)
         {
-            SetCursor(LoadCursor(NULL, IDC_HAND));
+            HCURSOR hcurs = LoadCursor(NULL, IDC_HAND);
+            if(hcurs == NULL) hcurs = LoadCursor((HINSTANCE)GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_HAND_FB));
+            SetCursor(hcurs);
             break;
         }
         // Ну иначе дефолтный курсор пусть будет

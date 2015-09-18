@@ -2,7 +2,8 @@
 #define RESOURCES_H
 
 #define IDI_ICON1   42
-#define IDI_LOGO64  43
+#define IDB_LOGO64  43
+#define IDC_HAND_FB 44
 
 #define CONTROL_PAINT_WIDGET                10000
 #define CONTROL_CHECKBOX_COLOR              10001

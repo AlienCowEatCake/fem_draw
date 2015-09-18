@@ -1,7 +1,8 @@
 #include "resources.h"
 
-IDI_ICON1 ICON DISCARDABLE "../resources/icon.ico"
-IDI_LOGO64 BITMAP DISCARDABLE "../resources/icon_64.bmp"
+IDI_ICON1   ICON   DISCARDABLE "../resources/icon.ico"
+IDB_LOGO64  BITMAP DISCARDABLE "../resources/icon_64.bmp"
+IDC_HAND_FB CURSOR DISCARDABLE "../resources/hand.cur"
 
 APP_ACCELERATORS ACCELERATORS 
 BEGIN
