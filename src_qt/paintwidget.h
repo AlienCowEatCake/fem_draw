@@ -188,7 +188,7 @@ private:
     QPoint to_window(float x, float y) const;
 
     // Подписи осей
-    string label_x, label_y;
+    QString label_x, label_y;
 
     // Число отрезков по x и по y
     size_t nx, ny;

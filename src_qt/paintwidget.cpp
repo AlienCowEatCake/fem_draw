@@ -6,19 +6,11 @@
 #include "paintwidget.h"
 #include <cmath>
 #include <QFont>
-#include <QString>
 #include <QMessageBox>
 #include <QFile>
-#include <fstream>
 #include <limits>
 #include <cstring>
-
-// getline для QTextStream
-QTextStream & getline(QTextStream & ifs, string & str)
-{
-    str = ifs.readLine().toStdString();
-    return ifs;
-}
+#include <cstdio>
 
 // Вывести msgbox с ошибкой
 void paintwidget::print_io_error()
@@ -83,7 +75,7 @@ void paintwidget::tec_read(const QString & filename)
         return;
     }
     QTextStream ifs(& qf);
-    string tmp;
+    QString tmp;
 
     // TITLE = "Slice Z = -10"
     // TITLE="Electric Field"
@@ -100,23 +92,22 @@ void paintwidget::tec_read(const QString & filename)
     // VARIABLES = "x", "y", "z", "ExR", "EyR", "EzR", "ExI", "EyI", "EzI", "abs(E)"
     // VARIABLES=X,Y,Z
     // VARIABLES = "X" "Y" "ReEx" "ImEx" "ReEy" "ImEy" "ReEz" "ImEz"
-    getline(ifs, tmp);
+    tmp = ifs.readLine();
     // Разберем переменные
-    const char * curr_c = tmp.c_str(), * end_c = curr_c;
-    const size_t VAR_MAX_LEN = 32;
-    char var_c[3][VAR_MAX_LEN];
+    QString::iterator curr_c = tmp.begin(), end_c = curr_c;
+    QString var_c[3];
     // Ну мало ли, вдруг кто-нибудь пробелов понаставит в начале строки
     while(* curr_c == ' ' || * curr_c == '\t')
         curr_c++;
     // Строка должна начинаться со слова VARIABLES
-    if(strncmp(curr_c, "VARIABLES", 9) == 0)
+    if(QString(&*curr_c, 9) == "VARIABLES")
     {
         // Дальше всегда идет равно, а после него - перечисления переменных
-        if((curr_c = strchr(curr_c + 9, '=')) != NULL)
+        if((curr_c = std::find(curr_c + 9, tmp.end(), '=')) != tmp.end())
         {
             bool eos_flag = false;
             size_t var_num = 0;
-            char tmpstr[VAR_MAX_LEN];
+            QString tmpstr;
             // Пока есть данные в строке пригодные для разбора, будем разбирать
             while(!eos_flag)
             {
@@ -130,10 +121,10 @@ void paintwidget::tec_read(const QString & filename)
 
                 // Если переменная начинается с кавычки, то и искать следует только кавычку
                 // Иначе могут быть пробел, таб или запятая
-                if((use_quote && (end_c = strchr(curr_c, '\"')) != NULL) || (!use_quote &&
-                   ((end_c = strchr(curr_c, ',')) != NULL ||
-                    (end_c = strchr(curr_c, ' ')) != NULL ||
-                    (end_c = strchr(curr_c, '\t')) != NULL)))
+                if((use_quote && (end_c = std::find(curr_c, tmp.end(), '\"')) != tmp.end()) || (!use_quote &&
+                   ((end_c = std::find(curr_c, tmp.end(), ',')) != tmp.end() ||
+                    (end_c = std::find(curr_c, tmp.end(), ' ')) != tmp.end() ||
+                    (end_c = std::find(curr_c, tmp.end(), '\t')) != tmp.end())))
                 {
                     // Никакая это не кавычка, это заэкранированная кавычка в тексте
                     bool maybe_escaped_quote = use_quote;
@@ -146,7 +137,7 @@ void paintwidget::tec_read(const QString & filename)
                             else
                                 break;
                         if(counter % 2 == 1)
-                            end_c = strchr(end_c + 1, '\"');
+                            end_c = std::find(end_c + 1, tmp.end(), '\"');
                         else
                             maybe_escaped_quote = false;
                         if(end_c == NULL)
@@ -166,32 +157,30 @@ void paintwidget::tec_read(const QString & filename)
                         return;
                     }
                     eos_flag = true;
-                    end_c = curr_c + strlen(curr_c);
+                    end_c = curr_c + QString(&*curr_c).length();
                 }
-                const char * end_c_old = end_c;
+                QString::iterator end_c_old = end_c;
                 if(use_quote)
                 {
                     // После кавычки надо найти разделитель и переместиться на него
-                    while(strlen(end_c_old) > 1 && (* (end_c_old + 1) == ' ' || * (end_c_old + 1) == '\t' || * (end_c_old + 1) == ','))
+                    while(QString(&*end_c_old).length() > 1 && (* (end_c_old + 1) == ' ' || * (end_c_old + 1) == '\t' || * (end_c_old + 1) == ','))
                         end_c_old++;
                 }
                 else
                 {
                     // Лишнего нам не надо, только само название переменной
-                    while(strlen(end_c) > 0 && (* (end_c - 1) == ' ' || * (end_c - 1) == '\t'))
+                    while(QString(&*end_c).length() > 0 && (* (end_c - 1) == ' ' || * (end_c - 1) == '\t'))
                         end_c--;
                 }
-                size_t len = end_c - curr_c;
                 // В нормальном случае длина больше нуля, однако если разделитель - пробел
                 // (или таб), а в конце строки есть еще пробел, то мы попадем сюда, когда
                 // на самом деле переменных больше нет
                 if(end_c > curr_c)
                 {
-                    strncpy(tmpstr, curr_c, len);
-                    tmpstr[len] = '\0';
+                    tmpstr = QString(&*curr_c, end_c - curr_c);
                     // У нас могут попасться заэкранированные символы в тексте, исправим это
-                    for(char * ch = strchr(tmpstr, '\\'); ch != NULL; ch = strchr(ch + 1, '\\'))
-                        memmove(ch, ch + 1, strlen(ch));
+                    for(int i = tmpstr.indexOf('\\'); i > 0; i = tmpstr.indexOf('\\', i + 1))
+                        tmpstr.remove(i, 1);
                     // Первые два или три значения будут названиями геометрических переменных
                     // по которым строится график, а остальные - переменные со значениями
                     // Поэтому занесем все, что больше двух в вектор с переменными (потом удалим,
@@ -200,9 +189,7 @@ void paintwidget::tec_read(const QString & filename)
                     if(var_num >= 2)
                         variables.push_back(tmpstr);
                     if(var_num < 3)
-                        strncpy(var_c[var_num++], tmpstr, VAR_MAX_LEN);
-                    //printf("[VAR]\t%s\n", tmpstr);
-                    //fflush(stdout);
+                        var_c[var_num++] = tmpstr;
                 }
                 else
                 {
@@ -227,36 +214,34 @@ void paintwidget::tec_read(const QString & filename)
     // ZONE T="BIG ZONE", I=3, J=3, F=POINT
     // ZONE I=100, J=100, DATAPACKING=POINT
     // ZONE I=2, J=2, F=POINT
-    getline(ifs, tmp);
+    tmp = ifs.readLine();
     size_t IJK[3];
     IJK[0] = IJK[1] = IJK[2] = numeric_limits<size_t>::max();
     bool point_accepted = false; // Должен быть указан параметр POINT
-    curr_c = tmp.c_str();
+    curr_c = tmp.begin();
     // Ну мало ли, вдруг кто-нибудь пробелов понаставит в начале строки
     while(* curr_c == ' ' || * curr_c == '\t')
         curr_c++;
     // Строка должна начинаться со слова ZONE
-    if(strncmp(curr_c, "ZONE", 4) == 0)
+    if(QString(&*curr_c, 4) == "ZONE")
     {
         curr_c += 4;
         // Пробелы и табы нас не интересуют
         while(* curr_c == ' ' || * curr_c == '\t')
             curr_c++;
-        char param_name[VAR_MAX_LEN], param_value[255];
+        QString param_name, param_value;
         bool flag_eol = false;
         // Пока есть данные в строке пригодные для разбора, будем разбирать
         while(!flag_eol)
         {
             // Пара параметр-значение всегда разделяется знаком равно
-            if((end_c = strchr(curr_c, '=')) != NULL)
+            if((end_c = std::find(curr_c, tmp.end(), '=')) != tmp.end())
             {
                 // Все, что до равно за вычетов табов-пробелов - название параметра
-                const char * end_c_old = end_c;
+                QString::iterator end_c_old = end_c;
                 while(* (end_c - 1) == ' ' || * (end_c - 1) == '\t')
                     end_c--;
-                size_t len = end_c - curr_c;
-                strncpy(param_name, curr_c, len);
-                param_name[len] = '\0';
+                param_name = QString(&*curr_c, end_c - curr_c);
                 curr_c = end_c_old + 1;
                 // А после равно - значение
                 while(* curr_c == ' ' || * curr_c == '\t')
@@ -266,10 +251,10 @@ void paintwidget::tec_read(const QString & filename)
 
                 // Если значение начинается с кавычки, то и искать следует только кавычку
                 // Иначе могут быть пробел, таб или запятая
-                if((use_quote && (end_c = strchr(curr_c, '\"')) != NULL) || (!use_quote &&
-                   ((end_c = strchr(curr_c, ',')) != NULL ||
-                    (end_c = strchr(curr_c, ' ')) != NULL ||
-                    (end_c = strchr(curr_c, '\t')) != NULL)))
+                if((use_quote && (end_c = std::find(curr_c, tmp.end(), '\"')) != tmp.end()) || (!use_quote &&
+                   ((end_c = std::find(curr_c, tmp.end(), ',')) != tmp.end() ||
+                    (end_c = std::find(curr_c, tmp.end(), ' ')) != tmp.end() ||
+                    (end_c = std::find(curr_c, tmp.end(), '\t')) != tmp.end())))
                 {
                     // Если тормознулись на кавычке, а это просто заэкранированная кавычка в тексте
                     bool maybe_escaped_quote = use_quote;
@@ -282,7 +267,7 @@ void paintwidget::tec_read(const QString & filename)
                             else
                                 break;
                         if(counter % 2 == 1)
-                            end_c = strchr(end_c + 1, '\"');
+                            end_c = std::find(end_c + 1, tmp.end(), '\"');
                         else
                             maybe_escaped_quote = false;
                         if(end_c == NULL)
@@ -292,16 +277,14 @@ void paintwidget::tec_read(const QString & filename)
                         }
                     }
                     // Если попало сюда, то все идет по плану
-                    const char * end_c_old = end_c;
+                    QString::iterator end_c_old = end_c;
                     if(!use_quote)
                     {
                         // Лишнего нам не надо, только само значение праметра
                         while(* (end_c - 1) == ' ' || * (end_c - 1) == '\t')
                             end_c--;
                     }
-                    size_t len = end_c - curr_c;
-                    strncpy(param_value, curr_c, len);
-                    param_value[len] = '\0';
+                    param_value = QString(&*curr_c, end_c - curr_c);
                     curr_c = end_c_old;
                     // Передвинемся на место после разделителя
                     while(* curr_c == ' ' || * curr_c == '\t' || * curr_c == ',' || * curr_c == '\"')
@@ -318,58 +301,40 @@ void paintwidget::tec_read(const QString & filename)
                     }
                     // То есть все до конца строки есть искомое значение
                     flag_eol = true;
-                    end_c = curr_c + strlen(curr_c);
-                    size_t len = end_c - curr_c;
-                    strncpy(param_value, curr_c, len);
-                    param_value[len] = '\0';
+                    param_value = QString(curr_c);
                 }
                 // У нас могут попасться заэкранированные символы в тексте, исправим это
-                for(char * ch = strchr(param_value, '\\'); ch != NULL; ch = strchr(ch + 1, '\\'))
-                    memmove(ch, ch + 1, strlen(ch));
-                //printf("[PARAM]\t%s = %s\n", param_name, param_value);
-                //fflush(stdout);
+                for(int i = param_value.indexOf('\\'); i > 0; i = param_value.indexOf('\\', i + 1))
+                    param_value.remove(i, 1);
 
                 // Для простоты приведем параметр и значение к верхнему регистру
                 // Интересующие нас строки заданы всегда латиницей, поэтому сделаем просто
-                size_t sle = strlen(param_name);
-                for(size_t i = 0; i < sle; i++)
-                    if(param_name[i] >= 'a' && param_name[i] <= 'z')
-                        param_name[i] += 'A' - 'a';
-                sle = strlen(param_value);
-                for(size_t i = 0; i < sle; i++)
-                    if(param_value[i] >= 'a' && param_value[i] <= 'z')
-                        param_value[i] += 'A' - 'a';
-
-                //printf("[P-C]\t%s = %s\n", param_name, param_value);
-                //fflush(stdout);
+                for(QString::iterator it = param_name.begin(); it != param_name.end(); ++it)
+                {
+                    char ch = it->toAscii();
+                    if(ch >= 'a' && ch <= 'z')
+                        *it = ch + 'A' - 'a';
+                }
+                for(QString::iterator it = param_value.begin(); it != param_value.end(); ++it)
+                {
+                    char ch = it->toAscii();
+                    if(ch >= 'a' && ch <= 'z')
+                        *it = ch + 'A' - 'a';
+                }
 
                 // Теперь разберемся, что за параметр мы считали
                 // Это "I"
-                if(strcmp(param_name, "I") == 0)
-                {
-                    unsigned int v = 0;
-                    sscanf(param_value, "%u", & v);
-                    IJK[0] = static_cast<size_t>(v);
-                }
+                if(param_name == "I")
+                    IJK[0] = static_cast<size_t>(param_value.toUInt());
                 // Это "J"
-                else if(strcmp(param_name, "J") == 0)
-                {
-                    unsigned int v = 0;
-                    sscanf(param_value, "%u", & v);
-                    IJK[1] = static_cast<size_t>(v);
-                }
+                else if(param_name == "J")
+                    IJK[1] = static_cast<size_t>(param_value.toUInt());
                 // Это "K"
-                else if(strcmp(param_name, "K") == 0)
-                {
-                    unsigned int v = 0;
-                    sscanf(param_value, "%u", & v);
-                    IJK[2] = static_cast<size_t>(v);
-                }
+                else if(param_name == "K")
+                    IJK[2] = static_cast<size_t>(param_value.toUInt());
                 // Это что-то с параметром "POINT"
-                else if(strcmp(param_value, "POINT") == 0)
-                {
+                else if(param_value == "POINT")
                     point_accepted = true;
-                }
             }
             else
             {
@@ -1047,8 +1012,8 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
     // Подписи осей
     painter.setFont(fnt_serif);
     painter.setPen(QPen(Qt::black, 1.0f));
-    painter.drawText(to_window(0.99f, -0.04f), trUtf8(label_x.c_str()));
-    painter.drawText(to_window(-0.05f, 0.99f), trUtf8(label_y.c_str()));
+    painter.drawText(to_window(0.99f, -0.04f), label_x);
+    painter.drawText(to_window(-0.05f, 0.99f), label_y);
 
     // Отрисовка шкалы
     painter.setFont(fnt_mono);
