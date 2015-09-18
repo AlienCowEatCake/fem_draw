@@ -535,7 +535,7 @@ void load_hbmp_logo()
 void on_actionAbout_FEM_Draw_triggered()
 {
     // Создадим окно
-    RECT rw = { 0, 0, 331, 158 };
+    RECT rw = { 0, 0, 311, 158 };
     AdjustWindowRect(&rw, WS_CAPTION | WS_SYSMENU, FALSE);
     int about_width = rw.right - rw.left;
     int about_height = rw.bottom - rw.top;
@@ -565,14 +565,14 @@ void on_actionAbout_FEM_Draw_triggered()
     CreateWindow(
                 WC_STATIC, TEXT("FEM Draw v1.2 (WinAPI)"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
-                92, 10, 254, 15,
+                92, 10, 205, 15,
                 hwnd_about, (HMENU)ABOUT_LABEL_VERSION, hInstance, NULL
                 );
     // Надпись с сайтом
     CreateWindow(
-                WC_STATIC, TEXT("https://fami.codefreak.ru/gitlab/peter/fem_draw"),
+                WC_STATIC, TEXT("https://fami.codefreak.ru/osp/fem_draw/"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
-                92, 38, 254, 15,
+                92, 38, 205, 15,
                 hwnd_about, (HMENU)ABOUT_LABEL_SITE, hInstance, NULL
                 );
     // Надпись "License: "
@@ -593,7 +593,7 @@ void on_actionAbout_FEM_Draw_triggered()
     CreateWindow(
                 WC_STATIC, TEXT("Copyright (c) 2014-2015"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
-                92, 80, 254, 15,
+                92, 80, 205, 15,
                 hwnd_about, (HMENU)ABOUT_LABEL_COPYRIGHT, hInstance, NULL
                 );
     // Надпись с автором
@@ -614,7 +614,7 @@ void on_actionAbout_FEM_Draw_triggered()
     CreateWindow(
                 WC_STATIC, TEXT(">"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
-                294, 94, 50, 15,
+                294, 94, 8, 15,
                 hwnd_about, (HMENU)ABOUT_LABEL_AUTHOR_END, hInstance, NULL
                 );
     // Кнопка OK
