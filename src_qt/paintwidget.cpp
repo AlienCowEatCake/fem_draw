@@ -419,13 +419,11 @@ void paintwidget::tec_read(const QString & filename)
     {
         float coords[3];
         for(size_t j = 0; j < points_coord; j++)
-            //ifs >> coords[j];
             coords[j] = read_number(ifs);
         tec_data[i].coord.x = coords[ind[0]];
         tec_data[i].coord.y = coords[ind[1]];
         tec_data[i].value = new float [variables.size()];
         for(size_t k = 0; k < variables.size(); k++)
-            //ifs >> tec_data[i].value[k];
             tec_data[i].value[k] = read_number(ifs);
 
         if(tec_data[i].coord.x > max_x) max_x = tec_data[i].coord.x;

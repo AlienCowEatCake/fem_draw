@@ -211,8 +211,6 @@ void paintwidget::tec_read(LPCTSTR filename)
                         variables.push_back(tmpstr);
                     if(var_num < 3)
                         u_strlcpy(var_c[var_num++], tmpstr, VAR_MAX_LEN);
-                    //printf("[VAR]\t%s\n", tmpstr);
-                    //fflush(stdout);
                 }
                 else
                 {
@@ -333,8 +331,6 @@ void paintwidget::tec_read(LPCTSTR filename)
                 // У нас могут попасться заэкранированные символы в тексте, исправим это
                 for(char * ch = strchr(param_value, '\\'); ch != NULL; ch = strchr(ch + 1, '\\'))
                     memmove(ch, ch + 1, strlen(ch));
-                //printf("[PARAM]\t%s = %s\n", param_name, param_value);
-                //fflush(stdout);
 
                 // Для простоты приведем параметр и значение к верхнему регистру
                 // Интересующие нас строки заданы всегда латиницей, поэтому сделаем просто
@@ -346,9 +342,6 @@ void paintwidget::tec_read(LPCTSTR filename)
                 for(size_t i = 0; i < sle; i++)
                     if(param_value[i] >= 'a' && param_value[i] <= 'z')
                         param_value[i] += 'A' - 'a';
-
-                //printf("[P-C]\t%s = %s\n", param_name, param_value);
-                //fflush(stdout);
 
                 // Теперь разберемся, что за параметр мы считали
                 // Это "I"
@@ -473,13 +466,11 @@ void paintwidget::tec_read(LPCTSTR filename)
     {
         float coords[3];
         for(size_t j = 0; j < points_coord; j++)
-            //ifs >> coords[j];
             coords[j] = read_number(ifs);
         tec_data[i].coord.x = coords[ind[0]];
         tec_data[i].coord.y = coords[ind[1]];
         tec_data[i].value = (float *)malloc(sizeof(float) * variables.size());
         for(size_t k = 0; k < variables.size(); k++)
-            //ifs >> tec_data[i].value[k];
             tec_data[i].value[k] = read_number(ifs);
 
         if(tec_data[i].coord.x > max_x) max_x = tec_data[i].coord.x;
