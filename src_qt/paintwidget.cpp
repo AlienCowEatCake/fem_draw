@@ -157,19 +157,19 @@ void paintwidget::tec_read(const QString & filename)
                         return;
                     }
                     eos_flag = true;
-                    end_c = curr_c + QString(&*curr_c).length();
+                    end_c = tmp.end();
                 }
                 QString::iterator end_c_old = end_c;
                 if(use_quote)
                 {
                     // После кавычки надо найти разделитель и переместиться на него
-                    while(QString(&*end_c_old).length() > 1 && (* (end_c_old + 1) == ' ' || * (end_c_old + 1) == '\t' || * (end_c_old + 1) == ','))
+                    while(end_c_old + 1 != tmp.end() && (* (end_c_old + 1) == ' ' || * (end_c_old + 1) == '\t' || * (end_c_old + 1) == ','))
                         end_c_old++;
                 }
                 else
                 {
                     // Лишнего нам не надо, только само название переменной
-                    while(QString(&*end_c).length() > 0 && (* (end_c - 1) == ' ' || * (end_c - 1) == '\t'))
+                    while(* (end_c - 1) == ' ' || * (end_c - 1) == '\t')
                         end_c--;
                 }
                 // В нормальном случае длина больше нуля, однако если разделитель - пробел
@@ -301,26 +301,17 @@ void paintwidget::tec_read(const QString & filename)
                     }
                     // То есть все до конца строки есть искомое значение
                     flag_eol = true;
-                    param_value = QString(curr_c);
+                    param_value = QString(curr_c, tmp.end() - curr_c);
                 }
                 // У нас могут попасться заэкранированные символы в тексте, исправим это
                 for(int i = param_value.indexOf('\\'); i > 0; i = param_value.indexOf('\\', i + 1))
                     param_value.remove(i, 1);
 
                 // Для простоты приведем параметр и значение к верхнему регистру
-                // Интересующие нас строки заданы всегда латиницей, поэтому сделаем просто
                 for(QString::iterator it = param_name.begin(); it != param_name.end(); ++it)
-                {
-                    char ch = it->toAscii();
-                    if(ch >= 'a' && ch <= 'z')
-                        *it = ch + 'A' - 'a';
-                }
+                    *it = it->toUpper();
                 for(QString::iterator it = param_value.begin(); it != param_value.end(); ++it)
-                {
-                    char ch = it->toAscii();
-                    if(ch >= 'a' && ch <= 'z')
-                        *it = ch + 'A' - 'a';
-                }
+                    *it = it->toUpper();
 
                 // Теперь разберемся, что за параметр мы считали
                 // Это "I"
