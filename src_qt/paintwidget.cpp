@@ -998,6 +998,11 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
     fnt_serif.setPixelSize(fnt_serif_h < fnt_serif_w ? fnt_serif_h : fnt_serif_w);
     fnt_serif.setBold(true);
 
+#if defined HAVE_LESS_THAN_QT45
+    fnt_mono.setPointSizeF(qreal(fnt_mono.pixelSize()) * qreal(0.75));
+    fnt_serif.setPointSizeF(qreal(fnt_serif.pixelSize()) * qreal(0.75));
+#endif
+
     // Подписи осей
     painter.setFont(fnt_serif);
     painter.setPen(QPen(Qt::black, 1.0f));

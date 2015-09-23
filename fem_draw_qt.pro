@@ -16,6 +16,10 @@ greaterThan(QT_MAJOR_VERSION, 4) {
     DEFINES += HAVE_QT5
 }
 
+lessThan(QT_VERSION, 4.5.0) {
+    DEFINES += HAVE_LESS_THAN_QT45
+}
+
 SOURCES += \
     src_qt/paintwidget.cpp \
     src_qt/main.cpp \
