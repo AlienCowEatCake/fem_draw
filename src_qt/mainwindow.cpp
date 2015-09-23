@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QSvgGenerator>
 
 // Конструктор
 MainWindow::MainWindow(QWidget *parent) :
@@ -200,21 +201,24 @@ void MainWindow::on_actionSave_Image_File_triggered()
         formats.append(record);
         formats.append(")");
     }
+    formats.append(";;SVG Images (*.svg)");
+    formats_all.append(" *.svg");
+    supported.push_back("svg");
     formats_all.prepend("All Images (");
     formats_all.append(");;");
     formats.prepend(formats_all);
 
+    bool is_svg = false;
     QString fileName = QFileDialog::getSaveFileName(this, trUtf8("Save Image File"), last_saved, formats);
     if(fileName.length() == 0) return;
-    string fn = fileName.toStdString();
-    size_t found = fn.find_last_of(".");
-    if(found == string::npos)
+    int found = fileName.lastIndexOf('.');
+    if(found == -1)
     {
         fileName.append(".png");
     }
     else
     {
-        QString ext = fn.substr(found + 1).c_str();
+        QString ext = fileName.right(fileName.length() - found - 1);
         bool finded = false;
         for(QList<QByteArray>::const_iterator it = supported.begin(); it != supported.end() && !finded; ++it)
         {
@@ -223,17 +227,29 @@ void MainWindow::on_actionSave_Image_File_triggered()
         }
         if(!finded)
             fileName.append(".png");
+        if(ext.compare("svg", Qt::CaseInsensitive) == 0)
+            is_svg = true;
     }
     last_saved = fileName;
 
-    QImage image(ui->widget->width(), ui->widget->height(), QImage::Format_ARGB32_Premultiplied);
-    bool transparent = ui->actionTransparent_Image->isChecked();
-    if(transparent)
-        image.fill(Qt::transparent);
+    bool saved = false;
+    if(is_svg)
+    {
+        QSvgGenerator generator;
+        generator.setFileName(fileName);
+        generator.setSize(QSize(ui->widget->width(), ui->widget->height()));
+        generator.setViewBox(QRect(0, 0, ui->widget->width(), ui->widget->height()));
+        generator.setTitle(ui->widget->title);
+        generator.setDescription(trUtf8("An SVG drawing created by FEM Draw."));
+        ui->widget->draw(& generator, ui->actionTransparent_Image->isChecked());
+        saved = true;
+    }
     else
-        image.fill(Qt::white);
-    ui->widget->draw(& image, transparent);
-    bool saved = image.save(fileName);
+    {
+        QImage image(ui->widget->width(), ui->widget->height(), QImage::Format_ARGB32_Premultiplied);
+        ui->widget->draw(& image, ui->actionTransparent_Image->isChecked());
+        saved = image.save(fileName);
+    }
 
     if(!saved)
     {

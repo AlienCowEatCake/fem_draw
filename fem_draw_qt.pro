@@ -8,7 +8,7 @@ TARGET = fem_draw_qt
 TEMPLATE = app
 CONFIG += warn_on
 
-QT += core gui
+QT += core gui svg
 INCLUDEPATH += src_qt
 
 greaterThan(QT_MAJOR_VERSION, 4) {
