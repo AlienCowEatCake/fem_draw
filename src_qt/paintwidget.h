@@ -13,6 +13,23 @@
 
 using namespace std;
 
+// Класс QPoint с номером (для операций с графами)
+class QPointN : public QPoint
+{
+public:
+    int num;
+    QPoint toQPoint() const
+    {
+        return QPoint(x(), y());
+    }
+    QPointN(const QPoint & other, int num = -1)
+    {
+        setX(other.x());
+        setY(other.y());
+        this->num = num;
+    }
+};
+
 // Класс динамический массив (сокращенный)
 template<typename value_type, typename size_type = size_t>
 class dynarray_t
@@ -23,6 +40,7 @@ public:
     ~dynarray_t()                       { delete [] _data; }
     inline size_type size() const       { return _size; }
     inline void clear()                 { resize(0); }
+    inline value_type * data()          { return _data; }
     dynarray_t & operator = (const dynarray_t & x)
     {
         if(this != & x) {
@@ -135,7 +153,7 @@ public:
     size_t div_num;
 
     // Отрисовка сцены на QPaintDevice
-    void draw(QPaintDevice * device, bool transparency);
+    void draw(QPaintDevice * device, bool transparency, bool is_svg = false);
 
     // Перерисовать, сбросив валидность буфера
     void invalidate();

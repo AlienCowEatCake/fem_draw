@@ -4,10 +4,12 @@
 #include <QtGui>
 #endif
 #include "paintwidget.h"
-#include <cmath>
 #include <QFont>
 #include <QMessageBox>
 #include <QFile>
+#include <QList>
+#include <QVector>
+#include <cmath>
 #include <limits>
 #include <cstring>
 #include <cstdio>
@@ -954,7 +956,7 @@ const QColor default_normal_legend_colors[14] =
 };
 
 // Отрисовка сцены на QPaintDevice
-void paintwidget::draw(QPaintDevice * device, bool transparency)
+void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
 {
     QPainter painter;
     painter.begin(device);
@@ -1029,18 +1031,48 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
     // Раскрашивать будем если запрошено сие
     if(draw_color)
     {
-        // Отрисовка всех треугольников
-        for(size_t i = 0; i < triangles.size(); i++)
+        // Если не SVG, то рисуем как обычно
+        if(!is_svg)
         {
-            // Задаем посчитанный цвет
-            painter.setBrush(QBrush(triangles[i].color[draw_index]));
-            painter.setPen(QPen(triangles[i].color[draw_index], 1));
+            // Отрисовка всех треугольников
+            for(size_t i = 0; i < triangles.size(); i++)
+            {
+                // Задаем посчитанный цвет
+                painter.setBrush(QBrush(triangles[i].color[draw_index]));
+                painter.setPen(QPen(triangles[i].color[draw_index], 1));
 
-            // Рисуем
-            QPoint tr[3];
-            for(size_t k = 0; k < 3; k++)
-                tr[k] = to_window((triangles[i].nodes[k].x - min_x) / size_x, (triangles[i].nodes[k].y - min_y) / size_y);
-            painter.drawPolygon(tr, 3);
+                // Рисуем
+                QPoint tr[3];
+                for(size_t k = 0; k < 3; k++)
+                    tr[k] = to_window((triangles[i].nodes[k].x - min_x) / size_x, (triangles[i].nodes[k].y - min_y) / size_y);
+                painter.drawPolygon(tr, 3);
+            }
+        }
+        // Для SVG будем использовать растровую заливку цветом (иначе дюже жирный файл выходит)
+        else
+        {
+            QImage image(device->width(), device->height(), QImage::Format_ARGB32_Premultiplied);
+            QPainter painter_img;
+            painter_img.begin(& image);
+            painter_img.setViewport(0, 0, device->width(), device->height());
+            painter_img.fillRect(0, 0, device->width(), device->height(), QBrush(Qt::transparent));
+
+            // Отрисовка всех треугольников
+            for(size_t i = 0; i < triangles.size(); i++)
+            {
+                // Задаем посчитанный цвет
+                painter_img.setBrush(QBrush(triangles[i].color[draw_index]));
+                painter_img.setPen(QPen(triangles[i].color[draw_index], 1));
+
+                // Рисуем
+                QPoint tr[3];
+                for(size_t k = 0; k < 3; k++)
+                    tr[k] = to_window((triangles[i].nodes[k].x - min_x) / size_x, (triangles[i].nodes[k].y - min_y) / size_y);
+                painter_img.drawPolygon(tr, 3);
+            }
+
+            painter_img.end();
+            painter.drawImage(0, 0, image);
         }
     }
 
@@ -1048,6 +1080,11 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
     // Изолинии рисуем только если оно нам надо
     if(draw_isolines)
     {
+        // Узлы изолиний с номерами (нужно для графов для SVG)
+        QList<QPointN> isol_nodes_l;
+        // Списки смежности узлов изолиний (нужно для графов для SVG)
+        QVector<QList<int> > isol_connected;
+
         for(size_t i = 0; i < triangles.size(); i++)
         {
             // Теперь рисуем изолинии
@@ -1076,8 +1113,129 @@ void paintwidget::draw(QPaintDevice * device, bool transparency)
                 counter++;
             }
 
+            // Если есть что рисовать - нарисуем
             if(counter > 1)
-                painter.drawLine(isol_points[0], isol_points[1]);
+            {
+                // Если не SVG, то рисуем как обычно
+                if(!is_svg)
+                {
+                    painter.drawLine(isol_points[0], isol_points[1]);
+                }
+                // Для SVG нужно объединить все связные сегменты изолиний в одну полилинию
+                // Поэтому занумеруем все точки и построим списки смежности
+                else
+                {
+                    // Занумеруем точки
+                    int nums[2] = {-1, -1};
+                    for(size_t k = 0; k < 2; k++)
+                    {
+                        QPointN new_node(isol_points[k]);
+                        QList<QPointN>::iterator r = std::find(isol_nodes_l.begin(), isol_nodes_l.end(), new_node);
+                        if(r != isol_nodes_l.end())
+                            nums[k] = r->num;
+                        else
+                        {
+                            nums[k] = new_node.num = isol_nodes_l.size();
+                            isol_nodes_l.push_front(new_node);
+                        }
+                    }
+                    // Если есть непустой путь, то добавим его в списки смежности
+                    if(nums[0] != nums[1])
+                    {
+                        int max_num = (nums[0] > nums[1] ? nums[0] : nums[1]);
+                        if(isol_connected.size() <= max_num) isol_connected.resize(max_num + 1);
+                        isol_connected[nums[0]].push_back(nums[1]);
+                        isol_connected[nums[1]].push_back(nums[0]);
+                    }
+                }
+            }
+        }
+
+        // Для SVG по спискам смежности сделаем объединение сегментов в полилинию
+        if(is_svg)
+        {
+            // Перенесем все в вектор для удобства индексации
+            QVector<QPoint> isol_nodes_v(isol_nodes_l.size());
+            for(QList<QPointN>::iterator it = isol_nodes_l.begin(); it != isol_nodes_l.end(); ++it)
+                isol_nodes_v[it->num] = it->toQPoint();
+            isol_nodes_l.clear();
+
+            // Алгоритм в основан на поиске в глубину
+            while(true)
+            {
+                QList<int> path;
+
+                // Ищем вершину, с которой начнем свой путь
+                int beg_index;
+                for(beg_index = 0; beg_index < isol_connected.size(); beg_index++)
+                    if(isol_connected[beg_index].size() > 0)
+                        break;
+                if(beg_index == isol_connected.size())
+                    break;
+                path.push_back(beg_index);
+
+                // Идем обходом в глубину от этой вершины
+                int curr_index = beg_index;
+                while(true)
+                {
+                    QList<int>::iterator dest_iter = isol_connected[curr_index].begin();
+                    if(dest_iter == isol_connected[curr_index].end())
+                        break;
+                    int dest_index = * dest_iter;
+                    isol_connected[curr_index].erase(dest_iter);
+                    isol_connected[dest_index].erase(std::find(isol_connected[dest_index].begin(), isol_connected[dest_index].end(), curr_index));
+                    path.push_back(dest_index);
+                    curr_index = dest_index;
+                }
+
+                // И в обратную сторону тоже
+                curr_index = beg_index;
+                while(true)
+                {
+                    QList<int>::iterator dest_iter = isol_connected[curr_index].begin();
+                    if(dest_iter == isol_connected[curr_index].end())
+                        break;
+                    int dest_index = * dest_iter;
+                    isol_connected[curr_index].erase(dest_iter);
+                    isol_connected[dest_index].erase(std::find(isol_connected[dest_index].begin(), isol_connected[dest_index].end(), curr_index));
+                    path.push_front(dest_index);
+                    curr_index = dest_index;
+                }
+
+                // Подумаем, а стоит ли рисовать этот путь?
+                int critical_number = 5;        // Число сегментов, больше которого будем рисовать без вопросов
+                float critical_distance = 2.5f; // Максимальное расстояние между двумя точками в пути, == || ==
+                bool is_long_path = (path.size() > critical_number ? true : false);
+                if(!is_long_path)
+                {
+                    float max_distance = 0.0f;
+                    for(QList<int>::iterator it = path.begin(); it != path.end(); ++it)
+                    {
+                        for(QList<int>::iterator jt = path.begin(); jt != path.end(); ++jt)
+                        {
+                            float dx = (float)isol_nodes_v[* it].x() - (float)isol_nodes_v[* jt].x();
+                            float dy = (float)isol_nodes_v[* it].y() - (float)isol_nodes_v[* jt].y();
+                            float curr_distance = (float)sqrt(dx * dx + dy * dy);
+                            if(curr_distance > max_distance)
+                                max_distance = curr_distance;
+                        }
+                    }
+                    if(max_distance > critical_distance)
+                        is_long_path = true;
+                }
+                if(is_long_path)
+                {
+                    // Рисуем полученный путь
+                    QVector<QPoint> path_vec(path.size());
+                    int index = 0;
+                    for(QList<int>::iterator it = path.begin(); it != path.end(); ++it)
+                        path_vec[index++] = isol_nodes_v[* it];
+                    painter.drawPolyline(path_vec.data(), index);
+                    //painter.drawEllipse(isol_nodes_v[path.front()], 2, 2);
+                    //painter.drawEllipse(isol_nodes_v[path.back()], 2, 2);
+                }
+            }
+
         }
     }
 

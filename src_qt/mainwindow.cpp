@@ -241,9 +241,9 @@ void MainWindow::on_actionSave_Image_File_triggered()
 #if !defined HAVE_LESS_THAN_QT45
         generator.setViewBox(QRect(0, 0, ui->widget->width(), ui->widget->height()));
         generator.setTitle(ui->widget->title);
-        generator.setDescription(trUtf8("An SVG drawing created by FEM Draw."));
+        generator.setDescription(trUtf8("Generated with FEM Draw"));
 #endif
-        ui->widget->draw(& generator, ui->actionTransparent_Image->isChecked());
+        ui->widget->draw(& generator, ui->actionTransparent_Image->isChecked(), true);
         saved = true;
     }
     else
