@@ -1,6 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QList>
+#include <QVector>
 #include <QSvgGenerator>
+#include <QPrinter>
+#include <algorithm>
 
 // Конструктор
 MainWindow::MainWindow(QWidget *parent) :
@@ -183,60 +187,88 @@ void MainWindow::on_actionOpen_Tecplot_File_triggered()
 // Событие при сохранении
 void MainWindow::on_actionSave_Image_File_triggered()
 {
-    QList<QByteArray> supported = QImageWriter::supportedImageFormats();
-    QString formats, formats_all;
-    for(QList<QByteArray>::const_iterator it = supported.begin(); it != supported.end(); ++it)
+    QList<QByteArray> supported_temp = QImageWriter::supportedImageFormats();
+    QVector<QString> supported;
+    for(QList<QByteArray>::const_iterator it = supported_temp.begin(); it != supported_temp.end(); ++it)
+        supported.push_back(QString(*it).toLower());
+    supported_temp.clear();
+    supported.push_back("svg");
+//    supported.push_back("ps");
+    supported.push_back("pdf");
+
+    bool qt_jpg = true;
+    if(std::find(supported.begin(), supported.end(), "jpg") == supported.end())
     {
-        QString record(* it);
+        supported.push_back("jpg");
+        qt_jpg = false;
+    }
+
+    bool qt_gif = true;
+    if(std::find(supported.begin(), supported.end(), "gif") == supported.end())
+    {
+        supported.push_back("gif");
+        qt_gif = false;
+    }
+
+    bool qt_tga = true;
+    if(std::find(supported.begin(), supported.end(), "tga") == supported.end())
+    {
+        supported.push_back("tga");
+        qt_tga = false;
+    }
+
+    std::sort(supported.begin(), supported.end());
+
+    QString formats, formats_all;
+    for(QVector<QString>::const_iterator it = supported.begin(); it != supported.end(); ++it)
+    {
         if(formats_all.length() > 0)
             formats_all.append(" *.");
         else
             formats_all.append("*.");
-        formats_all.append(record);
+        formats_all.append(*it);
 
         if(formats.length() > 0)
             formats.append(";;");
-        formats.append(record.toUpper());
-        formats.append(" Images (*.");
-        formats.append(record);
+        formats.append(it->toUpper());
+        formats.append(" ");
+        formats.append(trUtf8("Images"));
+        formats.append(" (*.");
+        formats.append(*it);
         formats.append(")");
     }
-    formats.append(";;SVG Images (*.svg)");
-    formats_all.append(" *.svg");
-    supported.push_back("svg");
     formats_all.prepend("All Images (");
     formats_all.append(");;");
     formats.prepend(formats_all);
 
-    bool is_svg = false;
-    QString fileName = QFileDialog::getSaveFileName(this, trUtf8("Save Image File"), last_saved, formats);
-    if(fileName.length() == 0) return;
-    int found = fileName.lastIndexOf('.');
+    QString filename = QFileDialog::getSaveFileName(this, trUtf8("Save Image File"), last_saved, formats);
+    if(filename.length() == 0) return;
+
+    QString def_ext("png"), ext;
+    int found = filename.lastIndexOf('.');
     if(found == -1)
     {
-        fileName.append(".png");
+        filename.append(".");
+        filename.append(def_ext);
+        ext = def_ext;
     }
     else
     {
-        QString ext = fileName.right(fileName.length() - found - 1);
-        bool finded = false;
-        for(QList<QByteArray>::const_iterator it = supported.begin(); it != supported.end() && !finded; ++it)
+        ext = filename.right(filename.length() - found - 1).toLower();
+        if(std::find(supported.begin(), supported.end(), ext) == supported.end())
         {
-            if(ext.compare(QString(* it), Qt::CaseInsensitive) == 0)
-                finded = true;
+            filename.append(".");
+            filename.append(def_ext);
+            ext = def_ext;
         }
-        if(!finded)
-            fileName.append(".png");
-        if(ext.compare("svg", Qt::CaseInsensitive) == 0)
-            is_svg = true;
     }
-    last_saved = fileName;
+    last_saved = filename;
 
     bool saved = false;
-    if(is_svg)
+    if(ext == "svg")
     {
         QSvgGenerator generator;
-        generator.setFileName(fileName);
+        generator.setFileName(filename);
         generator.setSize(QSize(ui->widget->width(), ui->widget->height()));
 #if !defined HAVE_LESS_THAN_QT45
         generator.setViewBox(QRect(0, 0, ui->widget->width(), ui->widget->height()));
@@ -246,11 +278,36 @@ void MainWindow::on_actionSave_Image_File_triggered()
         ui->widget->draw(& generator, ui->actionTransparent_Image->isChecked(), true);
         saved = true;
     }
+    else if(ext == "ps" || ext == "pdf")
+    {
+        QPrinter printer(QPrinter::ScreenResolution);
+        if(ext == "pdf")
+            printer.setOutputFormat(QPrinter::PdfFormat);
+//        else if(ext == "ps")
+//            printer.setOutputFormat(QPrinter::PostScriptFormat);
+        printer.setOutputFileName(filename);
+        printer.setPaperSize(QSizeF(ui->widget->width(), ui->widget->height()), QPrinter::DevicePixel);
+        printer.setPageMargins(0, 0, 0, 0, QPrinter::DevicePixel);
+        ui->widget->draw(& printer, ui->actionTransparent_Image->isChecked(), true);
+        saved = true;
+    }
+    else if(ext == "jpg" && !qt_jpg)
+    {
+
+    }
+    else if(ext == "gif" && !qt_gif)
+    {
+
+    }
+    else if(ext == "tga" && !qt_tga)
+    {
+
+    }
     else
     {
         QImage image(ui->widget->width(), ui->widget->height(), QImage::Format_ARGB32_Premultiplied);
         ui->widget->draw(& image, ui->actionTransparent_Image->isChecked());
-        saved = image.save(fileName);
+        saved = image.save(filename);
     }
 
     if(!saved)

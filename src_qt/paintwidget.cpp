@@ -983,51 +983,6 @@ void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
         painter.drawLine(to_window(-0.01f, y), to_window(1.0f, y));
     }
 
-    // Координатные оси
-    painter.setPen(QPen(Qt::black, 2.0f));
-    painter.drawLine(to_window(0.0f, -0.005f), to_window(0.0f, 1.005f));
-    painter.drawLine(to_window(-0.005f, 0.0f), to_window(1.005f, 0.0f));
-
-    // Шрифты
-    QFont fnt_mono("Courier");
-    fnt_mono.setLetterSpacing(QFont::PercentageSpacing, 82);
-    int fnt_mono_h = height() / 45;
-    int fnt_mono_w = width() / 55;
-    fnt_mono.setPixelSize(fnt_mono_h < fnt_mono_w ? fnt_mono_h : fnt_mono_w);
-    QFont fnt_serif("Times");
-    int fnt_serif_h = height() / 40;
-    int fnt_serif_w = width() / 45;
-    fnt_serif.setPixelSize(fnt_serif_h < fnt_serif_w ? fnt_serif_h : fnt_serif_w);
-    fnt_serif.setBold(true);
-
-#if defined HAVE_LESS_THAN_QT45
-    fnt_mono.setPointSizeF(qreal(fnt_mono.pixelSize()) * qreal(0.75));
-    fnt_serif.setPointSizeF(qreal(fnt_serif.pixelSize()) * qreal(0.75));
-#endif
-
-    // Подписи осей
-    painter.setFont(fnt_serif);
-    painter.setPen(QPen(Qt::black, 1.0f));
-    painter.drawText(to_window(0.99f, -0.04f), label_x);
-    painter.drawText(to_window(-0.05f, 0.99f), label_y);
-
-    // Отрисовка шкалы
-    painter.setFont(fnt_mono);
-    for(size_t i = 0; i < num_ticks_x; i++)
-    {
-        float x = (float)i / (float)num_ticks_x;
-        float x_real = (float)(std::floor((x * size_x + min_x) * 10000.0f + 0.5f)) / 10000.0f;
-        QString st = QString::number(x_real);
-        painter.drawText(to_window(x - 0.01f, -0.04f), st);
-    }
-    for(size_t i = 0; i < num_ticks_y; i++)
-    {
-        float y = (float)i / (float)num_ticks_y;
-        float y_real = (float)(std::floor((y * size_y + min_y) * 10000.0f + 0.5f)) / 10000.0f;
-        QString st = QString::number(y_real);
-        painter.drawText(to_window(-0.05f, y - 0.01f), st);
-    }
-
     // Раскрашивать будем если запрошено сие
     if(draw_color)
     {
@@ -1237,6 +1192,51 @@ void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
             }
 
         }
+    }
+
+    // Координатные оси
+    painter.setPen(QPen(Qt::black, 2.0f));
+    painter.drawLine(to_window(0.0f, -0.005f), to_window(0.0f, 1.005f));
+    painter.drawLine(to_window(-0.005f, 0.0f), to_window(1.005f, 0.0f));
+
+    // Шрифты
+    QFont fnt_mono("Courier");
+    fnt_mono.setLetterSpacing(QFont::PercentageSpacing, 82);
+    int fnt_mono_h = height() / 45;
+    int fnt_mono_w = width() / 55;
+    fnt_mono.setPixelSize(fnt_mono_h < fnt_mono_w ? fnt_mono_h : fnt_mono_w);
+    QFont fnt_serif("Times");
+    int fnt_serif_h = height() / 40;
+    int fnt_serif_w = width() / 45;
+    fnt_serif.setPixelSize(fnt_serif_h < fnt_serif_w ? fnt_serif_h : fnt_serif_w);
+    fnt_serif.setBold(true);
+
+#if defined HAVE_LESS_THAN_QT45
+    fnt_mono.setPointSizeF(qreal(fnt_mono.pixelSize()) * qreal(0.75));
+    fnt_serif.setPointSizeF(qreal(fnt_serif.pixelSize()) * qreal(0.75));
+#endif
+
+    // Подписи осей
+    painter.setFont(fnt_serif);
+    painter.setPen(QPen(Qt::black, 1.0f));
+    painter.drawText(to_window(0.99f, -0.04f), label_x);
+    painter.drawText(to_window(-0.05f, 0.99f), label_y);
+
+    // Отрисовка шкалы
+    painter.setFont(fnt_mono);
+    for(size_t i = 0; i < num_ticks_x; i++)
+    {
+        float x = (float)i / (float)num_ticks_x;
+        float x_real = (float)(std::floor((x * size_x + min_x) * 10000.0f + 0.5f)) / 10000.0f;
+        QString st = QString::number(x_real);
+        painter.drawText(to_window(x - 0.01f, -0.04f), st);
+    }
+    for(size_t i = 0; i < num_ticks_y; i++)
+    {
+        float y = (float)i / (float)num_ticks_y;
+        float y_real = (float)(std::floor((y * size_y + min_y) * 10000.0f + 0.5f)) / 10000.0f;
+        QString st = QString::number(y_real);
+        painter.drawText(to_window(-0.05f, y - 0.01f), st);
     }
 
     // Легенда
