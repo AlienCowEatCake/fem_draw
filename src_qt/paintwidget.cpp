@@ -1011,6 +1011,9 @@ void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
             painter_img.begin(& image);
             painter_img.setViewport(0, 0, device->width(), device->height());
             painter_img.fillRect(0, 0, device->width(), device->height(), QBrush(Qt::transparent));
+            // Изображение потом обрежем по реальному полезному размеру
+            int max_x_real = -numeric_limits<int>::max(), max_y_real = -numeric_limits<int>::max();
+            int min_x_real = numeric_limits<int>::max(), min_y_real = numeric_limits<int>::max();
 
             // Отрисовка всех треугольников
             for(size_t i = 0; i < triangles.size(); i++)
@@ -1022,12 +1025,19 @@ void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
                 // Рисуем
                 QPoint tr[3];
                 for(size_t k = 0; k < 3; k++)
+                {
                     tr[k] = to_window((triangles[i].nodes[k].x - min_x) / size_x, (triangles[i].nodes[k].y - min_y) / size_y);
+                    if(tr[k].x() < min_x_real) min_x_real = tr[k].x();
+                    if(tr[k].x() > max_x_real) max_x_real = tr[k].x();
+                    if(tr[k].y() < min_y_real) min_y_real = tr[k].y();
+                    if(tr[k].y() > max_y_real) max_y_real = tr[k].y();
+                }
                 painter_img.drawPolygon(tr, 3);
             }
 
             painter_img.end();
-            painter.drawImage(0, 0, image);
+            image = image.copy(min_x_real, min_y_real, max_x_real - min_x_real + 1, max_y_real - min_y_real + 1);
+            painter.drawImage(min_x_real, min_y_real, image);
         }
     }
 
@@ -1300,7 +1310,7 @@ void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
             static const float hy = 0.073f;
             painter.setBrush(QBrush(legend_colors[i]));
             painter.setPen(QPen(legend_colors[i], 1));
-            painter.drawRect(QRect(to_window(x0, y0 + dy * i), to_window(x0 + hx, y0 + dy * i + hy)));
+            painter.drawRect(QRect(to_window(x0, y0 + dy * i + hy), to_window(x0 + hx, y0 + dy * i)));
             painter.setFont(fnt_mono);
             painter.setPen(QPen(Qt::black));
             QString st = QString::number(legend_values[i], 'E', 2);
