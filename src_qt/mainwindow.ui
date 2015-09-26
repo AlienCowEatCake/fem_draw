@@ -200,6 +200,7 @@
      <string>About</string>
     </property>
     <addaction name="actionAbout_FEM_Draw"/>
+    <addaction name="actionAbout_Third_Party_Libraries"/>
     <addaction name="actionAbout_Qt"/>
    </widget>
    <widget class="QMenu" name="menuConfiguration">
@@ -271,6 +272,11 @@
   <action name="actionAbout_FEM_Draw">
    <property name="text">
     <string>About FEM Draw</string>
+   </property>
+  </action>
+  <action name="actionAbout_Third_Party_Libraries">
+   <property name="text">
+    <string>About Third Party Libraries</string>
    </property>
   </action>
   <action name="actionAbout_Qt">

@@ -57,6 +57,8 @@ private slots:
     void on_actionMemory_Limit_triggered();
     // Событие при нажатии кнопки About
     void on_actionAbout_FEM_Draw_triggered();
+    // Событие при нажатии кнопки About Libraries
+    void on_actionAbout_Third_Party_Libraries_triggered();
     // Событие при переключении закраски цветом
     void on_checkBox_Color_clicked();
     // Изменение переменной, которую выводим

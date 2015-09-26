@@ -5,6 +5,7 @@
 #include <QSvgGenerator>
 #include <QPrinter>
 #include <algorithm>
+#include "libs/jo_images.h"
 
 // Конструктор
 MainWindow::MainWindow(QWidget *parent) :
@@ -193,7 +194,9 @@ void MainWindow::on_actionSave_Image_File_triggered()
         supported.push_back(QString(*it).toLower());
     supported_temp.clear();
     supported.push_back("svg");
+//#if !defined HAVE_QT5
 //    supported.push_back("ps");
+//#endif
     supported.push_back("pdf");
 
     bool qt_jpg = true;
@@ -278,13 +281,19 @@ void MainWindow::on_actionSave_Image_File_triggered()
         ui->widget->draw(& generator, ui->actionTransparent_Image->isChecked(), true);
         saved = true;
     }
-    else if(ext == "ps" || ext == "pdf")
+//#if !defined HAVE_QT5
+//    else if(ext == "ps" || ext == "pdf")
+//#else
+    else if(ext == "pdf")
+//#endif
     {
         QPrinter printer(QPrinter::ScreenResolution);
         if(ext == "pdf")
             printer.setOutputFormat(QPrinter::PdfFormat);
+//#if !defined HAVE_QT5
 //        else if(ext == "ps")
 //            printer.setOutputFormat(QPrinter::PostScriptFormat);
+//#endif
         printer.setOutputFileName(filename);
         printer.setPaperSize(QSizeF(ui->widget->width(), ui->widget->height()), QPrinter::DevicePixel);
         printer.setPageMargins(0, 0, 0, 0, QPrinter::DevicePixel);
@@ -293,15 +302,47 @@ void MainWindow::on_actionSave_Image_File_triggered()
     }
     else if(ext == "jpg" && !qt_jpg)
     {
-
+        QFile file(filename);
+        file.open(QIODevice::WriteOnly);
+        QDataStream stream(&file);
+        if(stream.status() == QDataStream::Ok)
+        {
+            QImage image(ui->widget->width(), ui->widget->height(), QImage::Format_ARGB32_Premultiplied);
+            ui->widget->draw(& image, false);
+            jo_write_jpg(stream, image);
+            stream.device()->close();
+            saved = true;
+        }
     }
     else if(ext == "gif" && !qt_gif)
     {
-
+        QFile file(filename);
+        file.open(QIODevice::WriteOnly);
+        QDataStream stream(&file);
+        if(stream.status() == QDataStream::Ok)
+        {
+            QImage image(ui->widget->width(), ui->widget->height(), QImage::Format_ARGB32_Premultiplied);
+            ui->widget->draw(& image, false);
+            q_jo_gif_t gif = jo_gif_start(stream, image.width(), image.height());
+            jo_gif_frame(gif, image, 0);
+            jo_gif_end(gif);
+            stream.device()->close();
+            saved = true;
+        }
     }
     else if(ext == "tga" && !qt_tga)
     {
-
+        QFile file(filename);
+        file.open(QIODevice::WriteOnly);
+        QDataStream stream(&file);
+        if(stream.status() == QDataStream::Ok)
+        {
+            QImage image(ui->widget->width(), ui->widget->height(), QImage::Format_ARGB32_Premultiplied);
+            ui->widget->draw(& image, ui->actionTransparent_Image->isChecked());
+            jo_write_tga(stream, image, ui->actionTransparent_Image->isChecked());
+            stream.device()->close();
+            saved = true;
+        }
     }
     else
     {
@@ -417,6 +458,35 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
                    "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
                    "Copyright &copy; 2014-2015<br>"
                    "Peter Zhigalov &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;");
+    msgBox.setIconPixmap(QPixmap::fromImage(QImage(":/resources/icon_64.png")));
+    msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+    msgBox.exec();
+}
+
+// Событие при нажатии кнопки About Libraries
+void MainWindow::on_actionAbout_Third_Party_Libraries_triggered()
+{
+    QMessageBox msgBox;
+    msgBox.setAttribute(Qt::WA_QuitOnClose);
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+    msgBox.setWindowTitle("About Third Party Libraries");
+    msgBox.setText("<b>Third Party Libraries:</b><br>"
+                   "<table border=\"0\">"
+                   "<tr><td style=\"padding-right:8%\">Library:</td><td>Jon Olick JPEG Writer</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">License:</td><td>public domain</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">Website:</td><td><a href=\"http://www.jonolick.com/code.html\">http://www.jonolick.com/code.html</td></tr>"
+                   "</table><br>"
+                   "<table border=\"0\">"
+                   "<tr><td style=\"padding-right:8%\">Library:</td><td>Jon Olick GIF Writer</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">License:</td><td>public domain</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">Website:</td><td><a href=\"http://www.jonolick.com/code.html\">http://www.jonolick.com/code.html</td></tr>"
+                   "</table><br>"
+                   "<table border=\"0\">"
+                   "<tr><td style=\"padding-right:8%\">Library:</td><td>Jon Olick TGA Writer</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">License:</td><td>public domain</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">Website:</td><td><a href=\"http://www.jonolick.com/code.html\">http://www.jonolick.com/code.html</td></tr>"
+                   "</table>");
     msgBox.setIconPixmap(QPixmap::fromImage(QImage(":/resources/icon_64.png")));
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
     msgBox.exec();
