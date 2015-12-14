@@ -385,8 +385,8 @@ void paintwidget::tec_read(const QString & filename)
             ind[1] = 1;
         }
     }
-    nx = IJK[ind[0]];
-    ny = IJK[ind[1]];
+    nx = IJK[ind[1]];
+    ny = IJK[ind[0]];
     label_x = var_c[ind[0]];
     label_y = var_c[ind[1]];
 
@@ -556,14 +556,14 @@ void paintwidget::set_div_num(size_t num)
     {
         for(size_t j = 0; j < ny - 1; j++)
         {
-            float x0 = tec_data[i * nx + j].coord.x;
-            float y0 = tec_data[i * nx + j].coord.y;
-            float x1 = tec_data[(i + 1) * nx + j + 1].coord.x;
-            float y1 = tec_data[(i + 1) * nx + j + 1].coord.y;
+            float x0 = tec_data[i * ny + j].coord.x;
+            float y0 = tec_data[i * ny + j].coord.y;
+            float x1 = tec_data[(i + 1) * ny + j + 1].coord.x;
+            float y1 = tec_data[(i + 1) * ny + j + 1].coord.y;
             float hx = x1 - x0;
             float hy = y1 - y0;
-            float step_x_i = std::fabs(tec_data[(i + 1) * nx + j].coord.x - x0);
-            float step_x_j = std::fabs(tec_data[i * nx + j + 1].coord.x - x0);
+            float step_x_i = std::fabs(tec_data[(i + 1) * ny + j].coord.x - x0);
+            float step_x_j = std::fabs(tec_data[i * ny + j + 1].coord.x - x0);
             bool native_order = (step_x_i > step_x_j) ? true : false;
 
             for(size_t tn = 0; tn < tmp1_size; tn++)
@@ -587,17 +587,17 @@ void paintwidget::set_div_num(size_t num)
                         float r1, r2;
                         if(native_order)
                         {
-                            r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j].value[m] +
-                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * nx + j].value[m];
-                            r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j + 1].value[m] +
-                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
+                            r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * ny + j].value[m] +
+                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * ny + j].value[m];
+                            r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * ny + j + 1].value[m] +
+                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * ny + j + 1].value[m];
                         }
                         else
                         {
-                            r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * nx + j].value[m] +
-                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[i * nx + j + 1].value[m];
-                            r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[(i + 1) * nx + j].value[m] +
-                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
+                            r1 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[i * ny + j].value[m] +
+                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[i * ny + j + 1].value[m];
+                            r2 = (x1 - tmp_tr.nodes[k].x) / hx * tec_data[(i + 1) * ny + j].value[m] +
+                                    (tmp_tr.nodes[k].x - x0) / hx * tec_data[(i + 1) * ny + j + 1].value[m];
                         }
                         tmp_tr.solution[k][m] = (y1 - tmp_tr.nodes[k].y) / hy * r1 +
                                              (tmp_tr.nodes[k].y - y0) / hy * r2;
@@ -621,17 +621,17 @@ void paintwidget::set_div_num(size_t num)
                     float r1, r2;
                     if(native_order)
                     {
-                        r1 = (x1 - barycenter.x) / hx * tec_data[i * nx + j].value[m] +
-                                (barycenter.x - x0) / hx * tec_data[(i + 1) * nx + j].value[m];
-                        r2 = (x1 - barycenter.x) / hx * tec_data[i * nx + j + 1].value[m] +
-                                (barycenter.x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
+                        r1 = (x1 - barycenter.x) / hx * tec_data[i * ny + j].value[m] +
+                                (barycenter.x - x0) / hx * tec_data[(i + 1) * ny + j].value[m];
+                        r2 = (x1 - barycenter.x) / hx * tec_data[i * ny + j + 1].value[m] +
+                                (barycenter.x - x0) / hx * tec_data[(i + 1) * ny + j + 1].value[m];
                     }
                     else
                     {
-                        r1 = (x1 - barycenter.x) / hx * tec_data[i * nx + j].value[m] +
-                                (barycenter.x - x0) / hx * tec_data[i * nx + j + 1].value[m];
-                        r2 = (x1 - barycenter.x) / hx * tec_data[(i + 1) * nx + j].value[m] +
-                                (barycenter.x - x0) / hx * tec_data[(i + 1) * nx + j + 1].value[m];
+                        r1 = (x1 - barycenter.x) / hx * tec_data[i * ny + j].value[m] +
+                                (barycenter.x - x0) / hx * tec_data[i * ny + j + 1].value[m];
+                        r2 = (x1 - barycenter.x) / hx * tec_data[(i + 1) * ny + j].value[m] +
+                                (barycenter.x - x0) / hx * tec_data[(i + 1) * ny + j + 1].value[m];
                     }
                     center[m] = (y1 - barycenter.y) / hy * r1 +
                                          (barycenter.y - y0) / hy * r2;
@@ -1331,7 +1331,7 @@ void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
         {
             for(size_t i = 0; i < nx; i += skip_vec)
             {
-                tecplot_node * v = & tec_data[j * nx + i];
+                tecplot_node * v = & tec_data[i * ny + j];
                 QPoint begin = to_window((v->coord.x - min_x) / size_x, (v->coord.y - min_y) / size_y);
                 float len_x = v->value[ind_vec_1];
                 float len_y = v->value[ind_vec_2];
