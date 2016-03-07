@@ -440,7 +440,11 @@ void MainWindow::on_actionShow_Isolines_triggered()
 // Событие при запросе конфигурации цвета изолиний
 void MainWindow::on_actionIsolines_Color_triggered()
 {
+#if !defined HAVE_LESS_THAN_QT45
     QColor color = QColorDialog::getColor(ui->widget->isolines_config.color, this, trUtf8("Select Isolines Color"));
+#else
+    QColor color = QColorDialog::getColor(ui->widget->isolines_config.color, this);
+#endif
     if(color != ui->widget->isolines_config.color)
     {
         ui->widget->isolines_config.color = color;
@@ -470,7 +474,11 @@ void MainWindow::on_actionShow_Vectors_triggered()
 // Событие при запросе конфигурации цвета векторов
 void MainWindow::on_actionVectors_Color_triggered()
 {
+#if !defined HAVE_LESS_THAN_QT45
     QColor color = QColorDialog::getColor(ui->widget->vectors_config.color, this, trUtf8("Select Vectors Color"));
+#else
+    QColor color = QColorDialog::getColor(ui->widget->isolines_config.color, this);
+#endif
     if(color != ui->widget->vectors_config.color)
     {
         ui->widget->vectors_config.color = color;
@@ -554,7 +562,7 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setDefaultButton(QMessageBox::Ok);
     msgBox.setWindowTitle("About");
-    msgBox.setText("<b>FEM Draw v1.5 (Qt)</b><br><br>"
+    msgBox.setText("<b>FEM Draw v1.6 beta1 (Qt)</b><br><br>"
                    "<a href=\"https://fami.codefreak.ru/osp/fem_draw/\">https://fami.codefreak.ru/osp/fem_draw/</a><br>"
                    "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
                    "Copyright &copy; 2014-2016<br>"
