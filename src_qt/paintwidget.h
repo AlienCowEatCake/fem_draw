@@ -99,6 +99,18 @@ public:
     }
 };
 
+// Класс конфигурация для объектов-линий (изолиний, векторов)
+class lines_config
+{
+public:
+    QColor color;
+    float width;
+    float length;
+    float arrow_size;
+    lines_config(QColor n_color = Qt::black, float n_width = 1.0f, float n_length = 10.0f, float n_arrow_size = 5.0f)
+        : color(n_color), width(n_width), length(n_length), arrow_size(n_arrow_size) {}
+};
+
 // Класс виджет для рисования на QPaintDevice
 class paintwidget : public QWidget
 {
@@ -158,6 +170,10 @@ public:
     // Перерисовать, сбросив валидность буфера
     void invalidate();
 
+    // Конфигурация изолиний
+    lines_config isolines_config;
+    // Конфигурация векторов
+    lines_config vectors_config;
     // Использовать ли фиолетовые оттенки цвета
     // Дает большую комбинацию оттенков, но приводит к
     // некоторому дисбалансу между красным и синим

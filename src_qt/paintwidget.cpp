@@ -737,6 +737,8 @@ paintwidget::paintwidget(QWidget * parent) : QWidget(parent)
     div_num = 2;
     vect_value = 1;
 
+    isolines_config = lines_config(Qt::black, 1.0f);
+    vectors_config = lines_config(Qt::black, 1.0f, 10.0f, 5.0f);
     use_purple = false;
     use_legend = true;
     use_light_colors = true;
@@ -1086,10 +1088,10 @@ void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
         }
     }
 
-    painter.setPen(QPen(Qt::black, 1.0f));
     // Изолинии рисуем только если оно нам надо
     if(draw_isolines)
     {
+        painter.setPen(QPen(isolines_config.color, isolines_config.width));
         // Узлы изолиний с номерами (нужно для графов для SVG)
         QList<QPointN> isol_nodes_l;
         // Списки смежности узлов изолиний (нужно для графов для SVG)
@@ -1320,10 +1322,9 @@ void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
 
     if(draw_vectors)
     {
-        painter.setPen(QPen(Qt::black, 1.0f));
-        painter.setBrush(QBrush(Qt::black));
+        painter.setPen(QPen(vectors_config.color, vectors_config.width));
 
-        float vec_len = 10.0f, arrow_len = 5.0f;
+        float vec_len = vectors_config.length, arrow_len = vectors_config.arrow_size;
         float angle = 38.0f * 3.14159265358979323846f / 180.0f;
         float sin_angle = std::sin(angle), cos_angle = std::cos(angle);
 

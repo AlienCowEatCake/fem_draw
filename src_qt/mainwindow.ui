@@ -212,17 +212,37 @@
     <addaction name="actionUse_Purple_Colors"/>
     <addaction name="actionMemory_Limit"/>
    </widget>
+   <widget class="QMenu" name="menuIsolines">
+    <property name="title">
+     <string>Isolines</string>
+    </property>
+    <addaction name="actionShow_Isolines"/>
+    <addaction name="actionIsolines_Color"/>
+    <addaction name="actionIsolines_Width"/>
+   </widget>
+   <widget class="QMenu" name="menuVectors">
+    <property name="title">
+     <string>Vectors</string>
+    </property>
+    <addaction name="actionShow_Vectors"/>
+    <addaction name="actionVectors_Color"/>
+    <addaction name="actionVectors_Width"/>
+    <addaction name="actionVectors_Length"/>
+    <addaction name="actionArrowSize"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuInterpolation"/>
+   <addaction name="menuIsolines"/>
+   <addaction name="menuVectors"/>
    <addaction name="menuConfiguration"/>
    <addaction name="menuAbout"/>
   </widget>
   <action name="actionOpen_Tecplot_File">
    <property name="text">
-    <string>Open Tecplot File</string>
+    <string>Open Tecplot File...</string>
    </property>
    <property name="toolTip">
-    <string>Open Tecplot file</string>
+    <string>Open Tecplot File...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -230,10 +250,10 @@
   </action>
   <action name="actionSave_Image_File">
    <property name="text">
-    <string>Save Image File</string>
+    <string>Save Image File...</string>
    </property>
    <property name="toolTip">
-    <string>Save Image File</string>
+    <string>Save Image File...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
@@ -271,17 +291,17 @@
   </action>
   <action name="actionAbout_FEM_Draw">
    <property name="text">
-    <string>About FEM Draw</string>
+    <string>About FEM Draw...</string>
    </property>
   </action>
   <action name="actionAbout_Third_Party_Libraries">
    <property name="text">
-    <string>About Third Party Libraries</string>
+    <string>About Third Party Libraries...</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
    <property name="text">
-    <string>About Qt</string>
+    <string>About Qt...</string>
    </property>
   </action>
   <action name="actionTransparent_Image">
@@ -290,6 +310,52 @@
    </property>
    <property name="text">
     <string>Transparent Image</string>
+   </property>
+  </action>
+  <action name="actionShow_Isolines">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Isolines</string>
+   </property>
+  </action>
+  <action name="actionIsolines_Color">
+   <property name="text">
+    <string>Isolines Color...</string>
+   </property>
+  </action>
+  <action name="actionIsolines_Width">
+   <property name="text">
+    <string>Isolines Width...</string>
+   </property>
+  </action>
+  <action name="actionShow_Vectors">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Vectors</string>
+   </property>
+  </action>
+  <action name="actionVectors_Color">
+   <property name="text">
+    <string>Vectors Color...</string>
+   </property>
+  </action>
+  <action name="actionVectors_Width">
+   <property name="text">
+    <string>Vectors Width...</string>
+   </property>
+  </action>
+  <action name="actionVectors_Length">
+   <property name="text">
+    <string>Vectors Length...</string>
+   </property>
+  </action>
+  <action name="actionArrowSize">
+   <property name="text">
+    <string>Vectors Arrow Size...</string>
    </property>
   </action>
   <action name="actionShow_Legend">

@@ -47,6 +47,22 @@ private slots:
     // Событие при изменении уровня интерполяции
     void on_actionIncrease_Interpolation_triggered();
     void on_actionDecrease_Interpolation_triggered();
+    // Событие при переключении рисования изолиний из меню
+    void on_actionShow_Isolines_triggered();
+    // Событие при запросе конфигурации цвета изолиний
+    void on_actionIsolines_Color_triggered();
+    // Событие при запросе конфигурации толщины изолиний
+    void on_actionIsolines_Width_triggered();
+    // Событие при переключении рисования векторов из меню
+    void on_actionShow_Vectors_triggered();
+    // Событие при запросе конфигурации цвета векторов
+    void on_actionVectors_Color_triggered();
+    // Событие при запросе конфигурации толщины векторов
+    void on_actionVectors_Width_triggered();
+    // Событие при запросе конфигурации длины векторов
+    void on_actionVectors_Length_triggered();
+    // Событие при запросе конфигурации размера стрелок векторов
+    void on_actionArrowSize_triggered();
     // Событие при переключении рисования легенды
     void on_actionShow_Legend_triggered();
     // Событие при переключении использования светлых цветов

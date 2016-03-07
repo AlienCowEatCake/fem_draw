@@ -4,7 +4,10 @@
 #include <QVector>
 #include <QSvgGenerator>
 #include <QPrinter>
+#include <QColorDialog>
+#include <QInputDialog>
 #include <algorithm>
+#include <cmath>
 #include "libs/jo_images.h"
 
 // Конструктор
@@ -46,6 +49,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->spinBox_Vectors->setMinimum(1);
     ui->spinBox_Vectors->setMaximum(10000);
     ui->spinBox_Vectors->setValue(1);
+    ui->actionShow_Isolines->setChecked(ui->checkBox_Isolines->isChecked());
+    ui->actionShow_Vectors->setChecked(ui->checkBox_Vectors->isChecked());
 
     // Немного эстетства
     this->setWindowTitle("FEM Draw");
@@ -416,6 +421,92 @@ void MainWindow::on_actionDecrease_Interpolation_triggered()
     }
 }
 
+// Событие при переключении рисования изолиний из меню
+void MainWindow::on_actionShow_Isolines_triggered()
+{
+    ui->checkBox_Isolines->click();
+}
+
+// Событие при запросе конфигурации цвета изолиний
+void MainWindow::on_actionIsolines_Color_triggered()
+{
+    QColor color = QColorDialog::getColor(ui->widget->isolines_config.color, this, trUtf8("Select Isolines Color"));
+    if(color != ui->widget->isolines_config.color)
+    {
+        ui->widget->isolines_config.color = color;
+        ui->widget->invalidate();
+    }
+}
+
+// Событие при запросе конфигурации толщины изолиний
+void MainWindow::on_actionIsolines_Width_triggered()
+{
+    bool ok = false;
+    float width = (float)QInputDialog::getDouble(this, trUtf8("Width"), trUtf8("Select Isolines Width:"),
+                                                 (double)ui->widget->isolines_config.width, 1.0, 10.0, 1, &ok);
+    if(ok && fabs(width - ui->widget->isolines_config.width) > 1e-5)
+    {
+        ui->widget->isolines_config.width = width;
+        ui->widget->invalidate();
+    }
+}
+
+// Событие при переключении рисования векторов из меню
+void MainWindow::on_actionShow_Vectors_triggered()
+{
+    ui->checkBox_Vectors->click();
+}
+
+// Событие при запросе конфигурации цвета векторов
+void MainWindow::on_actionVectors_Color_triggered()
+{
+    QColor color = QColorDialog::getColor(ui->widget->vectors_config.color, this, trUtf8("Select Vectors Color"));
+    if(color != ui->widget->vectors_config.color)
+    {
+        ui->widget->vectors_config.color = color;
+        ui->widget->invalidate();
+    }
+}
+
+// Событие при запросе конфигурации толщины векторов
+void MainWindow::on_actionVectors_Width_triggered()
+{
+    bool ok = false;
+    float width = (float)QInputDialog::getDouble(this, trUtf8("Width"), trUtf8("Select Vectors Width:"),
+                                                 (double)ui->widget->vectors_config.width, 1.0, 10.0, 1, &ok);
+    if(ok && fabs(width - ui->widget->vectors_config.width) > 1e-5)
+    {
+        ui->widget->vectors_config.width = width;
+        ui->widget->invalidate();
+    }
+}
+
+// Событие при запросе конфигурации длины векторов
+void MainWindow::on_actionVectors_Length_triggered()
+{
+    bool ok = false;
+    float length = (float)QInputDialog::getDouble(this, trUtf8("Length"), trUtf8("Select Vectors Length:"),
+                                                  (double)ui->widget->vectors_config.length, 1.0, 100.0, 1, &ok);
+    if(ok && fabs(length - ui->widget->vectors_config.length) > 1e-5)
+    {
+        ui->widget->vectors_config.length = length;
+        ui->widget->invalidate();
+    }
+}
+
+// Событие при запросе конфигурации размера стрелок векторов
+void MainWindow::on_actionArrowSize_triggered()
+{
+    bool ok = false;
+    float arrow_size = (float)QInputDialog::getDouble(this, trUtf8("Arrow Size"), trUtf8("Select Arrow Size:"),
+                                                      (double)ui->widget->vectors_config.arrow_size, 1.0, 25.0, 1, &ok);
+    if(ok && fabs(arrow_size - ui->widget->vectors_config.arrow_size) > 1e-5)
+    {
+        ui->widget->vectors_config.arrow_size = arrow_size;
+        ui->widget->invalidate();
+    }
+}
+
 // Событие при переключении рисования легенды
 void MainWindow::on_actionShow_Legend_triggered()
 {
@@ -456,7 +547,7 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
     msgBox.setText("<b>FEM Draw v1.5 (Qt)</b><br><br>"
                    "<a href=\"https://fami.codefreak.ru/osp/fem_draw/\">https://fami.codefreak.ru/osp/fem_draw/</a><br>"
                    "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
-                   "Copyright &copy; 2014-2015<br>"
+                   "Copyright &copy; 2014-2016<br>"
                    "Peter Zhigalov &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;");
     msgBox.setIconPixmap(QPixmap::fromImage(QImage(":/resources/icon_64.png")));
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
@@ -513,7 +604,9 @@ void MainWindow::on_comboBox_Color_currentIndexChanged(int index)
 // Событие при переключении рисования изолиний
 void MainWindow::on_checkBox_Isolines_clicked()
 {
-    ui->widget->draw_isolines = ui->checkBox_Isolines->isChecked();
+    bool status = ui->checkBox_Isolines->isChecked();
+    ui->actionShow_Isolines->setChecked(status);
+    ui->widget->draw_isolines = status;
     ui->widget->invalidate();
 }
 
@@ -534,7 +627,9 @@ void MainWindow::on_spinBox_Isolines_valueChanged(int arg1)
 // Переключение рисовки векторов
 void MainWindow::on_checkBox_Vectors_clicked()
 {
-    ui->widget->draw_vectors = ui->checkBox_Vectors->isChecked();
+    bool status = ui->checkBox_Vectors->isChecked();
+    ui->actionShow_Vectors->setChecked(status);
+    ui->widget->draw_vectors = status;
     ui->widget->invalidate();
 }
 
