@@ -184,6 +184,7 @@
     <addaction name="actionOpen_Tecplot_File"/>
     <addaction name="separator"/>
     <addaction name="actionTransparent_Image"/>
+    <addaction name="actionCopy_Image_to_Clipboard"/>
     <addaction name="actionSave_Image_File"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
@@ -246,6 +247,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionCopy_Image_to_Clipboard">
+   <property name="text">
+    <string>Copy Image to Clipboard</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
    </property>
   </action>
   <action name="actionSave_Image_File">

@@ -40,6 +40,8 @@ public:
 private slots:
     // Событие при открытии файла
     void on_actionOpen_Tecplot_File_triggered();
+    // Событие при копировании картинки в буфер обмена
+    void on_actionCopy_Image_to_Clipboard_triggered();
     // Событие при сохранении
     void on_actionSave_Image_File_triggered();
     // Событие при нажатии кнопки Exit

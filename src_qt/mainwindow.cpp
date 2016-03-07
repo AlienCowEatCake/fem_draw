@@ -6,6 +6,7 @@
 #include <QPrinter>
 #include <QColorDialog>
 #include <QInputDialog>
+#include <QClipboard>
 #include <algorithm>
 #include <cmath>
 #include "libs/jo_images.h"
@@ -188,6 +189,15 @@ void MainWindow::on_actionOpen_Tecplot_File_triggered()
     QString fileName = QFileDialog::getOpenFileName(this, trUtf8("Open Tecplot File"), last_opened, "Tecplot Data Files (*.dat *.plt);;All Files (*.*)");
     if(fileName.length() == 0) return;
     open_file(fileName);
+}
+
+// Событие при копировании картинки в буфер обмена
+void MainWindow::on_actionCopy_Image_to_Clipboard_triggered()
+{
+    QImage image(ui->widget->width(), ui->widget->height(), QImage::Format_ARGB32_Premultiplied);
+    ui->widget->draw(& image, ui->actionTransparent_Image->isChecked(), true);
+    QClipboard * clipboard = QApplication::clipboard();
+    clipboard->setImage(image);
 }
 
 // Событие при сохранении
