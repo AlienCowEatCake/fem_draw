@@ -107,7 +107,7 @@ public:
     float width;
     float length;
     float arrow_size;
-    lines_config(QColor n_color = Qt::black, float n_width = 1.0f, float n_length = 10.0f, float n_arrow_size = 5.0f)
+    lines_config(const QColor & n_color = Qt::black, float n_width = 1.0f, float n_length = 10.0f, float n_arrow_size = 5.0f)
         : color(n_color), width(n_width), length(n_length), arrow_size(n_arrow_size) {}
 };
 

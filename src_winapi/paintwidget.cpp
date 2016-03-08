@@ -797,6 +797,8 @@ paintwidget::paintwidget()
     hbmp_is_valid = false;
     memset(&ps, 0, sizeof(PAINTSTRUCT));
 
+    isolines_config = lines_config(RGB(0, 0, 0), 1);
+    vectors_config = lines_config(RGB(0, 0, 0), 1, 10.0f, 5.0f);
     use_purple = false;
     use_legend = true;
     use_light_colors = true;
@@ -1187,11 +1189,11 @@ void paintwidget::draw(HDC hdc_local)
         }
     }
 
-    HPEN hIsolPen = GetStockPen(BLACK_PEN);
-    hOldPen = (HPEN)SelectObject(hdc_local, hIsolPen);
     // Изолинии рисуем только если оно нам надо
     if(draw_isolines)
     {
+        HPEN hIsolPen = CreatePen(PS_SOLID, isolines_config.width, isolines_config.color);
+        hOldPen = (HPEN)SelectObject(hdc_local, hIsolPen);
         for(size_t i = 0; i < triangles.size(); i++)
         {
             // Теперь рисуем изолинии
@@ -1230,8 +1232,9 @@ void paintwidget::draw(HDC hdc_local)
                 LineTo(hdc_local, x + shift_x, y + shift_y);
             }
         }
+        SelectObject(hdc_local, hOldPen);
+        DeleteObject(hIsolPen);
     }
-    SelectObject(hdc_local, hOldPen);
 
     // Легенда
     if(use_legend)
@@ -1325,12 +1328,10 @@ void paintwidget::draw(HDC hdc_local)
 
     if(draw_vectors)
     {
-        HPEN hVecPen = GetStockPen(BLACK_PEN);
+        HPEN hVecPen = CreatePen(PS_SOLID, vectors_config.width, vectors_config.color);
         hOldPen = (HPEN)SelectObject(hdc_local, hVecPen);
-        HBRUSH hVecBrush = GetStockBrush(BLACK_BRUSH);
-        hOldBrush = (HBRUSH)SelectObject(hdc_local, hVecBrush);
 
-        float vec_len = 10.5f, arrow_len = 5.5f;
+        float vec_len = vectors_config.length + 0.5f, arrow_len = vectors_config.arrow_size + 0.5f;
         float angle = 38.0f * 3.14159265358979323846f / 180.0f;
         float sin_angle = std::sin(angle), cos_angle = std::cos(angle);
 
@@ -1376,7 +1377,7 @@ void paintwidget::draw(HDC hdc_local)
             }
         }
         SelectObject(hdc_local, hOldPen);
-        SelectObject(hdc_local, hOldBrush);
+        DeleteObject(hVecPen);
     }
 
     DeleteObject(fnt_serif);

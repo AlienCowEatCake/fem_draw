@@ -18,18 +18,27 @@
 #define CONTROL_COMBOBOX_VECTORS_U          10010
 #define CONTROL_LABEL_VECTORS_V             10011
 #define CONTROL_COMBOBOX_VECTORS_V          10012
-#define CONTROL_MENU_OPEN                   10013
-#define CONTROL_MENU_TRANSPARENT            10014
-#define CONTROL_MENU_SAVE                   10015
-#define CONTROL_MENU_EXIT                   10016
-#define CONTROL_MENU_INCREASE_INTERPOLATION 10017
-#define CONTROL_MENU_DECREASE_INTERPOLATION 10018
-#define CONTROL_MENU_USELEGEND              10019
-#define CONTROL_MENU_USELIGHTCOLORS         10020
-#define CONTROL_MENU_USEPURPLE              10021
-#define CONTROL_MENU_USEMEMORYLIMIT         10022
-#define CONTROL_MENU_ABOUT                  10023
-#define CONTROL_MENU_ABOUT_LIBS             10024
+#define CONTROL_MENU_OPEN                   10020
+#define CONTROL_MENU_TRANSPARENT            10021
+#define CONTROL_MENU_COPY                   10022
+#define CONTROL_MENU_SAVE                   10023
+#define CONTROL_MENU_EXIT                   10024
+#define CONTROL_MENU_INCREASE_INTERPOLATION 10030
+#define CONTROL_MENU_DECREASE_INTERPOLATION 10031
+#define CONTROL_MENU_ISOLINES_SHOW          10040
+#define CONTROL_MENU_ISOLINES_COLOR         10041
+#define CONTROL_MENU_ISOLINES_WIDTH         10042
+#define CONTROL_MENU_VECTORS_SHOW           10050
+#define CONTROL_MENU_VECTORS_COLOR          10051
+#define CONTROL_MENU_VECTORS_WIDTH          10052
+#define CONTROL_MENU_VECTORS_LENGTH         10053
+#define CONTROL_MENU_VECTORS_ARROWSIZE      10054
+#define CONTROL_MENU_USELEGEND              10060
+#define CONTROL_MENU_USELIGHTCOLORS         10061
+#define CONTROL_MENU_USEPURPLE              10062
+#define CONTROL_MENU_USEMEMORYLIMIT         10063
+#define CONTROL_MENU_ABOUT                  10070
+#define CONTROL_MENU_ABOUT_LIBS             10071
 #define ABOUT_LABEL_VERSION                 10100
 #define ABOUT_LABEL_SITE                    10101
 #define ABOUT_LABEL_LICENSE                 10102
@@ -67,6 +76,11 @@
 #define ABOUT_LIBS_LABEL_URL_TGA            10224
 #define ABOUT_LIBS_BUTTON_OK                10225
 #define ABOUT_LIBS_LABEL_LOGO               10226
+#define INPUTBOX_LABEL_TEXT                 10300
+#define INPUTBOX_SPINBOX_TEXT               10301
+#define INPUTBOX_SPINBOX_UPDOWN             10302
+#define INPUTBOX_BUTTON_OK                  10303
+#define INPUTBOX_BUTTON_CANCEL              10304
 
 #include <windows.h>
 #include <commctrl.h>

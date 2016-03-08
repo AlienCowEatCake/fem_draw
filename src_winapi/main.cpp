@@ -14,6 +14,7 @@
 HWND hwnd;
 HWND hwnd_about = NULL;
 HWND hwnd_about_libs = NULL;
+HWND hwnd_inputbox = NULL;
 HBITMAP hbmp_logo = NULL;
 HBITMAP hbmp_mask = NULL;
 HACCEL haccel;
@@ -24,6 +25,8 @@ namespace menu
     HMENU hMenu;
     HMENU hFileMenu;
     HMENU hInterpMenu;
+    HMENU hIsolMenu;
+    HMENU hVecMenu;
     HMENU hConfigMenu;
     HMENU hAboutMenu;
 }
@@ -36,6 +39,26 @@ namespace config
     int vect_min = 1,   vect_max = 10000, vect_curr = 1;
     TCHAR last_saved[260]  = TEXT("draw.png");
     TCHAR last_opened[260] = TEXT("");
+    COLORREF custom_colors[16] =
+    {
+        RGB(0, 0, 0),
+        RGB(128, 128, 128),
+        RGB(192, 192, 192),
+        RGB(255, 255, 255),
+        RGB(128, 0, 0),
+        RGB(255, 0, 0),
+        RGB(128, 128, 0),
+        RGB(255, 255, 0),
+        RGB(0, 128, 0),
+        RGB(0, 255, 0),
+        RGB(0, 128, 128),
+        RGB(0, 255, 255),
+        RGB(0, 0, 128),
+        RGB(0, 0, 255),
+        RGB(128, 0, 128),
+        RGB(255, 0, 255)
+    };
+    int inputbox_target = 0;
 }
 
 namespace fonts
@@ -216,6 +239,47 @@ void bmp2rgb(const char * lpbitmap, LONG width, LONG height, unsigned colors, bo
             }
         }
     }
+}
+
+// Событие при копировании картинки в буфер обмена
+void on_actionCopy_Image_to_Clipboard_triggered()
+{
+    // Создадим все что нужно и запустим отрисовку
+    RECT r;
+    memset(&r, 0, sizeof(RECT));
+    GetClientRect(pdraw->hwnd, &r);
+    HDC hdc1 = BeginPaint(pdraw->hwnd, & pdraw->ps);
+    HDC hdc2 = CreateCompatibleDC(hdc1);
+    HBITMAP hbmp = pdraw->hbmp;
+
+    // Создадим bmp-изображение
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/dd183402(v=vs.85).aspx
+    BITMAP bmp;
+    GetObject(hbmp, sizeof(BITMAP), &bmp);
+    BITMAPINFOHEADER bi;
+    bi.biSize = sizeof(BITMAPINFOHEADER);
+    bi.biWidth = bmp.bmWidth;
+    bi.biHeight = bmp.bmHeight;
+    bi.biPlanes = 1;
+    bi.biBitCount = 32;
+    bi.biCompression = BI_RGB;
+    bi.biSizeImage = 0;
+    bi.biXPelsPerMeter = 0;
+    bi.biYPelsPerMeter = 0;
+    bi.biClrUsed = 0;
+    bi.biClrImportant = 0;
+    DWORD dwBmpSize = ((bmp.bmWidth * bi.biBitCount + 31) / 32) * 4 * bmp.bmHeight;
+    // https://stackoverflow.com/questions/1977363/how-to-copy-bitmap-to-clipboard-using-the-win32-api
+    OpenClipboard(NULL);
+    EmptyClipboard();
+    HGLOBAL hResult = GlobalAlloc(GMEM_MOVEABLE, dwBmpSize + bi.biSize);
+    char *lpbitmap = (char *)GlobalLock(hResult);
+    GetDIBits(hdc2, hbmp, 0, (UINT)bmp.bmHeight, lpbitmap + bi.biSize, (BITMAPINFO *)&bi, DIB_RGB_COLORS);
+    memcpy(lpbitmap, & bi, bi.biSize);
+    GlobalUnlock(hResult);
+    SetClipboardData(CF_DIB, hResult);
+    CloseClipboard();
+    GlobalFree(hResult);
 }
 
 // Событие при сохранении
@@ -435,6 +499,179 @@ void on_actionDecrease_Interpolation_triggered()
     }
 }
 
+// InputBox
+void InputBox(const TCHAR * header, const TCHAR * text, int val_curr, int val_min, int val_max)
+{
+    // Создадим окно
+    RECT rw = { 0, 0, 200, 102 };
+    AdjustWindowRect(&rw, WS_CAPTION | WS_SYSMENU, FALSE);
+    int box_width = rw.right - rw.left;
+    int box_height = rw.bottom - rw.top;
+    HDC hDCScreen = GetDC(NULL);
+    HINSTANCE hInstance = (HINSTANCE)GetModuleHandle(NULL);
+    hwnd_inputbox = CreateWindow(
+                             TEXT("inputboxwindow"), header,
+                             WS_CAPTION | WS_SYSMENU,
+                             (GetDeviceCaps(hDCScreen, HORZRES) - box_width) / 2,
+                             (GetDeviceCaps(hDCScreen, VERTRES) - box_height) / 2,
+                             box_width, box_height,
+                             NULL, NULL, hInstance, NULL
+                             );
+    ReleaseDC(NULL, hDCScreen);
+
+    // Надпись, содержащаяся в text
+    CreateWindow(
+                WC_STATIC, text,
+                WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
+                11, 10, 178, 25,
+                hwnd_inputbox, (HMENU)INPUTBOX_LABEL_TEXT, hInstance, NULL
+                );
+
+    // Спинбокс со значениями
+    CreateWindowEx(
+                WS_EX_CLIENTEDGE,
+                WC_EDIT, NULL,
+                WS_CHILD | WS_VISIBLE | ES_LEFT | WS_BORDER | ES_AUTOHSCROLL |
+                ES_NUMBER | WS_TABSTOP,
+                11, 31, 178, 25,
+                hwnd_inputbox, (HMENU)INPUTBOX_SPINBOX_TEXT, hInstance, NULL
+                );
+    CreateUpDownControl(
+                WS_CHILD | WS_BORDER | WS_VISIBLE | UDS_ARROWKEYS |
+                UDS_ALIGNRIGHT | UDS_SETBUDDYINT,
+                0, 0, 0, 0,
+                hwnd_inputbox, INPUTBOX_SPINBOX_UPDOWN, hInstance, GetDlgItem(hwnd_inputbox, INPUTBOX_SPINBOX_TEXT),
+                val_max, val_min, val_curr
+                );
+
+    // Кнопка OK
+    CreateWindow(
+                WC_BUTTON, TEXT("OK"),
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+                30, 67, 74, 22,
+                hwnd_inputbox, (HMENU)INPUTBOX_BUTTON_OK, hInstance, NULL
+                );
+
+    // Кнопка Cancel
+    CreateWindow(
+                WC_BUTTON, TEXT("Cancel"),
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
+                113, 67, 74, 22,
+                hwnd_inputbox, (HMENU)INPUTBOX_BUTTON_CANCEL, hInstance, NULL
+                );
+
+    // Шрифты
+    SendMessage(hwnd_inputbox, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_inputbox, INPUTBOX_LABEL_TEXT, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_inputbox, INPUTBOX_SPINBOX_TEXT, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_inputbox, INPUTBOX_SPINBOX_UPDOWN, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_inputbox, INPUTBOX_BUTTON_OK, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+    SendDlgItemMessage(hwnd_inputbox, INPUTBOX_BUTTON_CANCEL, WM_SETFONT, (WPARAM)fonts::font_std, TRUE);
+
+    EnableWindow(hwnd, FALSE);
+    ShowWindow(hwnd_inputbox, SW_SHOWNORMAL);
+    UpdateWindow(hwnd_inputbox);
+    SetFocus(GetDlgItem(hwnd_inputbox, INPUTBOX_SPINBOX_TEXT));
+}
+
+// Событие при переключении рисования изолиний из меню
+void on_actionShow_Isolines_triggered()
+{
+    DWORD state = GetMenuState(menu::hIsolMenu, (UINT)CONTROL_MENU_ISOLINES_SHOW, MF_BYCOMMAND);
+    if(!(state & MF_CHECKED))
+    {
+        CheckMenuItem(menu::hIsolMenu, (UINT)CONTROL_MENU_ISOLINES_SHOW, MF_CHECKED | MF_BYCOMMAND);
+        SendMessage(GetDlgItem(hwnd, CONTROL_CHECKBOX_ISOLINES), BM_SETCHECK, BST_CHECKED, 0);
+        SendMessage(hwnd, WM_COMMAND, CONTROL_CHECKBOX_ISOLINES, 0);
+    }
+    else
+    {
+        CheckMenuItem(menu::hIsolMenu, (UINT)CONTROL_MENU_ISOLINES_SHOW, MF_UNCHECKED | MF_BYCOMMAND);
+        SendMessage(GetDlgItem(hwnd, CONTROL_CHECKBOX_ISOLINES), BM_SETCHECK, BST_UNCHECKED, 0);
+        SendMessage(hwnd, WM_COMMAND, CONTROL_CHECKBOX_ISOLINES, 0);
+    }
+}
+
+// Событие при запросе конфигурации цвета изолиний
+void on_actionIsolines_Color_triggered()
+{
+    CHOOSECOLOR color;
+    memset(&color, 0, sizeof(CHOOSECOLOR));
+    color.lStructSize = sizeof(CHOOSECOLOR);
+    color.hwndOwner = hwnd;
+    color.rgbResult = pdraw->isolines_config.color;
+    color.Flags = CC_ANYCOLOR | CC_FULLOPEN | CC_RGBINIT;
+    color.lpCustColors = config::custom_colors;
+    if(ChooseColor(&color))
+    {
+        pdraw->isolines_config.color = color.rgbResult;
+        widget_redraw(false);
+    }
+}
+
+// Событие при запросе конфигурации толщины изолиний
+void on_actionIsolines_Width_triggered()
+{
+    config::inputbox_target = CONTROL_MENU_ISOLINES_WIDTH;
+    InputBox(TEXT("Width"), TEXT("Select Isolines Width:"), pdraw->isolines_config.width, 1, 10);
+}
+
+// Событие при переключении рисования векторов из меню
+void on_actionShow_Vectors_triggered()
+{
+    DWORD state = GetMenuState(menu::hVecMenu, (UINT)CONTROL_MENU_VECTORS_SHOW, MF_BYCOMMAND);
+    if(!(state & MF_CHECKED))
+    {
+        CheckMenuItem(menu::hVecMenu, (UINT)CONTROL_MENU_VECTORS_SHOW, MF_CHECKED | MF_BYCOMMAND);
+        SendMessage(GetDlgItem(hwnd, CONTROL_CHECKBOX_VECTORS), BM_SETCHECK, BST_CHECKED, 0);
+        SendMessage(hwnd, WM_COMMAND, CONTROL_CHECKBOX_VECTORS, 0);
+    }
+    else
+    {
+        CheckMenuItem(menu::hVecMenu, (UINT)CONTROL_MENU_VECTORS_SHOW, MF_UNCHECKED | MF_BYCOMMAND);
+        SendMessage(GetDlgItem(hwnd, CONTROL_CHECKBOX_VECTORS), BM_SETCHECK, BST_UNCHECKED, 0);
+        SendMessage(hwnd, WM_COMMAND, CONTROL_CHECKBOX_VECTORS, 0);
+    }
+}
+
+// Событие при запросе конфигурации цвета векторов
+void on_actionVectors_Color_triggered()
+{
+    CHOOSECOLOR color;
+    memset(&color, 0, sizeof(CHOOSECOLOR));
+    color.lStructSize = sizeof(CHOOSECOLOR);
+    color.hwndOwner = hwnd;
+    color.rgbResult = pdraw->vectors_config.color;
+    color.Flags = CC_ANYCOLOR | CC_FULLOPEN | CC_RGBINIT;
+    color.lpCustColors = config::custom_colors;
+    if(ChooseColor(&color))
+    {
+        pdraw->vectors_config.color = color.rgbResult;
+        widget_redraw(false);
+    }
+}
+
+// Событие при запросе конфигурации толщины векторов
+void on_actionVectors_Width_triggered()
+{
+    config::inputbox_target = CONTROL_MENU_VECTORS_WIDTH;
+    InputBox(TEXT("Width"), TEXT("Select Vectors Width:"), pdraw->vectors_config.width, 1, 10);
+}
+
+// Событие при запросе конфигурации длины векторов
+void on_actionVectors_Length_triggered()
+{
+    config::inputbox_target = CONTROL_MENU_VECTORS_LENGTH;
+    InputBox(TEXT("Length"), TEXT("Select Vectors Length:"), (int)pdraw->vectors_config.length, 1, 100);
+}
+
+// Событие при запросе конфигурации размера стрелок векторов
+void on_actionArrowSize_triggered()
+{
+    config::inputbox_target = CONTROL_MENU_VECTORS_ARROWSIZE;
+    InputBox(TEXT("Arrow Size"), TEXT("Select Arrow Size:"), (int)pdraw->vectors_config.arrow_size, 1, 25);
+}
+
 // Событие при переключении рисования легенды
 void on_actionShow_Legend_triggered()
 {
@@ -563,7 +800,7 @@ void on_actionAbout_FEM_Draw_triggered()
 
     // Надпись "FEM Draw <version_name> (WinAPI)"
     CreateWindow(
-                WC_STATIC, TEXT("FEM Draw v1.5 (WinAPI)"),
+                WC_STATIC, TEXT("FEM Draw v1.6 beta1 (WinAPI)"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
                 92, 10, 205, 15,
                 hwnd_about, (HMENU)ABOUT_LABEL_VERSION, hInstance, NULL
@@ -591,7 +828,7 @@ void on_actionAbout_FEM_Draw_triggered()
                 );
     // Надпись "Copyright (c) ..."
     CreateWindow(
-                WC_STATIC, TEXT("Copyright (c) 2014-2015"),
+                WC_STATIC, TEXT("Copyright (c) 2014-2016"),
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
                 92, 80, 205, 15,
                 hwnd_about, (HMENU)ABOUT_LABEL_COPYRIGHT, hInstance, NULL
@@ -925,9 +1162,15 @@ void on_checkBox_Isolines_clicked()
     LRESULT res = SendMessage(GetDlgItem(hwnd, CONTROL_CHECKBOX_ISOLINES), BM_GETCHECK, 0, 0);
     bool draw_isolines = pdraw->draw_isolines;
     if(res == BST_CHECKED)
+    {
+        CheckMenuItem(menu::hIsolMenu, (UINT)CONTROL_MENU_ISOLINES_SHOW, MF_CHECKED | MF_BYCOMMAND);
         draw_isolines = true;
+    }
     if(res == BST_UNCHECKED)
+    {
+        CheckMenuItem(menu::hIsolMenu, (UINT)CONTROL_MENU_ISOLINES_SHOW, MF_UNCHECKED | MF_BYCOMMAND);
         draw_isolines = false;
+    }
     if(draw_isolines != pdraw->draw_isolines)
     {
         pdraw->draw_isolines = draw_isolines;
@@ -969,9 +1212,15 @@ void on_checkBox_Vectors_clicked()
     LRESULT res = SendMessage(GetDlgItem(hwnd, CONTROL_CHECKBOX_VECTORS), BM_GETCHECK, 0, 0);
     bool draw_vectors = pdraw->draw_vectors;
     if(res == BST_CHECKED)
+    {
+        CheckMenuItem(menu::hVecMenu, (UINT)CONTROL_MENU_VECTORS_SHOW, MF_CHECKED | MF_BYCOMMAND);
         draw_vectors = true;
+    }
     if(res == BST_UNCHECKED)
+    {
+        CheckMenuItem(menu::hVecMenu, (UINT)CONTROL_MENU_VECTORS_SHOW, MF_UNCHECKED | MF_BYCOMMAND);
         draw_vectors = false;
+    }
     if(draw_vectors != pdraw->draw_vectors)
     {
         pdraw->draw_vectors = draw_vectors;
@@ -1061,6 +1310,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         case CONTROL_MENU_TRANSPARENT: // Событие при переключении прозрачности
             on_actionTransparent_Image_triggered();
             break;
+        case CONTROL_MENU_COPY: // Событие при копировании картинки в буфер обмена
+            on_actionCopy_Image_to_Clipboard_triggered();
+            break;
         case CONTROL_MENU_SAVE: // Событие при сохранении
             on_actionSave_Image_File_triggered();
             break;
@@ -1072,6 +1324,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             break;
         case CONTROL_MENU_DECREASE_INTERPOLATION: // Событие при уменьшении уровня интерполяции
             on_actionDecrease_Interpolation_triggered();
+            break;
+        case CONTROL_MENU_ISOLINES_SHOW: // Событие при переключении рисования изолиний из меню
+            on_actionShow_Isolines_triggered();
+            break;
+        case CONTROL_MENU_ISOLINES_COLOR: // Событие при запросе конфигурации цвета изолиний
+            on_actionIsolines_Color_triggered();
+            break;
+        case CONTROL_MENU_ISOLINES_WIDTH: // Событие при запросе конфигурации толщины изолиний
+            on_actionIsolines_Width_triggered();
+            break;
+        case CONTROL_MENU_VECTORS_SHOW: // Событие при переключении рисования векторов из меню
+            on_actionShow_Vectors_triggered();
+            break;
+        case CONTROL_MENU_VECTORS_COLOR: // Событие при запросе конфигурации цвета векторов
+            on_actionVectors_Color_triggered();
+            break;
+        case CONTROL_MENU_VECTORS_WIDTH: // Событие при запросе конфигурации толщины векторов
+            on_actionVectors_Width_triggered();
+            break;
+        case CONTROL_MENU_VECTORS_LENGTH: // Событие при запросе конфигурации длины векторов
+            on_actionVectors_Length_triggered();
+            break;
+        case CONTROL_MENU_VECTORS_ARROWSIZE: // Событие при запросе конфигурации размера стрелок векторов
+            on_actionArrowSize_triggered();
             break;
         case CONTROL_MENU_USELEGEND: // Событие при переключении рисования легенды
             on_actionShow_Legend_triggered();
@@ -1508,6 +1784,83 @@ LRESULT CALLBACK WndProcAboutLibs(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPa
     return 0;
 }
 
+// Обработка сообщений InputBox'а
+LRESULT CALLBACK WndProcInputBox(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    switch(Msg)
+    {
+    case WM_COMMAND:    // Нажата кнопка
+    {
+        switch(LOWORD(wParam))
+        {
+        case IDOK:      // Странная магия, чтобы перехватить Enter
+        case INPUTBOX_BUTTON_OK:
+        {
+            const size_t bufsize = 16;
+            char str[bufsize];
+            GetWindowTextA(GetDlgItem(hwnd_inputbox, INPUTBOX_SPINBOX_TEXT), str, bufsize);
+            int val = atoi(str);
+            float fval = (float)val;
+            LRESULT range = SendDlgItemMessage(hwnd_inputbox, INPUTBOX_SPINBOX_UPDOWN, UDM_GETRANGE, 0, 0);
+            int min = HIWORD(range), max = LOWORD(range);
+            if(val >= min && val <= max)
+            {
+                switch(config::inputbox_target)
+                {
+                case CONTROL_MENU_ISOLINES_WIDTH:
+                    if(val != pdraw->isolines_config.width)
+                    {
+                        pdraw->isolines_config.width = val;
+                        widget_redraw(false);
+                    }
+                    break;
+                case CONTROL_MENU_VECTORS_WIDTH:
+                    if(val != pdraw->vectors_config.width)
+                    {
+                        pdraw->vectors_config.width = val;
+                        widget_redraw(false);
+                    }
+                    break;
+                case CONTROL_MENU_VECTORS_LENGTH:
+                    if(fval != pdraw->vectors_config.length)
+                    {
+                        pdraw->vectors_config.length = fval;
+                        widget_redraw(false);
+                    }
+                    break;
+                case CONTROL_MENU_VECTORS_ARROWSIZE:
+                    if(fval != pdraw->vectors_config.arrow_size)
+                    {
+                        pdraw->vectors_config.arrow_size = fval;
+                        widget_redraw(false);
+                    }
+                    break;
+                }
+            }
+            SendMessage(hwnd_inputbox, WM_CLOSE, 0, 0);
+            break;
+        }
+        case INPUTBOX_BUTTON_CANCEL:
+            SendMessage(hwnd_inputbox, WM_CLOSE, 0, 0);
+            break;
+        }
+        break;
+    }
+    case WM_CLOSE:
+    {
+        EnableWindow(hwnd, TRUE);
+        SetFocus(hwnd);
+        DestroyWindow(hwnd_inputbox);
+        hwnd_inputbox = NULL;
+        config::inputbox_target = 0;
+        break;
+    }
+    default:
+        return DefWindowProc(hWnd, Msg, wParam, lParam);
+    }
+    return 0;
+}
+
 // Функция, устанавливающая подсказки
 void set_tooltip(HINSTANCE hInstance, HWND hwnd, int item, LPTSTR text)
 {
@@ -1576,6 +1929,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     wnd_about_libs.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
     RegisterClass(&wnd_about_libs);
 
+    // И зарегистрируем диалог типа InputBox
+    WNDCLASS wnd_inputbox;
+    memset(&wnd_inputbox, 0, sizeof(WNDCLASS));
+    wnd_inputbox.style = CS_HREDRAW | CS_VREDRAW;
+    wnd_inputbox.lpfnWndProc = WndProcInputBox;
+    wnd_inputbox.hInstance = hInstance;
+    wnd_inputbox.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wnd_inputbox.lpszClassName = TEXT("inputboxwindow");
+    wnd_inputbox.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
+    RegisterClass(&wnd_inputbox);
+
     // Установка минимальных размеров окна
     RECT rw = { 0, 0, 640, 500 };
     AdjustWindowRect(&rw, WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX, FALSE);
@@ -1600,16 +1964,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     menu::hMenu = CreateMenu();
     menu::hFileMenu = CreatePopupMenu();
     AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT_PTR)menu::hFileMenu, TEXT("File"));
-    AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_OPEN, TEXT("Open Tecplot File\tCtrl+O"));
+    AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_OPEN, TEXT("Open Tecplot File...\tCtrl+O"));
     AppendMenu(menu::hFileMenu, MF_SEPARATOR, (UINT_PTR)NULL, TEXT(""));
     AppendMenu(menu::hFileMenu, MF_STRING | MF_UNCHECKED, CONTROL_MENU_TRANSPARENT, TEXT("Transparent Image"));
-    AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_SAVE, TEXT("Save Image\tCtrl+S"));
+    AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_COPY, TEXT("Copy Image to Clipboard\tCtrl+C"));
+    AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_SAVE, TEXT("Save Image...\tCtrl+S"));
     AppendMenu(menu::hFileMenu, MF_SEPARATOR, (UINT_PTR)NULL, TEXT(""));
     AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_EXIT, TEXT("Exit\tCtrl+Q"));
     menu::hInterpMenu = CreatePopupMenu();
     AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT_PTR)menu::hInterpMenu, TEXT("Interpolation"));
     AppendMenu(menu::hInterpMenu, MF_STRING, CONTROL_MENU_INCREASE_INTERPOLATION, TEXT("Increase Interpolation\t="));
     AppendMenu(menu::hInterpMenu, MF_STRING, CONTROL_MENU_DECREASE_INTERPOLATION, TEXT("Decrease Interpolation\t-"));
+    menu::hIsolMenu = CreatePopupMenu();
+    AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT_PTR)menu::hIsolMenu, TEXT("Isolines"));
+    AppendMenu(menu::hIsolMenu, MF_STRING | (pdraw->draw_isolines ? MF_CHECKED : MF_UNCHECKED), CONTROL_MENU_ISOLINES_SHOW, TEXT("Show Isolines"));
+    AppendMenu(menu::hIsolMenu, MF_STRING, CONTROL_MENU_ISOLINES_COLOR, TEXT("Isolines Color..."));
+    AppendMenu(menu::hIsolMenu, MF_STRING, CONTROL_MENU_ISOLINES_WIDTH, TEXT("Isolines Width..."));
+    menu::hVecMenu = CreatePopupMenu();
+    AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT_PTR)menu::hVecMenu, TEXT("Vectors"));
+    AppendMenu(menu::hVecMenu, MF_STRING | (pdraw->draw_vectors ? MF_CHECKED : MF_UNCHECKED), CONTROL_MENU_VECTORS_SHOW, TEXT("Show Vectors"));
+    AppendMenu(menu::hVecMenu, MF_STRING, CONTROL_MENU_VECTORS_COLOR, TEXT("Vectors Color..."));
+    AppendMenu(menu::hVecMenu, MF_STRING, CONTROL_MENU_VECTORS_WIDTH, TEXT("Vectors Width..."));
+    AppendMenu(menu::hVecMenu, MF_STRING, CONTROL_MENU_VECTORS_LENGTH, TEXT("Vectors Length..."));
+    AppendMenu(menu::hVecMenu, MF_STRING, CONTROL_MENU_VECTORS_ARROWSIZE, TEXT("Vectors Arrow Size..."));
     menu::hConfigMenu = CreatePopupMenu();
     AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT_PTR)menu::hConfigMenu, TEXT("Configuration"));
     AppendMenu(menu::hConfigMenu, MF_STRING | (pdraw->use_legend ? MF_CHECKED : MF_UNCHECKED), CONTROL_MENU_USELEGEND, TEXT("Show Legend"));
@@ -1618,8 +1995,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     AppendMenu(menu::hConfigMenu, MF_STRING | (pdraw->use_memory_limit ? MF_CHECKED : MF_UNCHECKED), CONTROL_MENU_USEMEMORYLIMIT, TEXT("1 GiB Memory Limit"));
     menu::hAboutMenu = CreatePopupMenu();
     AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT_PTR)menu::hAboutMenu, TEXT("About"));
-    AppendMenu(menu::hAboutMenu, MF_STRING, CONTROL_MENU_ABOUT, TEXT("About FEM Draw"));
-    AppendMenu(menu::hAboutMenu, MF_STRING, CONTROL_MENU_ABOUT_LIBS, TEXT("About Third Party Libraries"));
+    AppendMenu(menu::hAboutMenu, MF_STRING, CONTROL_MENU_ABOUT, TEXT("About FEM Draw..."));
+    AppendMenu(menu::hAboutMenu, MF_STRING, CONTROL_MENU_ABOUT_LIBS, TEXT("About Third Party Libraries..."));
     SetMenu(hwnd, menu::hMenu);
     haccel = LoadAccelerators(hInstance, TEXT("APP_ACCELERATORS"));
 
@@ -1803,7 +2180,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
         {
             if(!IsDialogMessage(hwnd, &msg) &&
                !(hwnd_about && IsDialogMessage(hwnd_about, &msg)) &&
-               !(hwnd_about_libs && IsDialogMessage(hwnd_about_libs, &msg)))
+               !(hwnd_about_libs && IsDialogMessage(hwnd_about_libs, &msg)) &&
+               !(hwnd_inputbox && IsDialogMessage(hwnd_inputbox, &msg)))
             {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);

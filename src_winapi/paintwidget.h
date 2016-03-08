@@ -86,6 +86,18 @@ public:
     }
 };
 
+// Класс конфигурация для объектов-линий (изолиний, векторов)
+class lines_config
+{
+public:
+    COLORREF color;
+    int width;
+    float length;
+    float arrow_size;
+    lines_config(const COLORREF & n_color = RGB(0, 0, 0), int n_width = 1, float n_length = 10.0f, float n_arrow_size = 5.0f)
+        : color(n_color), width(n_width), length(n_length), arrow_size(n_arrow_size) {}
+};
+
 // Класс виджет для рисования через WinAPI
 class paintwidget
 {
@@ -149,6 +161,10 @@ public:
     PAINTSTRUCT ps;
     HBITMAP hbmp;
 
+    // Конфигурация изолиний
+    lines_config isolines_config;
+    // Конфигурация векторов
+    lines_config vectors_config;
     // Использовать ли фиолетовые оттенки цвета
     // Дает большую комбинацию оттенков, но приводит к
     // некоторому дисбалансу между красным и синим
