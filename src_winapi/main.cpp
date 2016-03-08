@@ -503,7 +503,7 @@ void on_actionDecrease_Interpolation_triggered()
 void InputBox(const TCHAR * header, const TCHAR * text, int val_curr, int val_min, int val_max)
 {
     // Создадим окно
-    RECT rw = { 0, 0, 200, 102 };
+    RECT rw = { 0, 0, 202, 94 };
     AdjustWindowRect(&rw, WS_CAPTION | WS_SYSMENU, FALSE);
     int box_width = rw.right - rw.left;
     int box_height = rw.bottom - rw.top;
@@ -523,7 +523,7 @@ void InputBox(const TCHAR * header, const TCHAR * text, int val_curr, int val_mi
     CreateWindow(
                 WC_STATIC, text,
                 WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE,
-                11, 10, 178, 25,
+                11, 6, 179, 25,
                 hwnd_inputbox, (HMENU)INPUTBOX_LABEL_TEXT, hInstance, NULL
                 );
 
@@ -533,7 +533,7 @@ void InputBox(const TCHAR * header, const TCHAR * text, int val_curr, int val_mi
                 WC_EDIT, NULL,
                 WS_CHILD | WS_VISIBLE | ES_LEFT | WS_BORDER | ES_AUTOHSCROLL |
                 ES_NUMBER | WS_TABSTOP,
-                11, 31, 178, 25,
+                11, 30, 179, 22,
                 hwnd_inputbox, (HMENU)INPUTBOX_SPINBOX_TEXT, hInstance, NULL
                 );
     CreateUpDownControl(
@@ -547,8 +547,8 @@ void InputBox(const TCHAR * header, const TCHAR * text, int val_curr, int val_mi
     // Кнопка OK
     CreateWindow(
                 WC_BUTTON, TEXT("OK"),
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                30, 67, 74, 22,
+                WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON | WS_TABSTOP,
+                30, 58, 75, 22,
                 hwnd_inputbox, (HMENU)INPUTBOX_BUTTON_OK, hInstance, NULL
                 );
 
@@ -556,7 +556,7 @@ void InputBox(const TCHAR * header, const TCHAR * text, int val_curr, int val_mi
     CreateWindow(
                 WC_BUTTON, TEXT("Cancel"),
                 WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP,
-                113, 67, 74, 22,
+                114, 58, 75, 22,
                 hwnd_inputbox, (HMENU)INPUTBOX_BUTTON_CANCEL, hInstance, NULL
                 );
 
