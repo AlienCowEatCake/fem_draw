@@ -48,4 +48,12 @@ win32-g++* {
 *msvc* {
     QMAKE_CXXFLAGS_RELEASE -= -O2
     QMAKE_CXXFLAGS_RELEASE *= -Ox
+    QMAKE_CFLAGS_RELEASE                    -= -Zc:strictStrings
+    QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO     -= -Zc:strictStrings
+    QMAKE_CFLAGS_DEBUG                      -= -Zc:strictStrings
+    QMAKE_CFLAGS                            -= -Zc:strictStrings
+    QMAKE_CXXFLAGS_RELEASE                  -= -Zc:strictStrings
+    QMAKE_CXXFLAGS_RELEASE_WITH_DEBUGINFO   -= -Zc:strictStrings
+    QMAKE_CXXFLAGS_DEBUG                    -= -Zc:strictStrings
+    QMAKE_CXXFLAGS                          -= -Zc:strictStrings
 }
