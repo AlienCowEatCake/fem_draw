@@ -562,7 +562,7 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setDefaultButton(QMessageBox::Ok);
     msgBox.setWindowTitle("About");
-    msgBox.setText("<b>FEM Draw v1.6 beta1 (Qt)</b><br><br>"
+    msgBox.setText("<b>FEM Draw v1.6 (Qt)</b><br><br>"
                    "<a href=\"https://fami.codefreak.ru/osp/fem_draw/\">https://fami.codefreak.ru/osp/fem_draw/</a><br>"
                    "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
                    "Copyright &copy; 2014-2016<br>"
