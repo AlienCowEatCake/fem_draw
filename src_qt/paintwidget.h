@@ -206,6 +206,9 @@ private:
     // Подгонка осей под реальность и вычисление шагов координатной сетки
     void adjustAxis(float & min, float & max, size_t & numTicks) const;
 
+    // Печать текста с заданным интервалом между символами
+    void drawTextWithSpacing(QPainter & painter, const QPoint & coord, const QString & str, bool manual_spacing);
+
     // Минимальное и максимальное значения решения
     dynarray_t<float> min_u, max_u;
 

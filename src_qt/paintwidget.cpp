@@ -957,6 +957,21 @@ const QColor default_normal_legend_colors[14] =
     QColor( 255,   0,   0 )
 };
 
+// Печать текста с заданным интервалом между символами
+void paintwidget::drawTextWithSpacing(QPainter & painter, const QPoint & coord, const QString & str, bool manual_spacing)
+{
+    if(!manual_spacing)
+        painter.drawText(coord, str);
+    else
+    {
+        int len = str.size();
+        int x = coord.x(), y = coord.y();
+        double spacing = (double)QFontMetrics(painter.font()).width(str) / (double)len;
+        for(int i = 0; i < len; i++)
+            painter.drawText((int)((double)x + spacing * (double)i), y, QString(str[i]));
+    }
+}
+
 // Отрисовка сцены на QPaintDevice
 void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
 {
@@ -1020,14 +1035,14 @@ void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
         float x = (float)i / (float)num_ticks_x;
         float x_real = (float)(std::floor((x * size_x + min_x) * 10000.0f + 0.5f)) / 10000.0f;
         QString st = QString::number(x_real);
-        painter.drawText(to_window(x - 0.01f, -0.04f), st);
+        drawTextWithSpacing(painter, to_window(x - 0.01f, -0.04f), st, is_svg);
     }
     for(size_t i = 0; i < num_ticks_y; i++)
     {
         float y = (float)i / (float)num_ticks_y;
         float y_real = (float)(std::floor((y * size_y + min_y) * 10000.0f + 0.5f)) / 10000.0f;
         QString st = QString::number(y_real);
-        painter.drawText(to_window(-0.05f, y - 0.01f), st);
+        drawTextWithSpacing(painter, to_window(-0.05f, y - 0.01f), st, is_svg);
     }
 
     // Раскрашивать будем если запрошено сие
@@ -1316,7 +1331,7 @@ void paintwidget::draw(QPaintDevice * device, bool transparency, bool is_svg)
             painter.setFont(fnt_mono);
             painter.setPen(QPen(Qt::black));
             QString st = QString::number(legend_values[i], 'E', 2);
-            painter.drawText(to_window(x0 + dx * i + 0.005f, y0 + dy * i + hy / 2.0f - 0.01f), st);
+            drawTextWithSpacing(painter, to_window(x0 + dx * i + 0.005f, y0 + dy * i + hy / 2.0f - 0.01f), st, is_svg);
         }
     }
 
