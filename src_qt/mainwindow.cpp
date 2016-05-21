@@ -579,11 +579,13 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setDefaultButton(QMessageBox::Ok);
     msgBox.setWindowTitle("About");
-    msgBox.setText("<b>FEM Draw v1.6 (Qt)</b><br><br>"
+    msgBox.setText(QString("<b>FEM Draw v1.6 (Qt)</b>").replace(" ", "&nbsp;"));
+    msgBox.setInformativeText(QString(
                    "<a href=\"https://fami.codefreak.ru/osp/fem_draw/\">https://fami.codefreak.ru/osp/fem_draw/</a><br>"
                    "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
                    "Copyright &copy; 2014-2016<br>"
-                   "Peter Zhigalov &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;");
+                   "Peter Zhigalov &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;"
+                   ).replace(" ", "&nbsp;").replace("a&nbsp;href", "a href"));
     msgBox.setIconPixmap(QPixmap::fromImage(QImage(":/resources/icon_64.png")));
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
     msgBox.exec();
@@ -597,7 +599,8 @@ void MainWindow::on_actionAbout_Third_Party_Libraries_triggered()
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setDefaultButton(QMessageBox::Ok);
     msgBox.setWindowTitle("About Third Party Libraries");
-    msgBox.setText("<b>Third Party Libraries:</b><br>"
+    msgBox.setText(QString("<b>Third Party Libraries:</b>").replace(" ", "&nbsp;"));
+    msgBox.setInformativeText(QString(
                    "<table border=\"0\">"
                    "<tr><td style=\"padding-right:8%\">Library:</td><td>Jon Olick JPEG Writer</td></tr>"
                    "<tr><td style=\"padding-right:8%\">License:</td><td>public domain</td></tr>"
@@ -612,7 +615,8 @@ void MainWindow::on_actionAbout_Third_Party_Libraries_triggered()
                    "<tr><td style=\"padding-right:8%\">Library:</td><td>Jon Olick TGA Writer</td></tr>"
                    "<tr><td style=\"padding-right:8%\">License:</td><td>public domain</td></tr>"
                    "<tr><td style=\"padding-right:8%\">Website:</td><td><a href=\"http://www.jonolick.com/code.html\">http://www.jonolick.com/code.html</td></tr>"
-                   "</table>");
+                   "</table>"
+                   ).replace(" ", "&nbsp;").replace("a&nbsp;href", "a href").replace("table&nbsp;border", "table border").replace("td&nbsp;style", "td style"));
     msgBox.setIconPixmap(QPixmap::fromImage(QImage(":/resources/icon_64.png")));
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
     msgBox.exec();
