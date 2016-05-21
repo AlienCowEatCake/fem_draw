@@ -75,6 +75,23 @@ MainWindow::MainWindow(QWidget *parent) :
     // Зададим умолчательные имена файлов
     last_saved = "draw.png";
     last_opened = "";
+
+#if defined (Q_OS_OSX)
+    // Очень грустный костыль: под маком очень странная политика работы с фокусом.
+    // Из-за этого по-умолчанию фокус устанавливается только на SpinBox'ах. Самый
+    // вменяемый способ починить это - заблокировать фокус у всех элементов
+    // управления, кроме основного виджета, в котором рисуем.
+    ui->checkBox_Color->setFocusPolicy(Qt::NoFocus);
+    ui->comboBox_Color->setFocusPolicy(Qt::NoFocus);
+    ui->checkBox_Isolines->setFocusPolicy(Qt::NoFocus);
+    ui->spinBox_Isolines->setFocusPolicy(Qt::NoFocus);
+    ui->checkBox_Vectors->setFocusPolicy(Qt::NoFocus);
+    ui->spinBox_Vectors->setFocusPolicy(Qt::NoFocus);
+    ui->label->setFocusPolicy(Qt::NoFocus);
+    ui->comboBox_Vectors_U->setFocusPolicy(Qt::NoFocus);
+    ui->label_2->setFocusPolicy(Qt::NoFocus);
+    ui->comboBox_Vectors_V->setFocusPolicy(Qt::NoFocus);
+#endif
 }
 
 // Деструктор

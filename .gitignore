@@ -62,6 +62,7 @@ Makefile*
 
 # Temp files
 *~
+.DS_Store
 
 # ================ FEM Draw specific .gitignore ================================
 

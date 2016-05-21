@@ -11,6 +11,10 @@ Q_IMPORT_PLUGIN(qtiff)
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+#if defined (Q_OS_OSX)
+    // TODO: При возможности добавить поддержку нативного меню
+    a.setAttribute(Qt::AA_DontUseNativeMenuBar);
+#endif
     MainWindow w;
     if(argc > 1)
     {
