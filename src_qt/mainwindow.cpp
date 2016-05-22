@@ -76,7 +76,7 @@ MainWindow::MainWindow(QWidget *parent) :
     last_saved = "draw.png";
     last_opened = "";
 
-#if defined (Q_OS_OSX)
+#if defined (Q_OS_MAC)
     // Очень грустный костыль: под маком очень странная политика работы с фокусом.
     // Из-за этого по-умолчанию фокус устанавливается только на SpinBox'ах. Самый
     // вменяемый способ починить это - заблокировать фокус у всех элементов
@@ -91,6 +91,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_Vectors_U->setFocusPolicy(Qt::NoFocus);
     ui->label_2->setFocusPolicy(Qt::NoFocus);
     ui->comboBox_Vectors_V->setFocusPolicy(Qt::NoFocus);
+    ui->centralwidget->setFocusPolicy(Qt::StrongFocus);
+    ui->centralwidget->setFocus();
 #endif
 }
 
@@ -176,7 +178,7 @@ void MainWindow::open_file(QString filename)
 
     // Установим заголовок окна
     QString label = filename.split('/').last();
-#if defined _WIN32
+#if defined (Q_OS_WIN32)
     label = label.split('\\').last();
 #endif
     if(ui->widget->title.length() > 0)
@@ -187,7 +189,7 @@ void MainWindow::open_file(QString filename)
     // Сохраним директорию, в которой находится файл
     last_opened = "";
     int stop_index = filename.lastIndexOf("/");
-#if defined _WIN32
+#if defined (Q_OS_WIN32)
     int stop_index_win = filename.lastIndexOf("\\");
     if(stop_index_win > stop_index)
         stop_index = stop_index_win;
@@ -226,7 +228,7 @@ void MainWindow::on_actionSave_Image_File_triggered()
         supported.push_back(QString(*it).toLower());
     supported_temp.clear();
     supported.push_back("svg");
-//#if !defined HAVE_QT5
+//#if !defined (HAVE_QT5)
 //    supported.push_back("ps");
 //#endif
     supported.push_back("pdf");
@@ -305,7 +307,7 @@ void MainWindow::on_actionSave_Image_File_triggered()
         QSvgGenerator generator;
         generator.setFileName(filename);
         generator.setSize(QSize(ui->widget->width(), ui->widget->height()));
-#if !defined HAVE_LESS_THAN_QT45
+#if !defined (HAVE_LESS_THAN_QT45)
         generator.setViewBox(QRect(0, 0, ui->widget->width(), ui->widget->height()));
         generator.setTitle(ui->widget->title);
         generator.setDescription(trUtf8("Generated with FEM Draw"));
@@ -313,7 +315,7 @@ void MainWindow::on_actionSave_Image_File_triggered()
         ui->widget->draw(& generator, ui->actionTransparent_Image->isChecked(), true);
         saved = true;
     }
-//#if !defined HAVE_QT5
+//#if !defined (HAVE_QT5)
 //    else if(ext == "ps" || ext == "pdf")
 //#else
     else if(ext == "pdf")
@@ -322,7 +324,7 @@ void MainWindow::on_actionSave_Image_File_triggered()
         QPrinter printer(QPrinter::ScreenResolution);
         if(ext == "pdf")
             printer.setOutputFormat(QPrinter::PdfFormat);
-//#if !defined HAVE_QT5
+//#if !defined (HAVE_QT5)
 //        else if(ext == "ps")
 //            printer.setOutputFormat(QPrinter::PostScriptFormat);
 //#endif
@@ -457,7 +459,7 @@ void MainWindow::on_actionShow_Isolines_triggered()
 // Событие при запросе конфигурации цвета изолиний
 void MainWindow::on_actionIsolines_Color_triggered()
 {
-#if !defined HAVE_LESS_THAN_QT45
+#if !defined (HAVE_LESS_THAN_QT45)
     QColor color = QColorDialog::getColor(ui->widget->isolines_config.color, this, trUtf8("Select Isolines Color"));
 #else
     QColor color = QColorDialog::getColor(ui->widget->isolines_config.color, this);
@@ -491,7 +493,7 @@ void MainWindow::on_actionShow_Vectors_triggered()
 // Событие при запросе конфигурации цвета векторов
 void MainWindow::on_actionVectors_Color_triggered()
 {
-#if !defined HAVE_LESS_THAN_QT45
+#if !defined (HAVE_LESS_THAN_QT45)
     QColor color = QColorDialog::getColor(ui->widget->vectors_config.color, this, trUtf8("Select Vectors Color"));
 #else
     QColor color = QColorDialog::getColor(ui->widget->isolines_config.color, this);
