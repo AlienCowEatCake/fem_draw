@@ -43,6 +43,12 @@ win32 {
     RC_FILE += src_qt/resources.rc
 }
 
+macx {
+    QMAKE_INFO_PLIST = resources/Info.plist
+    ICON = resources/fem_draw.icns
+    TARGET = "FEM Draw"
+}
+
 *g++*|*clang* {
     QMAKE_CXXFLAGS_WARN_ON *= -Wextra
     QMAKE_CXXFLAGS_RELEASE -= -O2
