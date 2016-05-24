@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include <QMenu>
 
 #if defined (USE_STATIC_QJPEG)
 Q_IMPORT_PLUGIN(qjpeg)
@@ -12,6 +13,12 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow w;
+#if defined (Q_OS_MAC)
+    void qt_mac_set_dock_menu(QMenu *menu);
+    QMenu dock_menu;
+    dock_menu.addAction("New Window", &w, SLOT(on_actionNew_Window_triggered()));
+    qt_mac_set_dock_menu(&dock_menu);
+#endif
     if(argc > 1)
     {
         string filename;

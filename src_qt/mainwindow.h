@@ -44,6 +44,8 @@ private slots:
     void on_actionCopy_Image_to_Clipboard_triggered();
     // Событие при сохранении
     void on_actionSave_Image_File_triggered();
+    // Событие при нажатии кнопки New Window
+    void on_actionNew_Window_triggered();
     // Событие при нажатии кнопки Exit
     void on_actionExit_triggered();
     // Событие при изменении уровня интерполяции

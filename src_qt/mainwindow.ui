@@ -187,6 +187,7 @@
     <addaction name="actionCopy_Image_to_Clipboard"/>
     <addaction name="actionSave_Image_File"/>
     <addaction name="separator"/>
+    <addaction name="actionNew_Window"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuInterpolation">
@@ -266,6 +267,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionNew_Window">
+   <property name="text">
+    <string>New Window</string>
    </property>
   </action>
   <action name="actionExit">

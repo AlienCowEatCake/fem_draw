@@ -7,6 +7,9 @@
 #include <QColorDialog>
 #include <QInputDialog>
 #include <QClipboard>
+#include <QProcess>
+#include <QDir>
+#include <QStringList>
 #include <algorithm>
 #include <cmath>
 #include "libs/jo_images.h"
@@ -397,6 +400,12 @@ void MainWindow::on_actionSave_Image_File_triggered()
         msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
         msgBox.exec();
     }
+}
+
+// Событие при нажатии кнопки New Window
+void MainWindow::on_actionNew_Window_triggered()
+{
+    QProcess::startDetached(QApplication::applicationFilePath(), QStringList(), QDir::currentPath());
 }
 
 // Событие при нажатии кнопки Exit
