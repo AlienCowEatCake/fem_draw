@@ -11,20 +11,44 @@
 	<key>CFBundleIconFile</key>
 	<string>fem_draw.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>ru.codefreak.fami.fem_draw</string>
+	<string>ru.codefreak.fem_draw</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>FEM Draw</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<key>CFBundleVersion</key>
+	<string>1.7</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.7.0</string>
+	<string>1.7</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilites</string>
+	<key>LSArchitecturePriority</key>
+	<array>
+		<string>x86_64</string>
+	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.7.0</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright (c) 2014-2016, Peter Zhigalov</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>dat</string>
+				<string>plt</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Qt UI File</string>
+		</dict>
+	</array>
 </dict>
 </plist>
