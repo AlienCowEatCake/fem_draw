@@ -1,19 +1,23 @@
 #!/bin/bash
 V_PROJECT=fem_draw_qt
-V_BUILDDIR=build_osx_qt5.6.0_clang64
+V_BUILDDIR=build_osx_qt4.8.7_clang64
 V_APPNAME="FEM Draw"
 V_DMGNAME="fem_draw_qt"
+V_INFO_PLIST="resources/Info.plist"
+V_ICON="resources/fem_draw.icns"
 
-QTDIR="${HOME}/Qt/5.6/clang_64"
-CMD_QMAKE="${QTDIR}/bin/qmake"
-CMD_DEPLOY="${QTDIR}/bin/macdeployqt"
+CMD_QMAKE="qmake"
+CMD_DEPLOY="macdeployqt"
 
 cd "$(dirname $0)"/..
 rm -rf "${V_BUILDDIR}"
 mkdir -p "${V_BUILDDIR}"
 cd "${V_BUILDDIR}"
-${CMD_QMAKE} CONFIG+="release" QMAKE_MACOSX_DEPLOYMENT_TARGET=10.7 "../${V_PROJECT}.pro"
+${CMD_QMAKE} CONFIG+="release" CONFIG+="x86_64" -r -spec unsupported/macx-clang QMAKE_MACOSX_DEPLOYMENT_TARGET=10.5 "../${V_PROJECT}.pro"
 make
+cp -a "../${V_INFO_PLIST}" "${V_APPNAME}.app/Contents/Info.plist"
+sed -e 's/10.7/10.5/' -i "" "${V_APPNAME}.app/Contents/Info.plist"
+cp -a "../${V_ICON}" "${V_APPNAME}.app/Contents/Resources/"
 ${CMD_DEPLOY} "${V_APPNAME}.app" -dmg -verbose=2
 
 hdiutil convert -format UDRW -o "${V_APPNAME}_rw.dmg" "${V_APPNAME}.dmg"

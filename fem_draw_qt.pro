@@ -47,6 +47,7 @@ macx {
     QMAKE_INFO_PLIST = resources/Info.plist
     ICON = resources/fem_draw.icns
     TARGET = "FEM Draw"
+    QMAKE_CXXFLAGS += -Wno-invalid-constexpr
 }
 
 *g++*|*clang* {
