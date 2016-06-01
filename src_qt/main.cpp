@@ -1,6 +1,6 @@
 #include "mainwindow.h"
-#include <QApplication>
 #include <QMenu>
+#include "Application.h"
 
 #if defined (USE_STATIC_QJPEG)
 Q_IMPORT_PLUGIN(qjpeg)
@@ -11,7 +11,7 @@ Q_IMPORT_PLUGIN(qtiff)
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    Application a(argc, argv);
     MainWindow w;
 #if defined (Q_OS_MAC)
     void qt_mac_set_dock_menu(QMenu *menu);
@@ -30,6 +30,11 @@ int main(int argc, char *argv[])
         }
         w.open_file(QString::fromLocal8Bit(filename.c_str()));
     }
+    else if(a.hasLastOpenFilename())
+    {
+        w.open_file(a.getLastOpenFilename());
+    }
+    QObject::connect(&a, SIGNAL(openFileEvent(const QString &)), &w, SLOT(open_file(const QString &)));
     w.show();
     return a.exec();
 }

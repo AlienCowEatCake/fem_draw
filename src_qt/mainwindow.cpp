@@ -116,7 +116,7 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 }
 
 // Открытие файла по имени
-void MainWindow::open_file(QString filename)
+void MainWindow::open_file(const QString & filename)
 {
     // Запомним старые значения индексов, чтоб потом восстановить
     size_t old_draw_index = ui->widget->draw_index;

@@ -30,13 +30,14 @@ public:
     ~MainWindow();
     // Событие при изменении размера окна
     void resizeEvent(QResizeEvent *event);
-    // Открытие файла по имени
-    void open_file(QString filename);
     // Пришло drag-and-drop сообщение
     void dragEnterEvent(QDragEnterEvent * event);
     void dragMoveEvent(QDragMoveEvent * event);
     void dragLeaveEvent(QDragLeaveEvent * event);
     void dropEvent(QDropEvent * event);
+public slots:
+    // Открытие файла по имени
+    void open_file(const QString & filename);
 private slots:
     // Событие при открытии файла
     void on_actionOpen_Tecplot_File_triggered();

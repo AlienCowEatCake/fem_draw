@@ -24,12 +24,14 @@ SOURCES += \
     src_qt/libs/jo_jpeg.cpp \
     src_qt/libs/jo_gif.cpp \
     src_qt/libs/jo_tga.cpp \
+    src_qt/Application.cpp \
     src_qt/paintwidget.cpp \
     src_qt/main.cpp \
     src_qt/mainwindow.cpp
 
 HEADERS += \
     src_qt/libs/jo_images.h \
+    src_qt/Application.h \
     src_qt/paintwidget.h \
     src_qt/mainwindow.h
 
