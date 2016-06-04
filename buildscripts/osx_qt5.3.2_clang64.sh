@@ -14,7 +14,7 @@ mkdir -p "${V_BUILDDIR}"
 cd "${V_BUILDDIR}"
 ${CMD_QMAKE} CONFIG+="release" QMAKE_MACOSX_DEPLOYMENT_TARGET=10.6 "../${V_PROJECT}.pro"
 make
-sed -e 's/10.7/10.6/' -i "" "${V_APPNAME}.app/Contents/Info.plist"
+sed -e 's/10.7.0/10.6.0/' -i "" "${V_APPNAME}.app/Contents/Info.plist"
 ${CMD_DEPLOY} "${V_APPNAME}.app" -dmg -verbose=2
 
 hdiutil convert -format UDRW -o "${V_APPNAME}_rw.dmg" "${V_APPNAME}.dmg"
