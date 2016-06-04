@@ -8,6 +8,9 @@ Q_IMPORT_PLUGIN(qjpeg)
 #if defined (USE_STATIC_QTIFF)
 Q_IMPORT_PLUGIN(qtiff)
 #endif
+#if defined (USE_STATIC_QICO)
+Q_IMPORT_PLUGIN(qico)
+#endif
 
 int main(int argc, char *argv[])
 {

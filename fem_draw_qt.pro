@@ -77,3 +77,10 @@ use_static_qtiff {
     QTPLUGIN += qtiff
     DEFINES += USE_STATIC_QTIFF
 }
+
+# qmake CONFIG+=use_static_qico
+use_static_qico {
+    QTPLUGIN += qico
+    DEFINES += USE_STATIC_QICO
+}
+
