@@ -2,8 +2,8 @@
 set V_PROJECT=fem_draw_qt
 set V_ARCH=x64
 set V_VCVARS="C:\Program Files (x86)\Microsoft Visual Studio 8\VC\vcvarsall.bat"
-set V_QTDIR=C:\Qt\qt4.4.3-msvc2005-x64-static
-set V_JOM=C:\Qt\jom.exe
+set V_QTDIR=C:\Qt\4.4.3\msvc2005_64_static
+set V_JOM=C:\Qt\Tools\QtCreator\bin\jom.exe
 set V_BUILDDIR=build_win_qt4.4.3_msvc2005_x64
 
 call %V_VCVARS% %V_ARCH%

@@ -1,6 +1,6 @@
 @echo off
 set V_PROJECT=fem_draw_winapi
-set MINGWDIR=C:\Qt\MinGW-3.4.2
+set MINGWDIR=C:\Qt\Tools\mingw342_32
 set V_BUILDDIR=build_winapi_mingw342
 set MINGW-CXX=g++
 set MINGW-WINDRES=windres

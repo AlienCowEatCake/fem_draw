@@ -467,6 +467,34 @@ finish:
     ReleaseDC(pdraw->hwnd, hdc1);
 }
 
+// Событие при нажатии кнопки New Window
+void on_actionNew_Window_triggered()
+{
+    TCHAR szFileName[MAX_PATH];
+    if(GetModuleFileName(NULL, szFileName, MAX_PATH))
+    {
+        STARTUPINFO info;
+        memset(&info, 0, sizeof(info));
+        info.cb = sizeof(info);
+        PROCESS_INFORMATION processInfo;
+        if(CreateProcess(szFileName, TEXT(""), NULL, NULL, TRUE, 0, NULL, NULL, &info, &processInfo))
+        {
+            CloseHandle(processInfo.hProcess);
+            CloseHandle(processInfo.hThread);
+        }
+        else
+        {
+            MessageBox(hwnd, TEXT("Error: Error while creating new process!"), TEXT("Error"), MB_OK | MB_ICONERROR);
+            return;
+        }
+    }
+    else
+    {
+        MessageBox(hwnd, TEXT("Error: Unable to get current module file name!"), TEXT("Error"), MB_OK | MB_ICONERROR);
+        return;
+    }
+}
+
 // Событие при нажатии кнопки Exit
 void on_actionExit_triggered()
 {
@@ -1316,6 +1344,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         case CONTROL_MENU_SAVE: // Событие при сохранении
             on_actionSave_Image_File_triggered();
             break;
+        case CONTROL_MENU_NEW_WINDOW: // Событие при нажатии кнопки New Window
+            on_actionNew_Window_triggered();
+            break;
         case CONTROL_MENU_EXIT: // Событие при нажатии кнопки Exit
             on_actionExit_triggered();
             break;
@@ -1970,6 +2001,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow
     AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_COPY, TEXT("Copy Image to Clipboard\tCtrl+C"));
     AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_SAVE, TEXT("Save Image...\tCtrl+S"));
     AppendMenu(menu::hFileMenu, MF_SEPARATOR, (UINT_PTR)NULL, TEXT(""));
+    AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_NEW_WINDOW, TEXT("New Window"));
     AppendMenu(menu::hFileMenu, MF_STRING, CONTROL_MENU_EXIT, TEXT("Exit\tCtrl+Q"));
     menu::hInterpMenu = CreatePopupMenu();
     AppendMenu(menu::hMenu, MF_STRING | MF_POPUP, (UINT_PTR)menu::hInterpMenu, TEXT("Interpolation"));
