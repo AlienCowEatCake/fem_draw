@@ -24,7 +24,9 @@ void paintwidget::print_io_error()
     msgBox.setWindowTitle(trUtf8("Error"));
     msgBox.setText(trUtf8("Error: Corrupted file"));
     msgBox.setIcon(QMessageBox::Critical);
+#if !defined (Q_OS_MAC)
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+#endif
     msgBox.exec();
 }
 

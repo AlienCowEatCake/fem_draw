@@ -397,7 +397,9 @@ void MainWindow::on_actionSave_Image_File_triggered()
         msgBox.setWindowTitle(trUtf8("Error"));
         msgBox.setText(trUtf8("Error: Can't save file"));
         msgBox.setIcon(QMessageBox::Critical);
+#if !defined (Q_OS_MAC)
         msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+#endif
         msgBox.exec();
     }
 }
@@ -432,7 +434,9 @@ void MainWindow::on_actionIncrease_Interpolation_triggered()
             msgBox.setWindowTitle(trUtf8("Error"));
             msgBox.setText(trUtf8("Error: Memory limit exceeded"));
             msgBox.setIcon(QMessageBox::Critical);
+#if !defined (Q_OS_MAC)
             msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+#endif
             msgBox.exec();
         }
     }
@@ -445,7 +449,9 @@ void MainWindow::on_actionIncrease_Interpolation_triggered()
         msgBox.setWindowTitle(trUtf8("Error"));
         msgBox.setText(trUtf8("Error: More than 10x interpolation is not supported"));
         msgBox.setIcon(QMessageBox::Critical);
+#if !defined (Q_OS_MAC)
         msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+#endif
         msgBox.exec();
     }
 }
@@ -598,7 +604,9 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
                    "Peter Zhigalov &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;"
                    ).replace(" ", "&nbsp;").replace("a&nbsp;href", "a href"));
     msgBox.setIconPixmap(QPixmap::fromImage(QImage(":/resources/icon_64.png")));
+#if !defined (Q_OS_MAC)
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+#endif
     msgBox.exec();
 }
 
@@ -629,7 +637,9 @@ void MainWindow::on_actionAbout_Third_Party_Libraries_triggered()
                    "</table>"
                    ).replace(" ", "&nbsp;").replace("a&nbsp;href", "a href").replace("table&nbsp;border", "table border").replace("td&nbsp;style", "td style"));
     msgBox.setIconPixmap(QPixmap::fromImage(QImage(":/resources/icon_64.png")));
+#if !defined (Q_OS_MAC)
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+#endif
     msgBox.exec();
 }
 
@@ -750,7 +760,9 @@ void MainWindow::dropEvent(QDropEvent * event)
             msgBox.setWindowTitle(trUtf8("Error"));
             msgBox.setText(trUtf8("Error: You can open only one file simultaneously!"));
             msgBox.setIcon(QMessageBox::Critical);
+#if !defined (Q_OS_MAC)
             msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
+#endif
             msgBox.exec();
         }
         else
