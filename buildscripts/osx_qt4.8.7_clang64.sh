@@ -16,7 +16,7 @@ cd "${V_BUILDDIR}"
 ${CMD_QMAKE} CONFIG+="release" CONFIG+="x86_64" -r -spec unsupported/macx-clang QMAKE_MACOSX_DEPLOYMENT_TARGET=10.5 "../${V_PROJECT}.pro"
 make
 cp -a "../${V_INFO_PLIST}" "${V_APPNAME}.app/Contents/Info.plist"
-sed -e 's/10.7.0/10.5.0/' -i "" "${V_APPNAME}.app/Contents/Info.plist"
+sed -e 's/10.6.0/10.5.0/' -i "" "${V_APPNAME}.app/Contents/Info.plist"
 cp -a "../${V_ICON}" "${V_APPNAME}.app/Contents/Resources/"
 ${CMD_DEPLOY} "${V_APPNAME}.app" -dmg -verbose=2
 

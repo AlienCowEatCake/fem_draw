@@ -84,3 +84,9 @@ use_static_qico {
     DEFINES += USE_STATIC_QICO
 }
 
+DESTDIR = .
+OBJECTS_DIR = build
+MOC_DIR = build
+RCC_DIR = build
+UI_DIR = build
+
