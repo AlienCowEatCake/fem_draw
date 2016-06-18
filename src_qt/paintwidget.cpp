@@ -31,7 +31,7 @@ void paintwidget::print_io_error()
 // Считать из QTextStream число с разделителями ' ', '\t', ',', '\r' или '\n'
 float paintwidget::read_number(QTextStream & ifs)
 {
-    char str[32]; // Должно хватить
+    QChar str[32]; // Должно хватить
     size_t len = 0;
     // Читаем мусор перед числом
     do
@@ -45,9 +45,7 @@ float paintwidget::read_number(QTextStream & ifs)
     if(ifs.status() != QTextStream::Ok) return 0.0f;
     str[len] = '\0';
     // Преобразуем во float
-    float num = 0.0f;
-    sscanf(str, "%f", &num);
-    return num;
+    return QString(str).toFloat();
 }
 
 // Чтение текплотовских значений из файла
