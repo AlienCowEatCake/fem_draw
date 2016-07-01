@@ -16,6 +16,7 @@
 #include <QMenu>
 #include <QSettings>
 #include <QLocale>
+#include <QResizeEvent>
 #include <algorithm>
 #include <cmath>
 #include "libs/jo_images.h"
@@ -118,7 +119,15 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     // Подгонка размеров виджета при изменении размеров окна
     QRect main = ui->centralwidget->geometry();
     QRect widget = ui->widget->geometry();
-    ui->widget->setGeometry(widget.x(), widget.y(), main.width() - widget.x(), main.height() - widget.y());
+    int widget_y = ui->verticalSpacer->geometry().top();
+    ui->widget->setGeometry(widget.x(), widget_y, main.width() - widget.x(), main.height() - widget_y);
+}
+
+// Показать окно
+void MainWindow::show()
+{
+    QMainWindow::show();
+    QApplication::postEvent(this, new QResizeEvent(size(), size()));
 }
 
 // Открытие файла по имени
@@ -612,6 +621,9 @@ void MainWindow::update_translations(QString language)
 
     // Меню в доке OS X также нуждается в переводе
     update_dock_menu();
+
+    // Также следует пересчитать геометрию виждетов
+    QApplication::postEvent(this, new QResizeEvent(size(), size()));
 }
 
 // Функция, устанавливающая меню в доке OS X

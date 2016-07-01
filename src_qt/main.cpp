@@ -15,8 +15,8 @@ int main(int argc, char *argv[])
 {
     Application a(argc, argv);
     a.setOrganizationDomain("fami.codefreak.ru");
-    a.setOrganizationName("FAMI Net Team");
-    a.setApplicationName("FEM Draw Qt");
+    a.setOrganizationName("fami_net_team");
+    a.setApplicationName("fem_draw");
     a.setApplicationVersion("1.7");
     MainWindow w;
     w.update_translations();

@@ -35,6 +35,8 @@ public:
     void dragMoveEvent(QDragMoveEvent * event);
     void dragLeaveEvent(QDragLeaveEvent * event);
     void dropEvent(QDropEvent * event);
+    // Показать окно
+    void show();
 public slots:
     // Открытие файла по имени
     void open_file(const QString & filename);
