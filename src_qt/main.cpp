@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include <QMenu>
 #include "Application.h"
 
 #if defined (USE_STATIC_QJPEG)
@@ -15,13 +14,12 @@ Q_IMPORT_PLUGIN(qico)
 int main(int argc, char *argv[])
 {
     Application a(argc, argv);
+    a.setOrganizationDomain("fami.codefreak.ru");
+    a.setOrganizationName("FAMI Net Team");
+    a.setApplicationName("FEM Draw Qt");
+    a.setApplicationVersion("1.7");
     MainWindow w;
-#if defined (Q_OS_MAC)
-    void qt_mac_set_dock_menu(QMenu *menu);
-    QMenu dock_menu;
-    dock_menu.addAction("New Window", &w, SLOT(on_actionNew_Window_triggered()));
-    qt_mac_set_dock_menu(&dock_menu);
-#endif
+    w.update_translations();
     if(argc > 1)
     {
         string filename;

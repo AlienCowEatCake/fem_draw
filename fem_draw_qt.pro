@@ -38,7 +38,14 @@ HEADERS += \
 FORMS += \
     src_qt/mainwindow.ui
 
-RESOURCES += resources/icon.qrc
+TRANSLATIONS += \
+    src_qt/l10ns/fem_draw_qt_en.ts \
+    src_qt/l10ns/fem_draw_qt_ru.ts
+
+RESOURCES += \
+    resources/icon.qrc \
+    src_qt/l10ns/l10ns.qrc
+
 QMAKE_RESOURCE_FLAGS += -threshold 0 -compress 9
 
 win32 {

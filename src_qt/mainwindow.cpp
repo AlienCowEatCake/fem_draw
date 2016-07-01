@@ -10,6 +10,12 @@
 #include <QProcess>
 #include <QDir>
 #include <QStringList>
+#include <QApplication>
+#include <QTranslator>
+#include <QPair>
+#include <QMenu>
+#include <QSettings>
+#include <QLocale>
 #include <algorithm>
 #include <cmath>
 #include "libs/jo_images.h"
@@ -57,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionShow_Vectors->setChecked(ui->checkBox_Vectors->isChecked());
 
     // Немного эстетства
-    this->setWindowTitle("FEM Draw");
+    this->setWindowTitle(trUtf8("FEM Draw"));
     connect(ui->actionAbout_Qt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
     // Передача начальных значений виджету
@@ -76,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setAcceptDrops(true);
 
     // Зададим умолчательные имена файлов
-    last_saved = "draw.png";
+    last_saved = trUtf8("draw.png");
     last_opened = "";
 
 #if defined (Q_OS_MAC)
@@ -128,7 +134,7 @@ void MainWindow::open_file(const QString & filename)
     ui->widget->tec_read(filename);
     if(!ui->widget->is_loaded)
     {
-        this->setWindowTitle("FEM Draw");
+        this->setWindowTitle(trUtf8("FEM Draw"));
         ui->widget->invalidate();
         return;
     }
@@ -186,7 +192,7 @@ void MainWindow::open_file(const QString & filename)
 #endif
     if(ui->widget->title.length() > 0)
         label.prepend(ui->widget->title + " - ");
-    label.append(" - FEM Draw");
+    label.append(" - ").append(trUtf8("FEM Draw"));
     this->setWindowTitle(label);
 
     // Сохраним директорию, в которой находится файл
@@ -208,7 +214,8 @@ void MainWindow::open_file(const QString & filename)
 // Событие при открытии файла
 void MainWindow::on_actionOpen_Tecplot_File_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, trUtf8("Open Tecplot File"), last_opened, "Tecplot Data Files (*.dat *.plt);;All Files (*.*)");
+    QString fileName = QFileDialog::getOpenFileName(this, trUtf8("Open Tecplot File"), last_opened,
+                                                    QString("%1 (*.dat *.plt);;%2 (*.*)").arg(trUtf8("Tecplot Data Files")).arg(trUtf8("All Files")));
     if(fileName.length() == 0) return;
     open_file(fileName);
 }
@@ -277,7 +284,7 @@ void MainWindow::on_actionSave_Image_File_triggered()
         formats.append(*it);
         formats.append(")");
     }
-    formats_all.prepend("All Images (");
+    formats_all.prepend(trUtf8("All Images").append(" ("));
     formats_all.append(");;");
     formats.prepend(formats_all);
 
@@ -559,6 +566,78 @@ void MainWindow::on_actionArrowSize_triggered()
     }
 }
 
+// Функция для применения локализации
+void MainWindow::update_translations(QString language)
+{
+    // Отображение название языка -> соответствующая ему менюшка
+    static QList<QPair<QString, QAction *> > languages_map = QList<QPair<QString, QAction *> >()
+            << qMakePair(QString("en"), ui->actionEnglish)
+            << qMakePair(QString("ru"), ui->actionRussian);
+
+    // Определим системную локаль
+    static QString system_lang;
+    if(system_lang.isEmpty())
+    {
+        QString system_locale = QLocale::system().name().toLower();
+        for(QList<QPair<QString, QAction *> >::Iterator it = languages_map.begin(); it != languages_map.end(); ++it)
+        {
+            if(system_locale.startsWith(it->first))
+            {
+                system_lang = it->first;
+                break;
+            }
+        }
+        if(system_lang.isEmpty())
+            system_lang = "en";
+    }
+
+    // Посмотрим в настройки, не сохранен ли случайно в них язык
+    QSettings settings;
+    if(language.isEmpty())
+        language = settings.value("Language", system_lang).toString();
+    else
+        settings.setValue("Language", language);
+
+    // Удалим старый перевод, установим новый
+    static QTranslator translator;
+    if(!translator.isEmpty())
+        qApp->removeTranslator(&translator);
+    translator.load(QString(":/l10ns/fem_draw_qt_%1").arg(language));
+    qApp->installTranslator(&translator);
+    ui->retranslateUi(this);
+
+    // Пробежим по меню и проставим галочку на нужном нам языке и снимем с остальных
+    for(QList<QPair<QString, QAction *> >::Iterator it = languages_map.begin(); it != languages_map.end(); ++it)
+        it->second->setChecked(it->first == language);
+
+    // Меню в доке OS X также нуждается в переводе
+    update_dock_menu();
+}
+
+// Функция, устанавливающая меню в доке OS X
+void MainWindow::update_dock_menu()
+{
+#if defined (Q_OS_MAC)
+    void qt_mac_set_dock_menu(QMenu *menu);
+    static QMenu dock_menu;
+    dock_menu.clear();
+    dock_menu.addAction(qApp->translate("Dock", "New Window"), this, SLOT(on_actionNew_Window_triggered()));
+    qt_mac_set_dock_menu(&dock_menu);
+#endif
+}
+
+// Событие при включении английского языка
+void MainWindow::on_actionEnglish_triggered()
+{
+    update_translations("en");
+}
+
+// Событие при включении русского языка
+void MainWindow::on_actionRussian_triggered()
+{
+    update_translations("ru");
+}
+
 // Событие при переключении рисования легенды
 void MainWindow::on_actionShow_Legend_triggered()
 {
@@ -595,14 +674,14 @@ void MainWindow::on_actionAbout_FEM_Draw_triggered()
     msgBox.setAttribute(Qt::WA_QuitOnClose);
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setDefaultButton(QMessageBox::Ok);
-    msgBox.setWindowTitle("About");
-    msgBox.setText(QString("<b>FEM Draw v1.7 (Qt)</b>").replace(" ", "&nbsp;"));
+    msgBox.setWindowTitle(trUtf8("About"));
+    msgBox.setText(QString("<b>%1 v1.7 (Qt)</b>").arg(trUtf8("FEM Draw")).replace(" ", "&nbsp;"));
     msgBox.setInformativeText(QString(
                    "<a href=\"https://fami.codefreak.ru/osp/fem_draw/\">https://fami.codefreak.ru/osp/fem_draw/</a><br>"
-                   "License: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
+                   "%1: <a href=\"http://www.gnu.org/copyleft/gpl.html\">GNU GPL v3</a><br><br>"
                    "Copyright &copy; 2014-2016<br>"
-                   "Peter Zhigalov &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;"
-                   ).replace(" ", "&nbsp;").replace("a&nbsp;href", "a href"));
+                   "%2 &lt;<a href=\"mailto:peter.zhigalov@gmail.com\">peter.zhigalov@gmail.com</a>&gt;"
+                   ).arg(trUtf8("License")).arg(trUtf8("Peter Zhigalov")).replace(" ", "&nbsp;").replace("a&nbsp;href", "a href"));
     msgBox.setIconPixmap(QPixmap::fromImage(QImage(":/resources/icon_64.png")));
 #if !defined (Q_OS_MAC)
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
@@ -617,25 +696,26 @@ void MainWindow::on_actionAbout_Third_Party_Libraries_triggered()
     msgBox.setAttribute(Qt::WA_QuitOnClose);
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setDefaultButton(QMessageBox::Ok);
-    msgBox.setWindowTitle("About Third Party Libraries");
-    msgBox.setText(QString("<b>Third Party Libraries:</b>").replace(" ", "&nbsp;"));
+    msgBox.setWindowTitle(trUtf8("About Third Party Libraries"));
+    msgBox.setText(QString("<b>%1:</b>").arg(trUtf8("Third Party Libraries")).replace(" ", "&nbsp;"));
     msgBox.setInformativeText(QString(
                    "<table border=\"0\">"
-                   "<tr><td style=\"padding-right:8%\">Library:</td><td>Jon Olick JPEG Writer</td></tr>"
-                   "<tr><td style=\"padding-right:8%\">License:</td><td>public domain</td></tr>"
-                   "<tr><td style=\"padding-right:8%\">Website:</td><td><a href=\"http://www.jonolick.com/code.html\">http://www.jonolick.com/code.html</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">%1:</td><td>Jon Olick JPEG Writer</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">%2:</td><td>public domain</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">%3:</td><td><a href=\"http://www.jonolick.com/code.html\">http://www.jonolick.com/code.html</td></tr>"
                    "</table><br>"
                    "<table border=\"0\">"
-                   "<tr><td style=\"padding-right:8%\">Library:</td><td>Jon Olick GIF Writer</td></tr>"
-                   "<tr><td style=\"padding-right:8%\">License:</td><td>public domain</td></tr>"
-                   "<tr><td style=\"padding-right:8%\">Website:</td><td><a href=\"http://www.jonolick.com/code.html\">http://www.jonolick.com/code.html</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">%1:</td><td>Jon Olick GIF Writer</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">%2:</td><td>public domain</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">%3:</td><td><a href=\"http://www.jonolick.com/code.html\">http://www.jonolick.com/code.html</td></tr>"
                    "</table><br>"
                    "<table border=\"0\">"
-                   "<tr><td style=\"padding-right:8%\">Library:</td><td>Jon Olick TGA Writer</td></tr>"
-                   "<tr><td style=\"padding-right:8%\">License:</td><td>public domain</td></tr>"
-                   "<tr><td style=\"padding-right:8%\">Website:</td><td><a href=\"http://www.jonolick.com/code.html\">http://www.jonolick.com/code.html</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">%1:</td><td>Jon Olick TGA Writer</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">%2:</td><td>public domain</td></tr>"
+                   "<tr><td style=\"padding-right:8%\">%3:</td><td><a href=\"http://www.jonolick.com/code.html\">http://www.jonolick.com/code.html</td></tr>"
                    "</table>"
-                   ).replace(" ", "&nbsp;").replace("a&nbsp;href", "a href").replace("table&nbsp;border", "table border").replace("td&nbsp;style", "td style"));
+                   ).arg(trUtf8("Library")).arg(trUtf8("License")).arg(trUtf8("Website"))
+                    .replace(" ", "&nbsp;").replace("a&nbsp;href", "a href").replace("table&nbsp;border", "table border").replace("td&nbsp;style", "td style"));
     msgBox.setIconPixmap(QPixmap::fromImage(QImage(":/resources/icon_64.png")));
 #if !defined (Q_OS_MAC)
     msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));
@@ -758,7 +838,7 @@ void MainWindow::dropEvent(QDropEvent * event)
             msgBox.setStandardButtons(QMessageBox::Ok);
             msgBox.setDefaultButton(QMessageBox::Ok);
             msgBox.setWindowTitle(trUtf8("Error"));
-            msgBox.setText(trUtf8("Error: You can open only one file simultaneously!"));
+            msgBox.setText(trUtf8("Error: You can open only one file simultaneously"));
             msgBox.setIcon(QMessageBox::Critical);
 #if !defined (Q_OS_MAC)
             msgBox.setWindowIcon(QIcon(":/resources/icon.ico"));

@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/l10ns">
+        <file>fem_draw_qt_en.qm</file>
+        <file>fem_draw_qt_ru.qm</file>
+    </qresource>
+</RCC>

@@ -38,6 +38,10 @@ public:
 public slots:
     // Открытие файла по имени
     void open_file(const QString & filename);
+    // Функция для применения локализации
+    void update_translations(QString language = QString());
+    // Функция, устанавливающая меню в доке OS X
+    void update_dock_menu();
 private slots:
     // Событие при открытии файла
     void on_actionOpen_Tecplot_File_triggered();
@@ -68,6 +72,10 @@ private slots:
     void on_actionVectors_Length_triggered();
     // Событие при запросе конфигурации размера стрелок векторов
     void on_actionArrowSize_triggered();
+    // Событие при включении английского языка
+    void on_actionEnglish_triggered();
+    // Событие при включении русского языка
+    void on_actionRussian_triggered();
     // Событие при переключении рисования легенды
     void on_actionShow_Legend_triggered();
     // Событие при переключении использования светлых цветов
