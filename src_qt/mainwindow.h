@@ -37,6 +37,8 @@ public:
     void dropEvent(QDropEvent * event);
     // Показать окно
     void show();
+    // Исправить отображение локаизованных шрифтов под Windows
+    void fonts_fix(const QString & language);
 public slots:
     // Открытие файла по имени
     void open_file(const QString & filename);

@@ -17,9 +17,16 @@
 #include <QSettings>
 #include <QLocale>
 #include <QResizeEvent>
+#include <QObject>
+#include <QFont>
+#include <QFontDatabase>
 #include <algorithm>
 #include <cmath>
 #include "libs/jo_images.h"
+
+#if defined (Q_OS_WIN) && defined (USE_WIN98_WORKAROUNDS)
+#include <windows.h>
+#endif
 
 // Конструктор
 MainWindow::MainWindow(QWidget *parent) :
@@ -128,6 +135,60 @@ void MainWindow::show()
 {
     QMainWindow::show();
     QApplication::postEvent(this, new QResizeEvent(size(), size()));
+}
+
+// Исправить отображение локаизованных шрифтов под Windows
+void MainWindow::fonts_fix(const QString & language)
+{
+#if defined (Q_OS_WIN)
+
+    // Отображение название языка -> соответствующая ему WritingSystem
+    static QList<QPair<QString, QFontDatabase::WritingSystem> > writingsystem_map =
+            QList<QPair<QString, QFontDatabase::WritingSystem> >()
+            << qMakePair(QString("en"), QFontDatabase::Latin)
+            << qMakePair(QString("ru"), QFontDatabase::Cyrillic);
+
+    // Найдем WritingSystem для текущего языка
+    QFontDatabase::WritingSystem current_writingsystem = QFontDatabase::Any;
+    for(QList<QPair<QString, QFontDatabase::WritingSystem> >::Iterator it = writingsystem_map.begin(); it != writingsystem_map.end(); ++it)
+    {
+        if(it->first == language)
+        {
+            current_writingsystem = it->second;
+            break;
+        }
+    }
+
+    // Шрифт стандартный, по умолчанию
+    static QFont default_font = qApp->font();
+    // Шрифт Tahoma, если стандартный не поддерживает выбранный язык
+    QFont fallback_font = default_font;
+    fallback_font.setFamily("Tahoma");
+
+    // Проверим, умеет ли стандартный шрифт писать на новом языке
+    static QFontDatabase qfd;
+    if(!qfd.families(current_writingsystem).contains(default_font.family(), Qt::CaseInsensitive))
+        qApp->setFont(fallback_font);   // Если не умеет - заменим на Tahoma
+    else
+        qApp->setFont(default_font);    // Если умеет, то вернем его обратно
+
+#if defined (USE_WIN98_WORKAROUNDS)
+    // Для Win98 форсированно заменяем шрифты на Tahoma для всех не-английских локалей
+    static DWORD dwVersion = (DWORD)(LOBYTE(LOWORD(GetVersion())));
+    if(dwVersion <= 4)
+    {
+        if(language != "en")
+            qApp->setFont(fallback_font);
+        else
+            qApp->setFont(default_font);
+    }
+#endif
+
+#else
+
+    Q_UNUSED(language);
+
+#endif
 }
 
 // Открытие файла по имени
@@ -614,6 +675,9 @@ void MainWindow::update_translations(QString language)
     translator.load(QString(":/l10ns/fem_draw_qt_%1").arg(language));
     qApp->installTranslator(&translator);
     ui->retranslateUi(this);
+
+    // Пофиксим шрифты
+    fonts_fix(language);
 
     // Пробежим по меню и проставим галочку на нужном нам языке и снимем с остальных
     for(QList<QPair<QString, QAction *> >::Iterator it = languages_map.begin(); it != languages_map.end(); ++it)

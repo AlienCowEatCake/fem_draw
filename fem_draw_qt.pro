@@ -18,6 +18,9 @@ greaterThan(QT_MAJOR_VERSION, 4) {
 
 lessThan(QT_VERSION, 4.5.0) {
     DEFINES += HAVE_LESS_THAN_QT45
+    win32-g++*|win32-msvc|win32-msvc.net|win32-msvc200* {
+        DEFINES += USE_WIN98_WORKAROUNDS
+    }
 }
 
 SOURCES += \
