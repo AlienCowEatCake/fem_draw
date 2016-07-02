@@ -47,7 +47,7 @@ float paintwidget::read_number(QTextStream & ifs)
     if(ifs.status() != QTextStream::Ok) return 0.0f;
     str[len] = '\0';
     // Преобразуем во float
-    return QString(str).toFloat();
+    return QString(str, (int)len).toFloat();
 }
 
 // Чтение текплотовских значений из файла
