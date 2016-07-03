@@ -14,6 +14,9 @@ mkdir -p "${V_BUILDDIR}"
 cd "${V_BUILDDIR}"
 ${CMD_QMAKE} CONFIG+="release" QMAKE_MACOSX_DEPLOYMENT_TARGET=10.6 "../${V_PROJECT}.pro"
 make
+RES_PATH="${V_APPNAME}.app/Contents/Resources"
+rm -f "${RES_PATH}/empty.lproj"
+mkdir -p "${RES_PATH}/en.lproj" "${RES_PATH}/ru.lproj"
 ${CMD_DEPLOY} "${V_APPNAME}.app" -dmg -verbose=2
 
 hdiutil convert -format UDRW -o "${V_APPNAME}_rw.dmg" "${V_APPNAME}.dmg"

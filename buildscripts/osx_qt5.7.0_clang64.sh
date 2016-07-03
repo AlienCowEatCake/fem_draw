@@ -15,6 +15,9 @@ cd "${V_BUILDDIR}"
 ${CMD_QMAKE} CONFIG+="release" QMAKE_MACOSX_DEPLOYMENT_TARGET=10.8 "../${V_PROJECT}.pro"
 make
 sed -e 's/10.6.0/10.8.0/' -i "" "${V_APPNAME}.app/Contents/Info.plist"
+RES_PATH="${V_APPNAME}.app/Contents/Resources"
+rm -f "${RES_PATH}/empty.lproj"
+mkdir -p "${RES_PATH}/en.lproj" "${RES_PATH}/ru.lproj"
 ${CMD_DEPLOY} "${V_APPNAME}.app" -dmg -verbose=2
 
 hdiutil convert -format UDRW -o "${V_APPNAME}_rw.dmg" "${V_APPNAME}.dmg"

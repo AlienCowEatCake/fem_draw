@@ -17,7 +17,10 @@ ${CMD_QMAKE} CONFIG+="release" CONFIG+="x86_64" -r -spec unsupported/macx-clang 
 make
 cp -a "../${V_INFO_PLIST}" "${V_APPNAME}.app/Contents/Info.plist"
 sed -e 's/10.6.0/10.5.0/' -i "" "${V_APPNAME}.app/Contents/Info.plist"
-cp -a "../${V_ICON}" "${V_APPNAME}.app/Contents/Resources/"
+RES_PATH="${V_APPNAME}.app/Contents/Resources"
+rm -f "${RES_PATH}/empty.lproj"
+mkdir -p "${RES_PATH}/en.lproj" "${RES_PATH}/ru.lproj"
+cp -a "../${V_ICON}" "${RES_PATH}/"
 ${CMD_DEPLOY} "${V_APPNAME}.app" -dmg -verbose=2
 
 hdiutil convert -format UDRW -o "${V_APPNAME}_rw.dmg" "${V_APPNAME}.dmg"

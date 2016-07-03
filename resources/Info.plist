@@ -11,7 +11,7 @@
 	<key>CFBundleIconFile</key>
 	<string>fem_draw.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>ru.codefreak.fem_draw</string>
+	<string>ru.codefreak.fami.fem_draw</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -35,7 +35,7 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>10.6.0</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright (c) 2014-2016, Peter Zhigalov</string>
+	<string>(c) Peter Zhigalov, 2014-2016</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
