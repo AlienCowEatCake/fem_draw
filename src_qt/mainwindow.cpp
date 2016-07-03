@@ -672,7 +672,7 @@ void MainWindow::update_translations(QString language)
     static QTranslator translator;
     if(!translator.isEmpty())
         qApp->removeTranslator(&translator);
-    translator.load(QString(":/l10ns/fem_draw_qt_%1").arg(language));
+    translator.load(QLocale(language), "fem_draw_qt", "_", ":/l10ns");
     qApp->installTranslator(&translator);
     ui->retranslateUi(this);
 
