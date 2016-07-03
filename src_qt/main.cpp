@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     a.setOrganizationDomain("fami.codefreak.ru");
     a.setOrganizationName("fami_net_team");
     a.setApplicationName("fem_draw");
-    a.setApplicationVersion("1.7");
+    a.setApplicationVersion("1.8");
     MainWindow w;
     w.update_translations();
     if(argc > 1)
